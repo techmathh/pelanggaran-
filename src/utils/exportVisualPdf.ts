@@ -16,7 +16,7 @@ export function downloadVisualPdfReport(
 ): void {
   const progress = getConsensusProgress(spreadsheet);
   if (!progress.exportUnlocked) {
-    throw new Error('Laporan PDF hanya dapat diekspor setelah semua petugas aktif menekan Selesai.');
+    throw new Error('Laporan PDF hanya dapat diekspor setelah jam selesai piket (status Final).');
   }
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -175,7 +175,7 @@ export function downloadVisualPdfReport(
 
   categories.forEach((cat, idx) => {
     const y = cursorY + 13 + idx * 6.2;
-    const shortCat = cat.category.length > 22 ? cat.category.slice(0, 21) + '…' : cat.category;
+    const shortCat = cat.category.length > 22 ? cat.category.slice(0, 21) + '...' : cat.category;
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
     doc.setTextColor(51, 65, 85);
@@ -293,12 +293,12 @@ export function downloadVisualPdfReport(
   doc.setFontSize(7.2);
   doc.setTextColor(71, 85, 105);
   const rules = [
-    '• 15 – 25 : Teguran lisan',
-    '• 26 – 50 : Surat pernyataan 1 dan panggilan orang tua 1',
-    '• 51 – 75 : Surat pernyataan 2 dan panggilan orang tua 2',
-    '• 76 – 99 : Panggilan orang tua 3',
-    '• ≥ 100   : Membuat Surat Pernyataan Bermaterai',
-    '• Catatan E2: Penyitaan HP sampai rambut sesuai aturan · E4: Penyitaan HP 1 minggu',
+    '- 15 - 25  : Teguran lisan',
+    '- 26 - 50  : Surat pernyataan 1 dan panggilan orang tua 1',
+    '- 51 - 75  : Surat pernyataan 2 dan panggilan orang tua 2',
+    '- 76 - 99  : Panggilan orang tua 3',
+    '- >= 100   : Membuat Surat Pernyataan Bermaterai',
+    '- Catatan E2: Penyitaan HP sampai rambut sesuai aturan · E4: Penyitaan HP 1 minggu',
   ];
   rules.forEach((line, i) => {
     doc.text(line, margin, cursorY + 4.5 + i * 3.8);

@@ -1,11 +1,24 @@
-import { useMemo, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Download, Search, ShieldAlert } from 'lucide-react';
-import { calculateStudentSummaries } from '../shared/piketLogic';
-import type { PublicAppState, TingkatPembinaan } from '../shared/types';
+import { useMemo, useState, type FormEvent } from 'react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Download,
+  Plus,
+  Search,
+  ShieldAlert,
+  Trash2,
+  UserPlus,
+} from 'lucide-react';
+import { apiFetch } from '../lib/apiClient';
+import { calculateStudentSummaries, isManagerRole } from '../shared/piketLogic';
+import type { PublicAppState, PublicOfficer, TingkatPembinaan } from '../shared/types';
 import { downloadStudentRecapXlsx } from '../utils/exportSpreadsheet';
+import { AnimatedNumber } from './AnimatedNumber';
 
 interface StudentRecapViewProps {
+  officer?: PublicOfficer;
   appState: PublicAppState;
+  onStateUpdate?: (nextState: PublicAppState) => void;
   onNotify?: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
@@ -19,12 +32,31 @@ const TIERS: ('ALL' | TingkatPembinaan)[] = [
   'Pembinaan Awal (< 15)',
 ];
 
-export function StudentRecapView({ appState, onNotify }: StudentRecapViewProps) {
+export function StudentRecapView({
+  officer,
+  appState,
+  onStateUpdate,
+  onNotify,
+}: StudentRecapViewProps) {
+  const canManageStudents = Boolean(officer && isManagerRole(officer.role));
   const [query, setQuery] = useState('');
   const [tierFilter, setTierFilter] = useState<'ALL' | TingkatPembinaan>('ALL');
   const [kelasFilter, setKelasFilter] = useState<string>('ALL');
   const [onlyViolators, setOnlyViolators] = useState<boolean>(false);
   const [visibleLimit, setVisibleLimit] = useState<number>(30);
+
+  // Custom student management state (for Admin/Developer)
+  const [showAddStudent, setShowAddStudent] = useState(false);
+  const [newStuName, setNewStuName] = useState('');
+  const [newStuKelas, setNewStuKelas] = useState('');
+  const [newStuNis, setNewStuNis] = useState('');
+  const [savingStudent, setSavingStudent] = useState(false);
+  const [confirmDeleteStudentId, setConfirmDeleteStudentId] = useState<string | null>(null);
+
+  const customStudents = useMemo(
+    () => appState.students.filter((s) => !/^stu-(?:10|11|12)[a-f]-\d+$/i.test(s.id)),
+    [appState.students]
+  );
 
   const summaries = useMemo(
     () => calculateStudentSummaries(appState.spreadsheets, appState.students),
@@ -67,9 +99,61 @@ export function StudentRecapView({ appState, onNotify }: StudentRecapViewProps) 
     onNotify?.(`Berhasil mengunduh Rekap-AKPS-Siswa-Per-Kelas-${appState.serverDate}.xlsx`, 'success');
   }
 
+  async function handleAddCustomStudent(e: FormEvent) {
+    e.preventDefault();
+    if (!canManageStudents) return;
+    setSavingStudent(true);
+    try {
+      const res = await apiFetch('/api/students', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: newStuName,
+          kelas: newStuKelas,
+          nis: newStuNis,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        onNotify?.(data.error || 'Gagal menambah siswa baru.', 'error');
+        return;
+      }
+      onStateUpdate?.(data.state);
+      setNewStuName('');
+      setNewStuKelas('');
+      setNewStuNis('');
+      onNotify?.('Siswa baru berhasil ditambahkan ke direktori sekolah.', 'success');
+    } catch {
+      onNotify?.('Gagal terhubung ke server.', 'error');
+    } finally {
+      setSavingStudent(false);
+    }
+  }
+
+  async function handleDeleteCustomStudent(studentId: string, name: string) {
+    if (!canManageStudents) return;
+    setSavingStudent(true);
+    try {
+      const res = await apiFetch(`/api/students/${studentId}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        onNotify?.(data.error || 'Gagal menghapus siswa tambahan.', 'error');
+        return;
+      }
+      onStateUpdate?.(data.state);
+      setConfirmDeleteStudentId(null);
+      onNotify?.(`Data siswa tambahan ${name} berhasil dihapus.`, 'info');
+    } catch {
+      onNotify?.('Gagal terhubung ke server.', 'error');
+    } finally {
+      setSavingStudent(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-6">
+      <section className="surface-3d animate-stagger-1 rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="font-display text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
@@ -79,37 +163,158 @@ export function StudentRecapView({ appState, onNotify }: StudentRecapViewProps) 
               Akumulasi Angka Kredit Pelanggaran Siswa (AKPS) SMA Negeri 1 Kemangkon beserta sanksi pembinaan otomatis.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handleExportRecapExcel}
-            className="btn-3d-soft inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-900 hover:bg-slate-50 whitespace-nowrap shrink-0 sm:w-auto"
-          >
-            <Download className="h-4 w-4" aria-hidden="true" />
-            <span>Ekspor Excel Rekap per Kelas (.xlsx)</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {canManageStudents && (
+              <button
+                type="button"
+                onClick={() => setShowAddStudent((prev) => !prev)}
+                className="btn-3d-soft inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-800 hover:bg-slate-50"
+              >
+                <UserPlus className="h-4 w-4 text-blue-600" aria-hidden="true" />
+                <span>{showAddStudent ? 'Tutup Form Siswa' : 'Kelola Siswa Baru / Pindahan'}</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleExportRecapExcel}
+              className="btn-3d-soft inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-900 hover:bg-slate-50 whitespace-nowrap"
+            >
+              <Download className="h-4 w-4" aria-hidden="true" />
+              <span>Ekspor Excel Rekap per Kelas (.xlsx)</span>
+            </button>
+          </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 sm:grid-cols-3">
-          <div>
-            <p className="text-xs text-slate-500">Total Pelanggaran Terekam</p>
-            <p className="font-mono-num mt-1 text-2xl font-bold text-slate-900">{totalIncidents}</p>
+        {canManageStudents && showAddStudent && (
+          <div className="animate-panel-reveal mt-5 rounded-xl border border-blue-100 bg-blue-50/35 p-4">
+            <h2 className="font-display text-sm font-bold text-slate-900">
+              Tambah Siswa Baru / Pindahan ke Direktori Sekolah ({appState.students.length} Siswa)
+            </h2>
+            <p className="mt-0.5 text-xs text-slate-600">
+              610 data siswa resmi dilindungi sistem. Siswa tambahan yang Anda input di sini akan muncul di pencarian otomatis saat petugas piket bertugas.
+            </p>
+            <form
+              onSubmit={handleAddCustomStudent}
+              className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-12"
+            >
+              <div className="sm:col-span-5">
+                <input
+                  type="text"
+                  required
+                  value={newStuName}
+                  onChange={(e) => setNewStuName(e.target.value)}
+                  placeholder="Nama lengkap siswa baru..."
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <input
+                  type="text"
+                  required
+                  value={newStuKelas}
+                  onChange={(e) => setNewStuKelas(e.target.value)}
+                  placeholder="Kelas (mis. 10A)"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs uppercase text-slate-900"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <input
+                  type="text"
+                  value={newStuNis}
+                  onChange={(e) => setNewStuNis(e.target.value)}
+                  placeholder="NIS (Opsional)"
+                  className="font-mono-num w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900"
+                />
+              </div>
+              <div className="sm:col-span-3">
+                <button
+                  type="submit"
+                  disabled={savingStudent}
+                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                >
+                  <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>Simpan Siswa</span>
+                </button>
+              </div>
+            </form>
+
+            {customStudents.length > 0 && (
+              <div className="mt-3 border-t border-blue-100 pt-3">
+                <p className="text-[11px] font-semibold text-slate-600">
+                  Siswa Tambahan di Luar 610 Data Pokok ({customStudents.length}):
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {customStudents.map((cs) => {
+                    const isConfirming = confirmDeleteStudentId === cs.id;
+                    return (
+                      <span
+                        key={cs.id}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-800"
+                      >
+                        <span className="font-medium">{cs.name}</span>
+                        <span className="font-mono-num text-slate-500">({cs.kelas})</span>
+                        {isConfirming ? (
+                          <span className="ml-1 inline-flex items-center gap-1">
+                            <button
+                              type="button"
+                              disabled={savingStudent}
+                              onClick={() => handleDeleteCustomStudent(cs.id, cs.name)}
+                              className="rounded bg-red-600 px-1.5 py-0.5 text-[10px] font-semibold text-white hover:bg-red-700"
+                            >
+                              Yakin Hapus
+                            </button>
+                            <button
+                              type="button"
+                              disabled={savingStudent}
+                              onClick={() => setConfirmDeleteStudentId(null)}
+                              className="rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-600 hover:bg-slate-50"
+                            >
+                              Batal
+                            </button>
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={savingStudent}
+                            onClick={() => setConfirmDeleteStudentId(cs.id)}
+                            aria-label={`Hapus siswa tambahan ${cs.name}`}
+                            className="ml-0.5 text-slate-400 hover:text-red-600"
+                          >
+                            <Trash2 className="h-3 w-3" aria-hidden="true" />
+                          </button>
+                        )}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
-          <div>
-            <p className="text-xs text-slate-500">Teguran Lisan (15–25 Poin)</p>
-            <p className="font-mono-num mt-1 text-2xl font-bold text-amber-700">
-              {verbalWarningCount}
+        )}
+
+        <div className="mt-6 grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 sm:grid-cols-3">
+          <div className="card-3d-interactive rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5">
+            <p className="text-xs text-slate-500">Total Pelanggaran Terekam</p>
+            <p className="mt-1 text-2xl font-bold text-slate-900">
+              <AnimatedNumber value={totalIncidents} />
             </p>
           </div>
-          <div>
+          <div className="card-3d-interactive rounded-xl border border-amber-200/70 bg-amber-50/40 p-3.5">
+            <p className="text-xs text-slate-500">Teguran Lisan (15–25 Poin)</p>
+            <p className="mt-1 text-2xl font-bold text-amber-700">
+              <AnimatedNumber value={verbalWarningCount} />
+            </p>
+          </div>
+          <div className="card-3d-interactive rounded-xl border border-red-200/70 bg-red-50/35 p-3.5">
             <p className="text-xs text-slate-500">Surat Pernyataan / Panggilan Ortu (≥ 26 Poin)</p>
-            <p className="font-mono-num mt-1 text-2xl font-bold text-red-700">
-              {needLetterCount}
+            <p className="mt-1 text-2xl font-bold text-red-700">
+              <AnimatedNumber value={needLetterCount} />
             </p>
           </div>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
+      <section className="surface-3d animate-stagger-2 rounded-2xl border border-slate-200/90 bg-white">
         <div className="flex flex-col gap-3 border-b border-slate-200 p-4 lg:flex-row lg:items-center lg:justify-between sm:p-5">
           <div className="relative w-full lg:w-72">
             <Search

@@ -1,30 +1,37 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Clock,
   Download,
   Eye,
   FileSpreadsheet,
   FileText,
   HelpCircle,
   Lock,
+  Pencil,
   Plus,
   RotateCcw,
+  Save,
   Search,
   SlidersHorizontal,
   Trash2,
-  UserCheck,
   Users,
+  WifiOff,
+  X,
 } from 'lucide-react';
 import { apiFetch } from '../lib/apiClient';
 import {
   AKPS_CATEGORIES,
+  DEFAULT_DAILY_SESSION_CONFIG,
   SCHOOL_IDENTITY,
   calculateDailyOfficerProductivity,
   calculateStudentSummaries,
+  canModifyViolationRow,
   formatIndonesianDateLabel,
+  getAutoSessionWindowStatus,
   getConsensusProgress,
   getScheduleStatus,
   getTingkatPembinaan,
@@ -38,15 +45,19 @@ import type {
   PublicAppState,
   PublicOfficer,
   StudentRecord,
+  ViolationEntry,
 } from '../shared/types';
 import { downloadSpreadsheetCsv, downloadSpreadsheetXlsx } from '../utils/exportSpreadsheet';
 import { downloadVisualPdfReport } from '../utils/exportVisualPdf';
+import { AnimatedNumber } from './AnimatedNumber';
 import { CuteMascot3D, type MascotMood } from './CuteMascot3D';
+import { Tilt3DCard } from './Tilt3DCard';
 import { VisualReportModal } from './VisualReportModal';
 
 interface SpreadsheetWorkspaceProps {
   officer: PublicOfficer;
   appState: PublicAppState;
+  connectionOffline?: boolean;
   onStateUpdate: (nextState: PublicAppState) => void;
   onNotify: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
@@ -54,10 +65,25 @@ interface SpreadsheetWorkspaceProps {
 export function SpreadsheetWorkspace({
   officer,
   appState,
+  connectionOffline = false,
   onStateUpdate,
   onNotify,
 }: SpreadsheetWorkspaceProps) {
-  const now = new Date();
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setNowTick(Date.now());
+    }, 30000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  const now = new Date(nowTick);
+  const dailySession = appState.dailySession ?? DEFAULT_DAILY_SESSION_CONFIG;
+  const autoWindow = getAutoSessionWindowStatus(
+    dailySession,
+    now,
+    appState.simulation
+  );
   const scheduleStatus = getScheduleStatus(
     officer,
     now,
@@ -95,6 +121,7 @@ export function SpreadsheetWorkspace({
   const [studentName, setStudentName] = useState('');
   const [studentNis, setStudentNis] = useState('');
   const [kelas, setKelas] = useState('');
+  const [saveToStudentDirectory, setSaveToStudentDirectory] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<KategoriPelanggaran | 'CUSTOM' | ''>('');
   const [selectedPresetId, setSelectedPresetId] = useState('');
   const [violationCode, setViolationCode] = useState('');
@@ -106,6 +133,18 @@ export function SpreadsheetWorkspace({
   const [showStudentDropdown, setShowStudentDropdown] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+
+  // Inline row editing state
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
+  const [editStudentName, setEditStudentName] = useState('');
+  const [editStudentNis, setEditStudentNis] = useState('');
+  const [editKelas, setEditKelas] = useState('');
+  const [editViolationCode, setEditViolationCode] = useState('');
+  const [editViolationLabel, setEditViolationLabel] = useState('');
+  const [editCategory, setEditCategory] = useState<KategoriPelanggaran>('A. Kedisiplinan & Kehadiran');
+  const [editPoints, setEditPoints] = useState<number>(5);
+  const [editActionTaken, setEditActionTaken] = useState('');
+  const [editNotes, setEditNotes] = useState('');
 
   // Grid filter & grouping view state
   const [searchQuery, setSearchQuery] = useState('');
@@ -124,11 +163,18 @@ export function SpreadsheetWorkspace({
     [appState.students, studentName]
   );
 
+  const isNewManualStudent = useMemo(() => {
+    const q = studentName.trim().toLowerCase();
+    if (!q || selectedStudentId) return false;
+    return !appState.students.some((s) => s.name.trim().toLowerCase() === q);
+  }, [appState.students, studentName, selectedStudentId]);
+
   function handleSelectStudent(stu: StudentRecord) {
     setStudentName(stu.name);
     setKelas(stu.kelas);
     setStudentNis(stu.nis && stu.nis !== '-' ? stu.nis : '');
     setSelectedStudentId(stu.id);
+    setSaveToStudentDirectory(false);
     setShowStudentDropdown(false);
     setHighlightedIndex(0);
   }
@@ -166,15 +212,14 @@ export function SpreadsheetWorkspace({
   );
 
   const isSheetFinalized = todaySheet?.status === 'FINALIZED';
-  const canRecordNow = scheduleStatus.allowed && !isSheetFinalized;
-  const isOfficerActiveInSheet = todaySheet?.activeOfficers.includes(officer.id) ?? false;
-  const isOfficerFinished = todaySheet?.finishedOfficers.includes(officer.id) ?? false;
+  const isSheetActive = Boolean(todaySheet && todaySheet.status === 'ACTIVE');
+  const canRecordNow = scheduleStatus.allowed && isSheetActive;
 
   const mascotMood: MascotMood = !scheduleStatus.allowed
     ? 'locked'
     : isSheetFinalized
       ? 'celebrate'
-      : todaySheet
+      : isSheetActive
         ? 'recording'
         : 'idle';
 
@@ -254,32 +299,6 @@ export function SpreadsheetWorkspace({
     }
   }
 
-  async function handleStartSession() {
-    setSubmitting(true);
-    try {
-      const res = await apiFetch('/api/spreadsheets/start', {
-        method: 'POST',
-        body: JSON.stringify({}),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        onNotify(data.error || 'Gagal memulai sesi piket.', 'error');
-        return;
-      }
-      onStateUpdate(data.state);
-      setMascotPulse((c) => c + 1);
-      onNotify(
-        data.created
-          ? 'Spreadsheet piket hari ini berhasil dibuat otomatis!'
-          : 'Anda telah bergabung ke sesi spreadsheet piket hari ini.',
-        'success'
-      );
-    } catch {
-      onNotify('Terjadi kesalahan jaringan saat memulai sesi.', 'error');
-    } finally {
-      setSubmitting(false);
-    }
-  }
 
   async function handleAddViolation(e: FormEvent) {
     e.preventDefault();
@@ -302,6 +321,7 @@ export function SpreadsheetWorkspace({
           points,
           actionTaken,
           notes,
+          saveToStudentDirectory: isNewManualStudent && saveToStudentDirectory,
         }),
       });
       const data = await res.json();
@@ -322,6 +342,7 @@ export function SpreadsheetWorkspace({
       setStudentNis('');
       setKelas('');
       setSelectedStudentId(null);
+      setSaveToStudentDirectory(false);
       setSelectedCategory('');
       setSelectedPresetId('');
       setViolationCode('');
@@ -338,6 +359,53 @@ export function SpreadsheetWorkspace({
       );
     } catch {
       onNotify('Tidak dapat menyimpan catatan ke server.', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function startEditRow(row: ViolationEntry) {
+    setConfirmDeleteId(null);
+    setEditingRowId(row.id);
+    setEditStudentName(row.studentName);
+    setEditStudentNis(row.studentNis === '-' ? '' : row.studentNis);
+    setEditKelas(row.kelas);
+    setEditViolationCode(row.violationCode || 'CUSTOM');
+    setEditViolationLabel(row.violationLabel);
+    setEditCategory(row.category);
+    setEditPoints(row.points);
+    setEditActionTaken(row.actionTaken);
+    setEditNotes(row.notes || '');
+  }
+
+  async function handleSaveEditRow(rowId: string) {
+    if (!todaySheet || !canRecordNow) return;
+    setSubmitting(true);
+    try {
+      const res = await apiFetch(`/api/violations/${todaySheet.id}/${rowId}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          studentName: editStudentName,
+          studentNis: editStudentNis,
+          kelas: editKelas,
+          violationCode: editViolationCode,
+          violationLabel: editViolationLabel,
+          category: editCategory,
+          points: Number(editPoints),
+          actionTaken: editActionTaken,
+          notes: editNotes,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        onNotify(data.error || 'Gagal memperbarui catatan pelanggaran.', 'error');
+        return;
+      }
+      onStateUpdate(data.state);
+      setEditingRowId(null);
+      onNotify('Catatan pelanggaran berhasil diperbarui.', 'success');
+    } catch {
+      onNotify('Gagal terhubung ke server.', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -365,36 +433,24 @@ export function SpreadsheetWorkspace({
     }
   }
 
-  async function handleToggleFinish(finished: boolean) {
+  async function handleCloseByCoordinator() {
     if (!todaySheet) return;
     setSubmitting(true);
     try {
-      const res = await apiFetch(`/api/spreadsheets/${todaySheet.id}/finish`, {
+      const res = await apiFetch(`/api/spreadsheets/${todaySheet.id}/close`, {
         method: 'POST',
-        body: JSON.stringify({ finished }),
+        body: JSON.stringify({}),
       });
       const data = await res.json();
       if (!res.ok) {
-        onNotify(data.error || 'Gagal memperbarui status selesai.', 'error');
+        onNotify(data.error || 'Gagal menutup spreadsheet.', 'error');
         return;
       }
       onStateUpdate(data.state);
       setMascotPulse((c) => c + 1);
-      if (data.spreadsheet.status === 'FINALIZED') {
-        onNotify(
-          'Semua petugas aktif telah menekan Selesai! Data tersimpan final & ekspor terbuka.',
-          'success'
-        );
-      } else if (finished) {
-        onNotify(
-          'Status Anda ditandai Selesai. Menunggu petugas aktif lainnya menekan Selesai.',
-          'info'
-        );
-      } else {
-        onNotify('Status Selesai dibatalkan. Anda dapat melanjutkan pencatatan.', 'info');
-      }
+      onNotify('Spreadsheet ditutup & difinalkan kembali. Laporan siap diunduh.', 'success');
     } catch {
-      onNotify('Gagal memperbarui status sesi.', 'error');
+      onNotify('Gagal terhubung ke server.', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -455,7 +511,7 @@ export function SpreadsheetWorkspace({
   return (
     <div className="space-y-6">
       {/* Header Summary Strip + Cute 3D Companion */}
-      <section className="grid grid-cols-1 items-stretch gap-5 rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:gap-6 sm:p-6 lg:grid-cols-12">
+      <section className="surface-3d animate-stagger-1 grid grid-cols-1 items-stretch gap-5 rounded-2xl border border-slate-200/90 bg-white p-4 sm:gap-6 sm:p-6 lg:grid-cols-12">
         <div className="flex flex-col justify-between lg:col-span-8">
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -501,54 +557,67 @@ export function SpreadsheetWorkspace({
                 <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
                   {!scheduleStatus.allowed
                     ? `Mode Lihat Saja (${officer.name}): ${scheduleStatus.reason}`
-                    : !todaySheet
-                      ? 'Langsung isi formulir di bawah untuk mulai mencatat siswa — lembar hari ini akan terbuka otomatis.'
-                      : isSheetFinalized
-                        ? 'Semua petugas piket hari ini sudah menekan Selesai. Laporan Excel per kelas & PDF siap diunduh.'
-                        : 'Catat siswa yang melanggar di formulir kiri. Jika jam piket sudah berakhir, tekan tombol hijau Tandai Selesai.'}
+                    : autoWindow.phase === 'NON_ACTIVE_DAY'
+                      ? `Hari ${autoWindow.hari} bukan jadwal aktif pembuatan spreadsheet otomatis.`
+                      : !todaySheet && autoWindow.phase === 'BEFORE_START'
+                        ? `Spreadsheet hari ini akan dibuat otomatis pada pukul ${autoWindow.startTime} WIB (${autoWindow.minutesUntilStart} menit lagi).`
+                        : todaySheet?.reopenedManually && isSheetActive
+                          ? 'Spreadsheet sedang dibuka kembali sementara untuk revisi oleh Admin / Developer.'
+                          : isSheetFinalized
+                            ? `Spreadsheet hari ini telah tertutup otomatis pada pukul ${autoWindow.endTime} WIB. Laporan Excel per kelas & PDF siap diunduh.`
+                            : `Spreadsheet aktif otomatis dan akan tertutup pada pukul ${autoWindow.endTime} WIB (${autoWindow.minutesUntilClose} menit tersisa).`}
                 </p>
               </div>
 
-              {!todaySheet && scheduleStatus.allowed && (
-                <button
-                  type="button"
-                  disabled={submitting}
-                  onClick={handleStartSession}
-                  className="btn-3d-primary inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700 whitespace-nowrap shrink-0 disabled:opacity-60"
-                >
-                  <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
-                  <span>Buat Spreadsheet Hari Ini</span>
-                </button>
-              )}
+              <div
+                className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold whitespace-nowrap shrink-0 ${
+                  isSheetFinalized
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    : isSheetActive
+                      ? 'border-blue-200 bg-blue-50 text-blue-700'
+                      : autoWindow.phase === 'BEFORE_START'
+                        ? 'border-slate-200 bg-slate-50 text-slate-700'
+                        : 'border-amber-200 bg-amber-50 text-amber-800'
+                }`}
+              >
+                <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>
+                  {isSheetFinalized
+                    ? `Tutup Otomatis (${autoWindow.endTime} WIB)`
+                    : todaySheet?.reopenedManually
+                      ? 'Mode Revisi Aktif'
+                      : isSheetActive
+                        ? `Aktif · Tutup ${autoWindow.endTime} WIB`
+                        : autoWindow.phase === 'BEFORE_START'
+                          ? `Buka Otomatis ${autoWindow.startTime} WIB`
+                          : 'Hari Tidak Aktif'}
+                </span>
+              </div>
             </div>
 
             {/* Interactive 3-step duty orientation */}
             <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-slate-500">
-              <span className="font-semibold text-slate-700">Alur bertugas:</span>
+              <span className="font-semibold text-slate-700">Alur otomatis:</span>
+              <span
+                className={`rounded-md px-1.5 py-0.5 ${
+                  todaySheet ? 'font-medium text-emerald-700' : 'font-semibold text-blue-700'
+                }`}
+              >
+                1. Buka otomatis ({autoWindow.startTime})
+              </span>
+              <span aria-hidden="true">→</span>
               <button
                 type="button"
                 onClick={() => document.getElementById('student-name')?.focus()}
                 className={`rounded-md px-1.5 py-0.5 transition-colors hover:bg-blue-50 ${
-                  !isSheetFinalized ? 'font-semibold text-blue-700' : 'text-emerald-700 font-medium'
-                }`}
-              >
-                1. Catat siswa
-              </button>
-              <span aria-hidden="true">→</span>
-              <button
-                type="button"
-                onClick={() =>
-                  document.getElementById('consensus-export-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                }
-                className={`rounded-md px-1.5 py-0.5 transition-colors hover:bg-blue-50 ${
-                  todaySheet && !isSheetFinalized
+                  isSheetActive
                     ? 'font-semibold text-blue-700'
                     : isSheetFinalized
-                      ? 'text-emerald-700 font-medium'
+                      ? 'font-medium text-emerald-700'
                       : 'hover:text-slate-800'
                 }`}
               >
-                2. Semua petugas tekan Selesai
+                2. Catat siswa melanggar
               </button>
               <span aria-hidden="true">→</span>
               <button
@@ -560,28 +629,28 @@ export function SpreadsheetWorkspace({
                   consensus.exportUnlocked ? 'font-semibold text-emerald-700' : 'hover:text-slate-800'
                 }`}
               >
-                3. Unduh Excel &amp; PDF
+                3. Tutup otomatis ({autoWindow.endTime}) &amp; Unduh
               </button>
             </div>
 
             {showGuide && (
               <div className="mt-4 grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 text-xs text-slate-700 sm:grid-cols-3">
                 <div>
-                  <p className="font-semibold text-slate-900">1. Cari &amp; Pilih Siswa</p>
+                  <p className="font-semibold text-slate-900">1. Buka Otomatis di Jam Mulai</p>
                   <p className="mt-0.5 leading-relaxed text-slate-600">
-                    Ketik beberapa huruf nama siswa lalu klik dari daftar — kelas langsung terisi otomatis.
+                    Spreadsheet hari ini otomatis dibuat pukul {autoWindow.startTime} WIB tanpa perlu menekan tombol buat manual.
                   </p>
                 </div>
                 <div>
-                  <p className="font-semibold text-slate-900">2. Pilih Kategori &amp; Aturan</p>
+                  <p className="font-semibold text-slate-900">2. Cari Siswa &amp; Pilih AKPS</p>
                   <p className="mt-0.5 leading-relaxed text-slate-600">
-                    Klik tombol cepat atau pilih kategori (A–F) dulu lalu pilih aturan yang muncul, kemudian simpan.
+                    Ketik beberapa huruf nama siswa agar kelas terisi otomatis, lalu pilih kategori (A–F) dan simpan.
                   </p>
                 </div>
                 <div>
-                  <p className="font-semibold text-slate-900">3. Klik Selesai &amp; Unduh</p>
+                  <p className="font-semibold text-slate-900">3. Tutup Otomatis &amp; Unduh</p>
                   <p className="mt-0.5 leading-relaxed text-slate-600">
-                    Saat piket berakhir, semua petugas wajib menekan Selesai agar Excel per kelas &amp; PDF terbuka.
+                    Saat pukul {autoWindow.endTime} WIB, spreadsheet tertutup &amp; final otomatis sehingga Excel per kelas dan PDF terbuka.
                   </p>
                 </div>
               </div>
@@ -595,7 +664,7 @@ export function SpreadsheetWorkspace({
                 className={`mt-1 flex items-center gap-1.5 text-sm font-semibold ${
                   isSheetFinalized
                     ? 'text-emerald-700'
-                    : todaySheet
+                    : isSheetActive
                       ? 'text-blue-700'
                       : 'text-slate-700'
                 }`}
@@ -603,44 +672,55 @@ export function SpreadsheetWorkspace({
                 {isSheetFinalized ? (
                   <>
                     <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span>Tersimpan &amp; Final</span>
+                    <span>Ditutup &amp; Final</span>
                   </>
-                ) : todaySheet ? (
+                ) : todaySheet?.reopenedManually ? (
+                  <>
+                    <FileSpreadsheet className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span>Mode Revisi</span>
+                  </>
+                ) : isSheetActive ? (
                   <>
                     <FileSpreadsheet className="h-4 w-4 shrink-0" aria-hidden="true" />
                     <span>Aktif Mencatat</span>
                   </>
+                ) : autoWindow.phase === 'NON_ACTIVE_DAY' ? (
+                  <span>Hari Tidak Aktif</span>
                 ) : (
-                  <span>Siap Dimulai</span>
+                  <span>Menunggu {autoWindow.startTime} WIB</span>
                 )}
               </p>
             </div>
 
             <div>
               <p className="text-xs text-slate-500">Pelanggaran Tercatat</p>
-              <p className="font-mono-num mt-1 text-xl font-bold text-slate-900">
-                {todaySheet ? todaySheet.rows.length : 0}
+              <p className="mt-1 text-xl font-bold text-slate-900">
+                <AnimatedNumber value={todaySheet ? todaySheet.rows.length : 0} />
               </p>
             </div>
 
             <div>
               <p className="text-xs text-slate-500">Total Poin Hari Ini</p>
-              <p className="font-mono-num mt-1 text-xl font-bold text-slate-900">
-                {totalPointsToday}
+              <p className="mt-1 text-xl font-bold text-slate-900">
+                <AnimatedNumber value={totalPointsToday} />
               </p>
             </div>
 
             <div>
-              <p className="text-xs text-slate-500">Petugas Selesai</p>
-              <p className="font-mono-num mt-1 text-xl font-bold text-slate-900">
-                {consensus.finishedCount}/{consensus.activeCount}
+              <p className="text-xs text-slate-500">Jadwal Otomatis</p>
+              <p className="font-mono-num mt-1 text-base font-bold text-slate-900 sm:text-lg">
+                {autoWindow.startTime} – {autoWindow.endTime}
               </p>
             </div>
           </div>
         </div>
 
         {/* Cute 3D Companion Corner */}
-        <div className="flex flex-col justify-center rounded-xl border border-sky-100/90 bg-gradient-to-b from-sky-50/75 via-white to-slate-50/60 p-3 lg:col-span-4">
+        <Tilt3DCard
+          maxTiltDeg={5}
+          scaleOnHover={1.012}
+          className="flex flex-col justify-center rounded-xl border border-sky-100/90 bg-gradient-to-b from-sky-50/75 via-white to-slate-50/60 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] lg:col-span-4"
+        >
           <CuteMascot3D
             mood={mascotMood}
             compact
@@ -648,16 +728,18 @@ export function SpreadsheetWorkspace({
             caption={
               !scheduleStatus.allowed
                 ? 'Piko sedang istirahat — di luar jadwal piket Anda.'
-                : !todaySheet
-                  ? 'Klik Piko! Siap menemani piket pagi hari ini.'
-                  : undefined
+                : !todaySheet && autoWindow.phase === 'BEFORE_START'
+                  ? `Piko menunggu jam buka otomatis (${autoWindow.startTime} WIB).`
+                  : !todaySheet
+                    ? 'Piko sedang istirahat — hari ini tidak ada sesi piket.'
+                    : undefined
             }
           />
-        </div>
+        </Tilt3DCard>
       </section>
 
-      {/* Schedule Lock Notice */}
-      {!scheduleStatus.allowed && (
+      {/* Schedule or Auto-Window Lock Notice */}
+      {!scheduleStatus.allowed ? (
         <section
           role="status"
           className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50/75 p-5 sm:flex-row sm:items-center sm:justify-between"
@@ -680,21 +762,46 @@ export function SpreadsheetWorkspace({
             </div>
           </div>
         </section>
-      )}
+      ) : !todaySheet ? (
+        <section
+          role="status"
+          className="flex flex-col gap-3 rounded-2xl border border-blue-200 bg-blue-50/70 p-5 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div className="flex items-start gap-3">
+            <Clock className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" aria-hidden="true" />
+            <div>
+              <h2 className="font-display text-base font-semibold text-blue-950">
+                {autoWindow.phase === 'BEFORE_START'
+                  ? `Menunggu Jam Buka Otomatis (${autoWindow.startTime} WIB)`
+                  : `Hari ${autoWindow.hari} Tidak Dijadwalkan`}
+              </h2>
+              <p className="mt-0.5 text-sm text-blue-900">
+                {autoWindow.phase === 'BEFORE_START'
+                  ? `Spreadsheet hari ini belum dibuat dan akan terbuka secara otomatis pukul ${autoWindow.startTime} WIB (${autoWindow.minutesUntilStart} menit lagi), lalu ditutup otomatis pukul ${autoWindow.endTime} WIB.`
+                  : `Pembuatan spreadsheet otomatis tidak dijadwalkan untuk hari ${autoWindow.hari}. Pengaturan hari aktif dan jam otomatis dapat diubah oleh Admin/Developer di menu Jadwal & Aturan.`}
+              </p>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {/* Main Split Workspace */}
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
         {/* Form Pencatatan AKPS */}
-        <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-6 lg:col-span-7">
+        <section className="surface-3d animate-stagger-2 rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-6 lg:col-span-7">
           <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
               <h2 className="font-display text-lg font-bold text-slate-900">
                 Catat Pelanggaran Siswa
               </h2>
               <p className="text-xs text-slate-500">
-                {todaySheet
+                {isSheetActive
                   ? 'Isi nama siswa lalu pilih kategori pelanggaran sesuai buku AKPS.'
-                  : 'Mencatat siswa pertama akan otomatis membuka spreadsheet hari ini.'}
+                  : isSheetFinalized
+                    ? `Spreadsheet sudah ditutup otomatis pada pukul ${autoWindow.endTime} WIB.`
+                    : autoWindow.phase === 'BEFORE_START'
+                      ? `Formulir akan aktif otomatis saat spreadsheet dibuka pukul ${autoWindow.startTime} WIB.`
+                      : 'Spreadsheet otomatis sedang tidak aktif hari ini.'}
               </p>
             </div>
             {isSheetFinalized && (
@@ -895,6 +1002,20 @@ export function SpreadsheetWorkspace({
               </div>
             </div>
 
+            {isNewManualStudent && canRecordNow && (
+              <label className="flex items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-2.5 text-xs text-slate-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={saveToStudentDirectory}
+                  onChange={(e) => setSaveToStudentDirectory(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600"
+                />
+                <span>
+                  Nama <strong>{studentName.trim()}</strong> belum ada di daftar {appState.students.length} siswa resmi. Centang jika ini <strong>siswa baru/pindahan</strong> agar disimpan permanen ke direktori sekolah.
+                </span>
+              </label>
+            )}
+
             {matchedStudentSummary && (
               <div
                 className={`flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-xs ${
@@ -941,7 +1062,7 @@ export function SpreadsheetWorkspace({
                         type="button"
                         disabled={!canRecordNow || submitting}
                         onClick={() => handlePresetChange(qp.id)}
-                        className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors whitespace-nowrap disabled:opacity-50 ${
+                        className={`card-3d-interactive rounded-lg border px-2.5 py-1.5 text-xs font-medium whitespace-nowrap disabled:opacity-50 ${
                           isPicked
                             ? 'border-blue-600 bg-blue-600 text-white'
                             : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
@@ -998,9 +1119,9 @@ export function SpreadsheetWorkspace({
                         title={cat}
                         disabled={!canRecordNow || submitting}
                         onClick={() => handleCategoryChange(cat)}
-                        className={`group rounded-xl border px-3 py-2 text-left transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${
+                        className={`card-3d-interactive group rounded-xl border px-3 py-2 text-left disabled:cursor-not-allowed disabled:opacity-50 ${
                           isActive
-                            ? 'border-blue-600 bg-blue-50/90 text-blue-950 shadow-xs'
+                            ? 'border-blue-600 bg-blue-50/95 text-blue-950 ring-2 ring-blue-600/15'
                             : 'border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-slate-50'
                         }`}
                       >
@@ -1026,9 +1147,9 @@ export function SpreadsheetWorkspace({
                     type="button"
                     disabled={!canRecordNow || submitting}
                     onClick={() => handleCategoryChange('CUSTOM')}
-                    className={`rounded-xl border px-3 py-2 text-left transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${
+                    className={`card-3d-interactive rounded-xl border px-3 py-2 text-left disabled:cursor-not-allowed disabled:opacity-50 ${
                       selectedCategory === 'CUSTOM'
-                        ? 'border-blue-600 bg-blue-50/90 text-blue-950 shadow-xs'
+                        ? 'border-blue-600 bg-blue-50/95 text-blue-950 ring-2 ring-blue-600/15'
                         : 'border-dashed border-slate-300 bg-slate-50/60 text-slate-700 hover:border-blue-300 hover:bg-slate-50'
                     }`}
                   >
@@ -1245,21 +1366,43 @@ export function SpreadsheetWorkspace({
               />
             </div>
 
+            {connectionOffline && canRecordNow && (
+              <div
+                role="alert"
+                className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs text-red-900"
+              >
+                <WifiOff className="mt-0.5 h-4 w-4 shrink-0 text-red-600" aria-hidden="true" />
+                <span>
+                  <strong>Koneksi sedang terputus.</strong> Jangan tekan simpan dulu agar catatan tidak gagal terkirim. Data yang sudah Anda ketik di formulir tetap aman menunggu koneksi kembali.
+                </span>
+              </div>
+            )}
+
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={!canRecordNow || submitting}
+                disabled={!canRecordNow || submitting || connectionOffline}
                 className="btn-3d-primary inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
               >
-                <Plus className="h-4 w-4" aria-hidden="true" />
+                {connectionOffline ? (
+                  <WifiOff className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                )}
                 <span>
-                  {submitting
-                    ? 'Menyimpan...'
-                    : !scheduleStatus.allowed
-                      ? 'Terkunci (Di Luar Jadwal Piket)'
-                      : isSheetFinalized
-                        ? 'Spreadsheet Sudah Disimpan Final'
-                        : 'Simpan ke Spreadsheet Hari Ini'}
+                  {connectionOffline
+                    ? 'Koneksi Terputus — Menunggu Tersambung...'
+                    : submitting
+                      ? 'Menyimpan...'
+                      : !scheduleStatus.allowed
+                        ? 'Terkunci (Di Luar Jadwal Piket)'
+                        : isSheetFinalized
+                          ? 'Spreadsheet Sudah Ditutup Final'
+                          : !todaySheet && autoWindow.phase === 'BEFORE_START'
+                            ? `Menunggu Jam Buka (${autoWindow.startTime} WIB)`
+                            : !todaySheet
+                              ? 'Spreadsheet Tidak Aktif Hari Ini'
+                              : 'Simpan ke Spreadsheet Hari Ini'}
                 </span>
               </button>
             </div>
@@ -1272,7 +1415,7 @@ export function SpreadsheetWorkspace({
           <section
             id="daily-productivity-card"
             aria-label="Ringkasan Produktivitas Piket Hari Ini"
-            className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-6"
+            className="surface-3d animate-stagger-3 rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-6"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -1287,9 +1430,9 @@ export function SpreadsheetWorkspace({
                 <p className="text-[11px] font-medium text-slate-500">Total Hari Ini</p>
                 <p
                   id="daily-total-violations"
-                  className="font-mono-num text-3xl font-bold tracking-tight text-slate-900"
+                  className="text-3xl font-bold tracking-tight text-slate-900"
                 >
-                  {dailyProductivity.totalViolations}
+                  <AnimatedNumber value={dailyProductivity.totalViolations} />
                 </p>
               </div>
             </div>
@@ -1339,7 +1482,7 @@ export function SpreadsheetWorkspace({
                               {isSelf ? ' (Anda)' : ''}
                             </p>
                             <p className="truncate text-xs text-slate-500">
-                              {item.division} · {item.isFinished ? 'Selesai' : 'Aktif'}
+                              {item.division} · {isSheetFinalized ? 'Selesai' : 'Aktif'}
                             </p>
                           </div>
                           <p className="font-mono-num shrink-0 text-xs font-semibold text-slate-800">
@@ -1348,8 +1491,8 @@ export function SpreadsheetWorkspace({
                         </div>
                         <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
                           <div
-                            className={`h-full transition-all duration-300 ${
-                              item.isFinished ? 'bg-emerald-600' : 'bg-blue-600'
+                            className={`animate-bar-grow h-full transition-all duration-300 ${
+                              isSheetFinalized ? 'bg-emerald-600' : 'bg-blue-600'
                             }`}
                             style={{ width: `${item.percentage}%` }}
                           />
@@ -1362,145 +1505,138 @@ export function SpreadsheetWorkspace({
             </div>
           </section>
 
-          {/* Panel Konsensus Selesai & Ekspor */}
+          {/* Panel Jadwal Otomatis Sesi & Ekspor */}
           <section
             id="consensus-export-card"
-            className="flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-6"
+            className="surface-3d animate-stagger-3 flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-6"
           >
             <div>
               <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
                 <div>
                   <h2 className="font-display text-lg font-bold text-slate-900">
-                    Selesaikan Tugas &amp; Unduh
+                    Status Sesi &amp; Unduh Laporan
                   </h2>
                   <p className="text-xs text-slate-500">
-                    Semua petugas aktif wajib menekan Selesai sebelum Excel &amp; PDF dibuka.
+                    Spreadsheet buka otomatis pukul {autoWindow.startTime} WIB dan tutup otomatis pukul {autoWindow.endTime} WIB.
                   </p>
                 </div>
                 <Users className="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
               </div>
 
               {!todaySheet ? (
-                <div className="mt-4 py-4 text-center">
-                  <p className="text-sm font-medium text-slate-700">
-                    Belum ada petugas aktif hari ini
+                <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/70 p-4 text-center">
+                  <p className="text-sm font-semibold text-slate-800">
+                    {autoWindow.phase === 'BEFORE_START'
+                      ? `Spreadsheet Dibuka Otomatis Pukul ${autoWindow.startTime} WIB`
+                      : `Hari ${autoWindow.hari} Tidak Ada Sesi Piket`}
                   </p>
                   <p className="mt-1 text-xs text-slate-500">
-                    Daftar petugas aktif dan tombol Selesai muncul otomatis saat sesi dimulai.
+                    {autoWindow.phase === 'BEFORE_START'
+                      ? `Tersisa sekitar ${autoWindow.minutesUntilStart} menit lagi sebelum spreadsheet dibuat otomatis.`
+                      : 'Aktifkan hari ini di menu Jadwal & Aturan jika ingin menjadwalkan sesi otomatis.'}
                   </p>
                 </div>
               ) : (
                 <div className="mt-4 space-y-4">
-                  <div>
-                    <div className="flex items-center justify-between text-xs font-medium text-slate-600">
-                      <span>Progres Konfirmasi Selesai</span>
-                      <span className="font-mono-num font-semibold text-slate-900">
-                        {consensus.finishedCount} dari {consensus.activeCount} petugas selesai
+                  <div
+                    className={`rounded-xl border p-3.5 text-xs ${
+                      isSheetFinalized
+                        ? 'border-emerald-200 bg-emerald-50/70 text-emerald-900'
+                        : todaySheet.reopenedManually
+                          ? 'border-amber-200 bg-amber-50/70 text-amber-900'
+                          : 'border-blue-200 bg-blue-50/70 text-blue-900'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2 font-semibold">
+                      <span>
+                        {isSheetFinalized
+                          ? 'Spreadsheet Ditutup & Final Otomatis'
+                          : todaySheet.reopenedManually
+                            ? 'Spreadsheet Dibuka Kembali untuk Revisi'
+                            : 'Spreadsheet Sedang Aktif Otomatis'}
+                      </span>
+                      <span className="font-mono-num">
+                        {autoWindow.startTime} – {autoWindow.endTime}
                       </span>
                     </div>
-                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                      <div
-                        className={`h-full transition-all duration-300 ${
-                          consensus.allFinished ? 'bg-emerald-600' : 'bg-blue-600'
-                        }`}
-                        style={{
-                          width:
-                            consensus.activeCount > 0
-                              ? `${(consensus.finishedCount / consensus.activeCount) * 100}%`
-                              : '0%',
-                        }}
-                      />
+                    <p className="mt-1 leading-relaxed opacity-90">
+                      {isSheetFinalized
+                        ? `Sesi telah ditutup pada jam selesai (${autoWindow.endTime} WIB). Seluruh file unduhan laporan sekarang terbuka.`
+                        : todaySheet.reopenedManually
+                          ? 'Sesi dibuka sementara oleh Admin/Developer. Klik Tutup & Finalkan Kembali setelah revisi selesai.'
+                          : `Spreadsheet akan otomatis selesai dan terkunci pada pukul ${autoWindow.endTime} WIB (${autoWindow.minutesUntilClose} menit lagi).`}
+                    </p>
+                  </div>
+
+                  {todaySheet.activeOfficers.length > 0 && (
+                    <ul className="divide-y divide-slate-100 border-t border-slate-100">
+                      {todaySheet.activeOfficers.map((id) => {
+                        const activeOff = officerMap.get(id);
+                        const isSelf = id === officer.id;
+                        return (
+                          <li
+                            key={id}
+                            className="flex items-center justify-between gap-3 py-2.5"
+                          >
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold text-slate-900">
+                                {activeOff?.name ?? id}
+                                {isSelf ? ' (Anda)' : ''}
+                              </p>
+                              <p className="truncate text-xs text-slate-500">
+                                {activeOff?.division ?? 'Petugas Piket'}
+                              </p>
+                            </div>
+                            <span
+                              className={`inline-flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap shrink-0 ${
+                                isSheetFinalized ? 'text-emerald-700' : 'text-blue-700'
+                              }`}
+                            >
+                              {isSheetFinalized ? (
+                                <>
+                                  <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                                  <span>Selesai</span>
+                                </>
+                              ) : (
+                                <span>Aktif Mencatat</span>
+                              )}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+
+                  {isManagerRole(officer.role) && (
+                    <div className="space-y-2 pt-1">
+                      {isSheetFinalized ? (
+                        <button
+                          key="reopen-sheet-btn"
+                          type="button"
+                          disabled={submitting}
+                          onClick={handleReopenByCoordinator}
+                          className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                          <span>Buka Kembali untuk Revisi (Admin / Developer)</span>
+                        </button>
+                      ) : todaySheet.reopenedManually || autoWindow.phase === 'CLOSED' ? (
+                        <button
+                          key="close-sheet-btn"
+                          type="button"
+                          disabled={submitting}
+                          onClick={handleCloseByCoordinator}
+                          className="btn-3d-success flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                        >
+                          <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                          <span>Tutup &amp; Finalkan Kembali</span>
+                        </button>
+                      ) : null}
                     </div>
-                  </div>
-
-                  <ul className="divide-y divide-slate-100 border-t border-slate-100">
-                    {todaySheet.activeOfficers.map((id) => {
-                      const activeOff = officerMap.get(id);
-                      const done = todaySheet.finishedOfficers.includes(id);
-                      const isSelf = id === officer.id;
-                      return (
-                        <li
-                          key={id}
-                          className="flex items-center justify-between gap-3 py-2.5"
-                        >
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-slate-900">
-                            {activeOff?.name ?? id}
-                            {isSelf ? ' (Anda)' : ''}
-                          </p>
-                          <p className="truncate text-xs text-slate-500">
-                            {activeOff?.division ?? 'Petugas Piket'}
-                          </p>
-                        </div>
-                        <span
-                          className={`inline-flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap shrink-0 ${
-                            done ? 'text-emerald-700' : 'text-amber-700'
-                          }`}
-                        >
-                          {done ? (
-                            <>
-                              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                              <span>Sudah Selesai</span>
-                            </>
-                          ) : (
-                            <span>Sedang Mencatat</span>
-                          )}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-
-                {scheduleStatus.allowed && !isSheetFinalized && (
-                  <div className="pt-1">
-                    {!isOfficerActiveInSheet ? (
-                      <button
-                        type="button"
-                        disabled={submitting}
-                        onClick={handleStartSession}
-                        className="btn-3d-soft flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-                      >
-                        <UserCheck className="h-4 w-4" aria-hidden="true" />
-                        <span>Gabung sebagai Petugas Aktif Hari Ini</span>
-                      </button>
-                    ) : isOfficerFinished ? (
-                      <button
-                        type="button"
-                        disabled={submitting}
-                        onClick={() => handleToggleFinish(false)}
-                        className="btn-3d-soft flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                      >
-                        <RotateCcw className="h-4 w-4" aria-hidden="true" />
-                        <span>Batalkan Selesai (Lanjut Mencatat)</span>
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        disabled={submitting}
-                        onClick={() => handleToggleFinish(true)}
-                        className="btn-3d-success flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-                      >
-                        <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                        <span>Tandai Selesai Mencatat</span>
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {isSheetFinalized && isManagerRole(officer.role) && (
-                  <button
-                    type="button"
-                    disabled={submitting}
-                    onClick={handleReopenByCoordinator}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100"
-                  >
-                    <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-                    <span>Buka Kembali Sesi (Admin / Developer)</span>
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Export Section */}
             <div className="mt-6 border-t border-slate-100 pt-5">
@@ -1513,14 +1649,14 @@ export function SpreadsheetWorkspace({
                     consensus.exportUnlocked ? 'text-emerald-700' : 'text-slate-500'
                   }`}
                 >
-                  {consensus.exportUnlocked ? 'Siap Diunduh' : 'Belum Selesai'}
+                  {consensus.exportUnlocked ? 'Siap Diunduh' : `Terkunci s.d. ${autoWindow.endTime} WIB`}
                 </span>
               </div>
 
               {!consensus.exportUnlocked && (
                 <p className="mb-3 text-xs text-slate-500">
-                  Tombol unduh akan aktif otomatis setelah semua petugas piket di atas menekan{' '}
-                  <strong className="text-slate-700">Tandai Selesai Mencatat</strong>.
+                  Tombol unduh akan aktif otomatis setelah spreadsheet ditutup pada jam selesai (
+                  <strong className="font-mono-num text-slate-700">{autoWindow.endTime} WIB</strong>).
                 </p>
               )}
 
@@ -1575,7 +1711,7 @@ export function SpreadsheetWorkspace({
       </div>
 
       {/* Live Spreadsheet Table */}
-      <section className="rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
+      <section className="surface-3d animate-stagger-4 rounded-2xl border border-slate-200/90 bg-white">
         <div className="flex flex-col gap-4 border-b border-slate-200 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="font-display text-lg font-bold text-slate-900">
@@ -1584,7 +1720,7 @@ export function SpreadsheetWorkspace({
             <p className="text-xs text-slate-500">
               {todaySheet
                 ? `Menampilkan ${filteredRows.length} dari ${todaySheet.rows.length} catatan`
-                : 'Spreadsheet akan terisi otomatis saat pelanggaran pertama dicatat.'}
+                : `Spreadsheet akan dibuat otomatis pukul ${autoWindow.startTime} WIB.`}
             </p>
           </div>
 
@@ -1658,12 +1794,18 @@ export function SpreadsheetWorkspace({
           {!todaySheet || todaySheet.rows.length === 0 ? (
             <div className="px-6 py-12 text-center">
               <p className="text-sm font-medium text-slate-700">
-                Belum ada data pelanggaran pada spreadsheet hari ini.
+                {!todaySheet
+                  ? 'Spreadsheet hari ini belum dibuka.'
+                  : 'Belum ada data pelanggaran pada spreadsheet hari ini.'}
               </p>
               <p className="mt-1 text-xs text-slate-500">
-                {canRecordNow
-                  ? 'Gunakan formulir di atas untuk mencatat siswa pertama.'
-                  : 'Menunggu petugas yang terjadwal mencatat pelanggaran.'}
+                {!todaySheet
+                  ? autoWindow.phase === 'BEFORE_START'
+                    ? `Spreadsheet akan dibuat otomatis pada pukul ${autoWindow.startTime} WIB.`
+                    : `Tidak ada sesi otomatis untuk hari ${autoWindow.hari}.`
+                  : canRecordNow
+                    ? 'Gunakan formulir di atas untuk mencatat siswa pertama.'
+                    : 'Menunggu pencatatan pelanggaran oleh petugas piket.'}
               </p>
             </div>
           ) : filteredRows.length === 0 ? (
@@ -1693,81 +1835,216 @@ export function SpreadsheetWorkspace({
                         <th className="px-4 py-2.5 text-right w-20">Poin</th>
                         <th className="px-4 py-2.5">Tindak Lanjut</th>
                         <th className="px-4 py-2.5">Petugas</th>
-                        {canRecordNow && <th className="px-4 py-2.5 text-right w-16">Aksi</th>}
+                        {canRecordNow && <th className="px-4 py-2.5 text-right w-28">Aksi</th>}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {grp.rows.map((row, idx) => (
-                        <tr
-                          key={row.id}
-                          className={`hover:bg-slate-50/80 transition-colors ${
-                            row.id === lastAddedRowId ? 'animate-row-flash' : ''
-                          }`}
-                        >
-                          <td className="font-mono-num px-4 py-2.5 text-center text-xs text-slate-500">
-                            {idx + 1}
-                          </td>
-                          <td className="font-mono-num px-4 py-2.5 text-xs text-slate-700">
-                            {row.timeLabel}
-                          </td>
-                          <td className="font-mono-num px-4 py-2.5 text-xs font-semibold text-blue-700">
-                            {row.violationCode || '-'}
-                          </td>
-                          <td className="px-4 py-2.5">
-                            <p className="font-medium text-slate-900">{row.studentName}</p>
-                            <p className="font-mono-num text-xs text-slate-500">
-                              NIS {row.studentNis}
-                            </p>
-                          </td>
-                          <td className="px-4 py-2.5">
-                            <p className="text-slate-900">{row.violationLabel}</p>
-                            <p className="text-xs text-slate-500">
-                              {row.category}
-                              {row.notes ? ` · ${row.notes}` : ''}
-                            </p>
-                          </td>
-                          <td className="font-mono-num px-4 py-2.5 text-right font-semibold text-red-700">
-                            +{row.points}
-                          </td>
-                          <td className="px-4 py-2.5 text-xs text-slate-600">{row.actionTaken}</td>
-                          <td className="px-4 py-2.5 text-xs text-slate-700 whitespace-nowrap">
-                            {row.recordedByName}
-                          </td>
-                          {canRecordNow && (
-                            <td className="px-4 py-2.5 text-right whitespace-nowrap">
-                              {confirmDeleteId === row.id ? (
-                                <div className="inline-flex items-center gap-1">
-                                  <button
-                                    type="button"
-                                    disabled={submitting}
-                                    onClick={() => handleDeleteRow(row.id, row.studentName)}
-                                    className="rounded-md bg-red-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-red-700"
-                                  >
-                                    Hapus
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => setConfirmDeleteId(null)}
-                                    className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-50"
-                                  >
-                                    Batal
-                                  </button>
-                                </div>
+                      {grp.rows.map((row, idx) => {
+                        const canModifyRow = canModifyViolationRow(officer, row);
+                        const isEditingRow = editingRowId === row.id;
+                        return (
+                          <tr
+                            key={row.id}
+                            className={`hover:bg-slate-50/80 transition-colors ${
+                              row.id === lastAddedRowId ? 'animate-row-flash' : ''
+                            }`}
+                          >
+                            <td className="font-mono-num px-4 py-2.5 text-center text-xs text-slate-500">
+                              {idx + 1}
+                            </td>
+                            <td className="font-mono-num px-4 py-2.5 text-xs text-slate-700">
+                              {row.timeLabel}
+                            </td>
+                            <td className="font-mono-num px-4 py-2.5 text-xs font-semibold text-blue-700">
+                              {isEditingRow ? (
+                                <input
+                                  type="text"
+                                  aria-label="Edit kode AKPS"
+                                  value={editViolationCode}
+                                  onChange={(e) => setEditViolationCode(e.target.value)}
+                                  placeholder="Kode"
+                                  className="font-mono-num w-16 rounded-lg border border-slate-200 px-2 py-1 text-xs uppercase text-slate-900"
+                                />
                               ) : (
-                                <button
-                                  type="button"
-                                  disabled={submitting}
-                                  onClick={() => setConfirmDeleteId(row.id)}
-                                  aria-label={`Hapus catatan ${row.studentName}`}
-                                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600"
-                                >
-                                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                                </button>
+                                row.violationCode || '-'
                               )}
                             </td>
-                          )}
-                        </tr>
-                      ))}
+                            <td className="px-4 py-2.5">
+                              {isEditingRow ? (
+                                <div className="space-y-1.5">
+                                  <input
+                                    type="text"
+                                    value={editStudentName}
+                                    onChange={(e) => setEditStudentName(e.target.value)}
+                                    placeholder="Nama siswa"
+                                    className="w-full rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-900"
+                                  />
+                                  <div className="flex gap-1.5">
+                                    <input
+                                      type="text"
+                                      value={editKelas}
+                                      onChange={(e) => setEditKelas(e.target.value)}
+                                      placeholder="Kelas"
+                                      className="w-20 rounded-lg border border-slate-200 px-2 py-1 text-xs uppercase"
+                                    />
+                                    <input
+                                      type="text"
+                                      value={editStudentNis}
+                                      onChange={(e) => setEditStudentNis(e.target.value)}
+                                      placeholder="NIS"
+                                      className="font-mono-num w-24 rounded-lg border border-slate-200 px-2 py-1 text-xs"
+                                    />
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <p className="font-medium text-slate-900">{row.studentName}</p>
+                                  <p className="font-mono-num text-xs text-slate-500">
+                                    NIS {row.studentNis}
+                                  </p>
+                                </>
+                              )}
+                            </td>
+                            <td className="px-4 py-2.5">
+                              {isEditingRow ? (
+                                <div className="space-y-1.5">
+                                  <input
+                                    type="text"
+                                    value={editViolationLabel}
+                                    onChange={(e) => setEditViolationLabel(e.target.value)}
+                                    placeholder="Pelanggaran"
+                                    className="w-full rounded-lg border border-slate-200 px-2.5 py-1 text-xs text-slate-900"
+                                  />
+                                  <select
+                                    aria-label="Edit kategori AKPS"
+                                    value={editCategory}
+                                    onChange={(e) =>
+                                      setEditCategory(e.target.value as KategoriPelanggaran)
+                                    }
+                                    className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700"
+                                  >
+                                    {AKPS_CATEGORIES.map((c) => (
+                                      <option key={c} value={c}>
+                                        {c}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <input
+                                    type="text"
+                                    value={editNotes}
+                                    onChange={(e) => setEditNotes(e.target.value)}
+                                    placeholder="Catatan (opsional)"
+                                    className="w-full rounded-lg border border-slate-200 px-2.5 py-1 text-xs text-slate-600"
+                                  />
+                                </div>
+                              ) : (
+                                <>
+                                  <p className="text-slate-900">{row.violationLabel}</p>
+                                  <p className="text-xs text-slate-500">
+                                    {row.category}
+                                    {row.notes ? ` · ${row.notes}` : ''}
+                                  </p>
+                                </>
+                              )}
+                            </td>
+                            <td className="font-mono-num px-4 py-2.5 text-right font-semibold text-red-700">
+                              {isEditingRow ? (
+                                <input
+                                  type="number"
+                                  min={1}
+                                  max={100}
+                                  value={editPoints}
+                                  onChange={(e) => setEditPoints(Number(e.target.value))}
+                                  className="font-mono-num w-16 rounded-lg border border-slate-200 px-2 py-1 text-right text-xs"
+                                />
+                              ) : (
+                                `+${row.points}`
+                              )}
+                            </td>
+                            <td className="px-4 py-2.5 text-xs text-slate-600">
+                              {isEditingRow ? (
+                                <input
+                                  type="text"
+                                  value={editActionTaken}
+                                  onChange={(e) => setEditActionTaken(e.target.value)}
+                                  placeholder="Tindak lanjut"
+                                  className="w-full rounded-lg border border-slate-200 px-2.5 py-1 text-xs"
+                                />
+                              ) : (
+                                row.actionTaken
+                              )}
+                            </td>
+                            <td className="px-4 py-2.5 text-xs text-slate-700 whitespace-nowrap">
+                              {row.recordedByName}
+                            </td>
+                            {canRecordNow && (
+                              <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                                {!canModifyRow ? (
+                                  <span className="text-[11px] text-slate-400">Petugas lain</span>
+                                ) : isEditingRow ? (
+                                  <div className="inline-flex items-center gap-1">
+                                    <button
+                                      type="button"
+                                      disabled={submitting}
+                                      onClick={() => handleSaveEditRow(row.id)}
+                                      className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-blue-700"
+                                    >
+                                      <Save className="h-3 w-3" aria-hidden="true" />
+                                      <span>Simpan</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditingRowId(null)}
+                                      className="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-50"
+                                    >
+                                      Batal
+                                    </button>
+                                  </div>
+                                ) : confirmDeleteId === row.id ? (
+                                  <div className="inline-flex items-center gap-1">
+                                    <button
+                                      type="button"
+                                      disabled={submitting}
+                                      onClick={() => handleDeleteRow(row.id, row.studentName)}
+                                      className="rounded-md bg-red-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-red-700"
+                                    >
+                                      Hapus
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setConfirmDeleteId(null)}
+                                      className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-50"
+                                    >
+                                      Batal
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="inline-flex items-center justify-end gap-1">
+                                    <button
+                                      type="button"
+                                      disabled={submitting}
+                                      onClick={() => startEditRow(row)}
+                                      aria-label={`Edit catatan ${row.studentName}`}
+                                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                    >
+                                      <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={submitting}
+                                      onClick={() => setConfirmDeleteId(row.id)}
+                                      aria-label={`Hapus catatan ${row.studentName}`}
+                                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                    >
+                                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                                    </button>
+                                  </div>
+                                )}
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -1786,82 +2063,220 @@ export function SpreadsheetWorkspace({
                   <th className="px-4 py-3 text-right w-20">Poin</th>
                   <th className="px-4 py-3">Tindak Lanjut</th>
                   <th className="px-4 py-3">Petugas</th>
-                  {canRecordNow && <th className="px-4 py-3 text-right w-16">Aksi</th>}
+                  {canRecordNow && <th className="px-4 py-3 text-right w-28">Aksi</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredRows.map((row, idx) => (
-                  <tr
-                    key={row.id}
-                    className={`hover:bg-slate-50/80 transition-colors ${
-                      row.id === lastAddedRowId ? 'animate-row-flash' : ''
-                    }`}
-                  >
-                    <td className="font-mono-num px-4 py-3 text-center text-xs text-slate-500">
-                      {filteredRows.length - idx}
-                    </td>
-                    <td className="font-mono-num px-4 py-3 text-xs font-medium text-slate-700">
-                      {row.timeLabel}
-                    </td>
-                    <td className="font-mono-num px-4 py-3 text-xs font-semibold text-blue-700">
-                      {row.violationCode || '-'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-slate-900">{row.studentName}</p>
-                      <p className="font-mono-num text-xs text-slate-500">NIS {row.studentNis}</p>
-                    </td>
-                    <td className="font-mono-num px-4 py-3 text-xs font-semibold text-slate-800">
-                      {row.kelas}
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="text-slate-900">{row.violationLabel}</p>
-                      <p className="text-xs text-slate-500">
-                        {row.category}
-                        {row.notes ? ` · ${row.notes}` : ''}
-                      </p>
-                    </td>
-                    <td className="font-mono-num px-4 py-3 text-right font-semibold text-red-700">
-                      +{row.points}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-slate-600">{row.actionTaken}</td>
-                    <td className="px-4 py-3 text-xs text-slate-700 whitespace-nowrap">
-                      {row.recordedByName}
-                    </td>
-                    {canRecordNow && (
-                      <td className="px-4 py-3 text-right whitespace-nowrap">
-                        {confirmDeleteId === row.id ? (
-                          <div className="inline-flex items-center gap-1">
-                            <button
-                              type="button"
-                              disabled={submitting}
-                              onClick={() => handleDeleteRow(row.id, row.studentName)}
-                              className="rounded-md bg-red-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-red-700"
-                            >
-                              Hapus
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setConfirmDeleteId(null)}
-                              className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-50"
-                            >
-                              Batal
-                            </button>
-                          </div>
+                {filteredRows.map((row, idx) => {
+                  const canModifyRow = canModifyViolationRow(officer, row);
+                  const isEditingRow = editingRowId === row.id;
+                  return (
+                    <tr
+                      key={row.id}
+                      className={`hover:bg-slate-50/80 transition-colors ${
+                        row.id === lastAddedRowId ? 'animate-row-flash' : ''
+                      }`}
+                    >
+                      <td className="font-mono-num px-4 py-3 text-center text-xs text-slate-500">
+                        {filteredRows.length - idx}
+                      </td>
+                      <td className="font-mono-num px-4 py-3 text-xs font-medium text-slate-700">
+                        {row.timeLabel}
+                      </td>
+                      <td className="font-mono-num px-4 py-3 text-xs font-semibold text-blue-700">
+                        {isEditingRow ? (
+                          <input
+                            type="text"
+                            aria-label="Edit kode AKPS"
+                            value={editViolationCode}
+                            onChange={(e) => setEditViolationCode(e.target.value)}
+                            placeholder="Kode"
+                            className="font-mono-num w-16 rounded-lg border border-slate-200 px-2 py-1 text-xs uppercase text-slate-900"
+                          />
                         ) : (
-                          <button
-                            type="button"
-                            disabled={submitting}
-                            onClick={() => setConfirmDeleteId(row.id)}
-                            aria-label={`Hapus catatan ${row.studentName}`}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
-                          >
-                            <Trash2 className="h-4 w-4" aria-hidden="true" />
-                          </button>
+                          row.violationCode || '-'
                         )}
                       </td>
-                    )}
-                  </tr>
-                ))}
+                      <td className="px-4 py-3">
+                        {isEditingRow ? (
+                          <div className="space-y-1.5">
+                            <input
+                              type="text"
+                              value={editStudentName}
+                              onChange={(e) => setEditStudentName(e.target.value)}
+                              placeholder="Nama siswa"
+                              className="w-full rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-900"
+                            />
+                            <input
+                              type="text"
+                              value={editStudentNis}
+                              onChange={(e) => setEditStudentNis(e.target.value)}
+                              placeholder="NIS"
+                              className="font-mono-num w-full rounded-lg border border-slate-200 px-2.5 py-1 text-xs"
+                            />
+                          </div>
+                        ) : (
+                          <>
+                            <p className="font-medium text-slate-900">{row.studentName}</p>
+                            <p className="font-mono-num text-xs text-slate-500">
+                              NIS {row.studentNis}
+                            </p>
+                          </>
+                        )}
+                      </td>
+                      <td className="font-mono-num px-4 py-3 text-xs font-semibold text-slate-800">
+                        {isEditingRow ? (
+                          <input
+                            type="text"
+                            value={editKelas}
+                            onChange={(e) => setEditKelas(e.target.value)}
+                            placeholder="Kelas"
+                            className="w-20 rounded-lg border border-slate-200 px-2 py-1 text-xs uppercase"
+                          />
+                        ) : (
+                          row.kelas
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {isEditingRow ? (
+                          <div className="space-y-1.5">
+                            <input
+                              type="text"
+                              value={editViolationLabel}
+                              onChange={(e) => setEditViolationLabel(e.target.value)}
+                              placeholder="Pelanggaran"
+                              className="w-full rounded-lg border border-slate-200 px-2.5 py-1 text-xs text-slate-900"
+                            />
+                            <select
+                              aria-label="Edit kategori AKPS"
+                              value={editCategory}
+                              onChange={(e) =>
+                                setEditCategory(e.target.value as KategoriPelanggaran)
+                              }
+                              className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700"
+                            >
+                              {AKPS_CATEGORIES.map((c) => (
+                                <option key={c} value={c}>
+                                  {c}
+                                </option>
+                              ))}
+                            </select>
+                            <input
+                              type="text"
+                              value={editNotes}
+                              onChange={(e) => setEditNotes(e.target.value)}
+                              placeholder="Catatan (opsional)"
+                              className="w-full rounded-lg border border-slate-200 px-2.5 py-1 text-xs text-slate-600"
+                            />
+                          </div>
+                        ) : (
+                          <>
+                            <p className="text-slate-900">{row.violationLabel}</p>
+                            <p className="text-xs text-slate-500">
+                              {row.category}
+                              {row.notes ? ` · ${row.notes}` : ''}
+                            </p>
+                          </>
+                        )}
+                      </td>
+                      <td className="font-mono-num px-4 py-3 text-right font-semibold text-red-700">
+                        {isEditingRow ? (
+                          <input
+                            type="number"
+                            min={1}
+                            max={100}
+                            value={editPoints}
+                            onChange={(e) => setEditPoints(Number(e.target.value))}
+                            className="font-mono-num w-16 rounded-lg border border-slate-200 px-2 py-1 text-right text-xs"
+                          />
+                        ) : (
+                          `+${row.points}`
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-slate-600">
+                        {isEditingRow ? (
+                          <input
+                            type="text"
+                            value={editActionTaken}
+                            onChange={(e) => setEditActionTaken(e.target.value)}
+                            placeholder="Tindak lanjut"
+                            className="w-full rounded-lg border border-slate-200 px-2.5 py-1 text-xs"
+                          />
+                        ) : (
+                          row.actionTaken
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-slate-700 whitespace-nowrap">
+                        {row.recordedByName}
+                      </td>
+                      {canRecordNow && (
+                        <td className="px-4 py-3 text-right whitespace-nowrap">
+                          {!canModifyRow ? (
+                            <span className="text-[11px] text-slate-400">Petugas lain</span>
+                          ) : isEditingRow ? (
+                            <div className="inline-flex items-center gap-1">
+                              <button
+                                type="button"
+                                disabled={submitting}
+                                onClick={() => handleSaveEditRow(row.id)}
+                                className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-blue-700"
+                              >
+                                <Save className="h-3 w-3" aria-hidden="true" />
+                                <span>Simpan</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditingRowId(null)}
+                                className="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-50"
+                              >
+                                <X className="h-3 w-3" aria-hidden="true" />
+                              </button>
+                            </div>
+                          ) : confirmDeleteId === row.id ? (
+                            <div className="inline-flex items-center gap-1">
+                              <button
+                                type="button"
+                                disabled={submitting}
+                                onClick={() => handleDeleteRow(row.id, row.studentName)}
+                                className="rounded-md bg-red-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-red-700"
+                              >
+                                Hapus
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteId(null)}
+                                className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-50"
+                              >
+                                Batal
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="inline-flex items-center justify-end gap-1">
+                              <button
+                                type="button"
+                                disabled={submitting}
+                                onClick={() => startEditRow(row)}
+                                aria-label={`Edit catatan ${row.studentName}`}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                              >
+                                <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={submitting}
+                                onClick={() => setConfirmDeleteId(row.id)}
+                                aria-label={`Hapus catatan ${row.studentName}`}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                              >
+                                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}

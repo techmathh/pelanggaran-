@@ -37,7 +37,7 @@ export function TopBar({
   ];
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
+    <header className="relative z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:gap-8">
         {/* Zone 1: Single text element wordmark */}
         <button

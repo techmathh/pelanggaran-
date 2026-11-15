@@ -9,6 +9,7 @@ import { formatIndonesianDateLabel } from '../shared/piketLogic';
 import type { PublicAppState, PublicMetaState, PublicOfficer } from '../shared/types';
 import { CuteMascot3D } from './CuteMascot3D';
 import type { PendingPasswordChange } from './MandatoryPasswordChangeView';
+import { Tilt3DCard } from './Tilt3DCard';
 
 interface LoginViewProps {
   meta: PublicMetaState;
@@ -66,10 +67,21 @@ export function LoginView({
   }
 
   return (
-    <div className="min-h-screen px-4 py-6 sm:px-6 sm:py-8 lg:py-12">
+    <div className="relative min-h-screen overflow-x-clip px-4 py-6 sm:px-6 sm:py-8 lg:py-12">
+      {/* Subtle ambient depth accents */}
+      <div
+        aria-hidden="true"
+        className="animate-ambient-float pointer-events-none fixed -top-24 left-1/2 -z-10 h-72 w-72 -translate-x-1/2 rounded-full bg-sky-200/35 blur-3xl sm:h-96 sm:w-96"
+      />
+      <div
+        aria-hidden="true"
+        className="animate-ambient-float pointer-events-none fixed bottom-8 right-6 -z-10 h-56 w-56 rounded-full bg-blue-200/25 blur-3xl"
+        style={{ animationDelay: '-5s' }}
+      />
+
       <div className="mx-auto max-w-6xl">
         {/* Minimal top context line */}
-        <header className="mb-6 flex flex-col gap-2 border-b border-slate-200/80 pb-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
+        <header className="animate-panel-reveal mb-6 flex flex-col gap-2 border-b border-slate-200/80 pb-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <span className="font-display text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
               SiPiket OSIS
@@ -89,7 +101,7 @@ export function LoginView({
 
         <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-12 lg:gap-8">
           {/* Left Hero & Interactive 3D Mascot */}
-          <section className="order-2 flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-8 lg:order-1 lg:col-span-6">
+          <section className="surface-3d animate-stagger-2 order-2 flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-8 lg:order-1 lg:col-span-6">
             <div>
               <p className="text-xs font-semibold tracking-wide text-blue-700">
                 Portal Piket Kedisiplinan OSIS
@@ -98,21 +110,25 @@ export function LoginView({
                 Piket OSIS lebih mudah, rapi, dan langsung jadi laporan kelas.
               </h1>
               <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                Cukup cari nama siswa lalu pilih kategori pelanggaran. Setelah selesai piket,
-                tekan tombol <strong className="font-semibold text-slate-900">Selesai</strong>{' '}
-                agar laporan Excel per kelas dan PDF langsung siap diunduh.
+                Spreadsheet harian dibuat dan ditutup otomatis sesuai jam piket yang ditentukan.
+                Cukup cari nama siswa lalu pilih pelanggaran — saat jam selesai tiba, laporan Excel
+                per kelas dan PDF langsung siap diunduh.
               </p>
             </div>
 
-            <div className="my-5 rounded-xl border border-sky-100/90 bg-gradient-to-b from-sky-50/75 via-white to-slate-50/60 p-3 sm:p-4">
+            <Tilt3DCard
+              maxTiltDeg={5}
+              scaleOnHover={1.01}
+              className="my-5 rounded-xl border border-sky-100/90 bg-gradient-to-b from-sky-50/75 via-white to-slate-50/60 p-3 sm:p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]"
+            >
               <CuteMascot3D mood="idle" />
-            </div>
+            </Tilt3DCard>
 
             <div className="grid grid-cols-1 gap-3 border-t border-slate-100 pt-5 sm:grid-cols-3">
               <button
                 type="button"
                 onClick={() => document.getElementById('login-username')?.focus()}
-                className="group rounded-xl border border-transparent p-2.5 text-left transition-all hover:border-sky-200 hover:bg-sky-50/50"
+                className="card-3d-interactive group rounded-xl border border-slate-200/70 bg-white p-2.5 text-left hover:border-sky-200 hover:bg-sky-50/50"
               >
                 <p className="text-xs font-semibold text-slate-900 group-hover:text-blue-700">
                   01. Masuk Akun Piket
@@ -121,23 +137,23 @@ export function LoginView({
                   Login sesuai akun petugas OSIS yang sudah dibagikan pengurus.
                 </p>
               </button>
-              <div className="rounded-xl p-2.5">
+              <div className="card-3d-interactive rounded-xl border border-slate-200/60 bg-slate-50/40 p-2.5">
                 <p className="text-xs font-semibold text-slate-900">02. Catat Siswa Cepat</p>
                 <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
                   Ketik beberapa huruf nama siswa — kelas dan poin AKPS terisi otomatis.
                 </p>
               </div>
-              <div className="rounded-xl p-2.5">
-                <p className="text-xs font-semibold text-slate-900">03. Klik Selesai &amp; Unduh</p>
+              <div className="card-3d-interactive rounded-xl border border-slate-200/60 bg-slate-50/40 p-2.5">
+                <p className="text-xs font-semibold text-slate-900">03. Tutup Otomatis &amp; Unduh</p>
                 <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
-                  Setelah semua petugas klik Selesai, file Excel &amp; PDF siap diunduh.
+                  Saat jam selesai tercapai, spreadsheet terkunci otomatis &amp; Excel/PDF siap diunduh.
                 </p>
               </div>
             </div>
           </section>
 
           {/* Right Card: Login */}
-          <section className="order-1 flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-8 lg:order-2 lg:col-span-6">
+          <section className="surface-3d animate-stagger-1 order-1 flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-8 lg:order-2 lg:col-span-6">
               <div className="flex flex-1 flex-col justify-center">
                 <div>
                   <p className="text-xs font-semibold text-blue-700">Akses Petugas Piket</p>

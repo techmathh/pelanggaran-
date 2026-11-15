@@ -13,12 +13,47 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
-import type { PublicAppState, RolePetugas } from '../shared/types';
+import type { PublicAppState, RolePetugas, SystemBackupPayload } from '../shared/types';
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
 export const googleAuthProvider = new GoogleAuthProvider();
+
+export const BACKUP_JSON_DELIMITER = '\n---SIPIKET_BACKUP_JSON---\n';
+const GZIP_B64_PREFIX = 'GZIP_B64:';
+
+async function compressTextGzipBase64(text: string): Promise<string | null> {
+  if (typeof CompressionStream === 'undefined') return null;
+  try {
+    const stream = new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'));
+    const buffer = await new Response(stream).arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+    }
+    return btoa(binary);
+  } catch {
+    return null;
+  }
+}
+
+async function decompressTextGzipBase64(b64: string): Promise<string | null> {
+  if (typeof DecompressionStream === 'undefined') return null;
+  try {
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+    return await new Response(stream).text();
+  } catch {
+    return null;
+  }
+}
 
 export enum OperationType {
   CREATE = 'create',
@@ -100,11 +135,47 @@ export interface CloudBackupSummary {
   spreadsheetCount: number;
   violationCount: number;
   summaryDigest: string;
+  restoreEmbedded?: boolean;
+}
+
+export function getDisplaySummaryDigest(summaryDigest: string): string {
+  const idx = summaryDigest.indexOf(BACKUP_JSON_DELIMITER);
+  return idx >= 0 ? summaryDigest.slice(0, idx).trim() : summaryDigest;
+}
+
+export function hasEmbeddedBackupDigest(summaryDigest: string): boolean {
+  const idx = summaryDigest.indexOf(BACKUP_JSON_DELIMITER);
+  if (idx < 0) return false;
+  return summaryDigest.slice(idx + BACKUP_JSON_DELIMITER.length).trim().length > 0;
+}
+
+export async function extractBackupPayloadFromDigestAsync(
+  summaryDigest: string
+): Promise<SystemBackupPayload | null> {
+  const idx = summaryDigest.indexOf(BACKUP_JSON_DELIMITER);
+  if (idx < 0) return null;
+  let rawPayload = summaryDigest.slice(idx + BACKUP_JSON_DELIMITER.length).trim();
+  if (!rawPayload) return null;
+  if (rawPayload.startsWith(GZIP_B64_PREFIX)) {
+    const decompressed = await decompressTextGzipBase64(rawPayload.slice(GZIP_B64_PREFIX.length));
+    if (!decompressed) return null;
+    rawPayload = decompressed;
+  }
+  try {
+    const parsed = JSON.parse(rawPayload) as SystemBackupPayload;
+    if (parsed && Array.isArray(parsed.spreadsheets)) {
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 export async function syncSnapshotToFirestore(
   appRole: RolePetugas,
-  appState: PublicAppState
+  appState: PublicAppState,
+  backupPayload?: SystemBackupPayload
 ): Promise<CloudBackupSummary> {
   const user = auth.currentUser;
   if (!user) {
@@ -134,9 +205,42 @@ export async function syncSnapshotToFirestore(
       (s) =>
         `${s.date} (${s.status}): ${s.rows.length} pelanggaran, ${s.rows.reduce((a, r) => a + r.points, 0)} poin`
     );
-  const summaryDigest = (
+  const humanSummary = (
     digestLines.join(' | ') || `Sinkronisasi awal pada ${appState.serverDate} ${appState.serverTime} WIB`
-  ).slice(0, 19500);
+  ).slice(0, 1500);
+
+  const fallbackPayload: SystemBackupPayload = backupPayload ?? {
+    version: 1,
+    createdAt: new Date().toISOString(),
+    schoolName: 'SMA NEGERI 1 KEMANGKON',
+    officers: appState.officers.filter((o) => !o.isProtected),
+    presets: appState.presets,
+    customStudents: appState.students.filter((s) => !/^stu-(?:10|11|12)[a-f]-\d+$/i.test(s.id)),
+    spreadsheets: appState.spreadsheets,
+    weeklySchedule: appState.weeklySchedule,
+    dailySession: appState.dailySession,
+    simulation: appState.simulation,
+  };
+
+  const serializedPayload = JSON.stringify(fallbackPayload);
+  const plainDigest = `${humanSummary}${BACKUP_JSON_DELIMITER}${serializedPayload}`;
+
+  let summaryDigest = humanSummary.slice(0, 19500);
+  let restoreEmbedded = false;
+
+  if (plainDigest.length <= 19500) {
+    summaryDigest = plainDigest;
+    restoreEmbedded = true;
+  } else {
+    const compressed = await compressTextGzipBase64(serializedPayload);
+    if (compressed) {
+      const compressedDigest = `${humanSummary}${BACKUP_JSON_DELIMITER}${GZIP_B64_PREFIX}${compressed}`;
+      if (compressedDigest.length <= 19500) {
+        summaryDigest = compressedDigest;
+        restoreEmbedded = true;
+      }
+    }
+  }
 
   const backupId = `backup-${appState.serverDate}-${Date.now()}`;
   const backupPath = `cloud_snapshots/${user.uid}/backups/${backupId}`;
@@ -161,6 +265,7 @@ export async function syncSnapshotToFirestore(
     spreadsheetCount: appState.spreadsheets.length,
     violationCount: totalViolations,
     summaryDigest,
+    restoreEmbedded,
   };
 }
 

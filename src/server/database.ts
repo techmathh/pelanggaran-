@@ -4,20 +4,24 @@ import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import {
   ALL_ROTATION_WEEKS,
+  DEFAULT_DAILY_SESSION_CONFIG,
   HARI_LIST,
   addViolationToSpreadsheet,
   assignWeeklyRotationDistribution,
   clampCycleWeeks,
   createOrJoinDailySpreadsheet,
+  evaluateAutoSpreadsheetLifecycle,
   formatDateKey,
   generateUniqueUsername,
   getEffectiveClock,
   getMondayDateKey,
+  removeOfficerFromActiveSpreadsheet,
   shiftAnchorMondayForTargetWeek,
   toggleOfficerFinished,
   type AddViolationInput,
 } from '../shared/piketLogic';
 import type {
+  DailySessionConfig,
   DailySpreadsheet,
   GeneratedAccountCredential,
   HariPiket,
@@ -28,6 +32,7 @@ import type {
   RolePetugas,
   SimulationConfig,
   StudentRecord,
+  SystemBackupPayload,
   ViolationEntry,
   ViolationPreset,
   WeeklyRotationConfig,
@@ -191,7 +196,8 @@ function createSchemaAndSeed(db: DatabaseSync): void {
       created_at TEXT NOT NULL,
       created_by_id TEXT NOT NULL,
       created_by_name TEXT NOT NULL,
-      finalized_at TEXT
+      finalized_at TEXT,
+      reopened_manually INTEGER NOT NULL DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS spreadsheet_officers (
@@ -233,6 +239,12 @@ function createSchemaAndSeed(db: DatabaseSync): void {
     db.exec(
       "ALTER TABLE accounts ADD COLUMN scheduled_weeks_json TEXT NOT NULL DEFAULT '[1,2,3,4]'"
     );
+  }
+
+  // Ensure reopened_manually column exists on pre-existing databases
+  const sheetCols = db.prepare('PRAGMA table_info(spreadsheets)').all() as Array<{ name: string }>;
+  if (!sheetCols.some((c) => c.name === 'reopened_manually')) {
+    db.exec('ALTER TABLE spreadsheets ADD COLUMN reopened_manually INTEGER NOT NULL DEFAULT 0');
   }
 
   // Ensure the 1 permanent non-deletable developer account exists
@@ -340,6 +352,17 @@ function createSchemaAndSeed(db: DatabaseSync): void {
       JSON.stringify(defaultWeekly)
     );
   }
+
+  // Ensure default automatic daily session schedule exists (06:30–08:30 Senin–Sabtu)
+  const dailyRow = db
+    .prepare('SELECT value_json FROM app_settings WHERE key = ?')
+    .get('daily_session') as { value_json: string } | undefined;
+  if (!dailyRow) {
+    db.prepare('INSERT INTO app_settings (key, value_json) VALUES (?, ?)').run(
+      'daily_session',
+      JSON.stringify(DEFAULT_DAILY_SESSION_CONFIG)
+    );
+  }
 }
 
 export function getDatabase(): DatabaseSync {
@@ -434,6 +457,61 @@ export function setSimulationConfig(config: SimulationConfig): PublicAppState {
     'simulation',
     JSON.stringify(config)
   );
+  syncAutoDailySpreadsheets(new Date());
+  return getPublicAppState();
+}
+
+export function getDailySessionConfig(): DailySessionConfig {
+  const db = getDatabase();
+  const row = db
+    .prepare('SELECT value_json FROM app_settings WHERE key = ?')
+    .get('daily_session') as { value_json: string } | undefined;
+  if (!row) {
+    return { ...DEFAULT_DAILY_SESSION_CONFIG };
+  }
+  try {
+    const parsed = JSON.parse(row.value_json) as Partial<DailySessionConfig>;
+    const validDays = Array.isArray(parsed.activeDays)
+      ? parsed.activeDays.filter((d): d is HariPiket => HARI_LIST.includes(d))
+      : [];
+    return {
+      activeDays: validDays.length > 0 ? validDays : [...DEFAULT_DAILY_SESSION_CONFIG.activeDays],
+      startTime: parsed.startTime || DEFAULT_DAILY_SESSION_CONFIG.startTime,
+      endTime: parsed.endTime || DEFAULT_DAILY_SESSION_CONFIG.endTime,
+    };
+  } catch {
+    return { ...DEFAULT_DAILY_SESSION_CONFIG };
+  }
+}
+
+export function setDailySessionConfigRecord(
+  config: DailySessionConfig,
+  syncOfficers = true,
+  now = new Date()
+): PublicAppState {
+  const db = getDatabase();
+  const normalized: DailySessionConfig = {
+    activeDays: config.activeDays.filter((d) => HARI_LIST.includes(d)),
+    startTime: config.startTime,
+    endTime: config.endTime,
+  };
+  db.exec('BEGIN');
+  try {
+    db.prepare('INSERT OR REPLACE INTO app_settings (key, value_json) VALUES (?, ?)').run(
+      'daily_session',
+      JSON.stringify(normalized)
+    );
+    if (syncOfficers) {
+      db.prepare(
+        "UPDATE accounts SET shift_start = ?, shift_end = ? WHERE role != 'developer'"
+      ).run(normalized.startTime, normalized.endTime);
+    }
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+  syncAutoDailySpreadsheets(now);
   return getPublicAppState();
 }
 
@@ -587,11 +665,96 @@ export function addPresetRecord(preset: ViolationPreset): PublicAppState {
   return getPublicAppState();
 }
 
+export function updatePresetRecord(
+  presetId: string,
+  updates: {
+    code?: string;
+    label?: string;
+    category?: ViolationPreset['category'];
+    points?: number;
+    defaultAction?: string;
+  }
+): PublicAppState {
+  const db = getDatabase();
+  const existing = getAllPresets().find((p) => p.id === presetId);
+  if (!existing) {
+    throw new Error('Aturan pelanggaran tidak ditemukan.');
+  }
+
+  const nextCode = updates.code?.trim().toUpperCase() || existing.code;
+  const nextLabel = updates.label?.trim() || existing.label;
+  const nextCategory = updates.category || existing.category;
+  const nextPoints =
+    updates.points !== undefined && Number.isFinite(updates.points) && updates.points >= 1
+      ? Math.round(updates.points)
+      : existing.points;
+  const nextAction = updates.defaultAction?.trim() || existing.defaultAction;
+
+  db.prepare(
+    'UPDATE presets SET code = ?, label = ?, category = ?, points = ?, default_action = ? WHERE id = ?'
+  ).run(nextCode, nextLabel, nextCategory, nextPoints, nextAction, presetId);
+
+  return getPublicAppState();
+}
+
+export function deletePresetRecord(presetId: string): PublicAppState {
+  const db = getDatabase();
+  const existing = getAllPresets().find((p) => p.id === presetId);
+  if (!existing) {
+    throw new Error('Aturan pelanggaran tidak ditemukan.');
+  }
+  db.prepare('DELETE FROM presets WHERE id = ?').run(presetId);
+  return getPublicAppState();
+}
+
 export function getAllStudents(): StudentRecord[] {
   const db = getDatabase();
   return db
     .prepare('SELECT id, nis, name, kelas FROM students ORDER BY kelas ASC, name ASC')
     .all() as unknown as StudentRecord[];
+}
+
+export function addCustomStudentRecord(params: {
+  name: string;
+  kelas: string;
+  nis?: string;
+}): PublicAppState {
+  const db = getDatabase();
+  const cleanName = params.name.trim();
+  const cleanKelas = params.kelas.trim().toUpperCase();
+  const cleanNis = params.nis?.trim() || '-';
+
+  if (!cleanName || !cleanKelas) {
+    throw new Error('Nama lengkap dan kelas siswa wajib diisi.');
+  }
+
+  const existing = db
+    .prepare('SELECT id FROM students WHERE LOWER(name) = LOWER(?) AND UPPER(kelas) = UPPER(?)')
+    .get(cleanName, cleanKelas) as { id: string } | undefined;
+
+  if (existing) {
+    throw new Error('Siswa dengan nama dan kelas tersebut sudah terdaftar di direktori sekolah.');
+  }
+
+  const id = `stu-${Date.now()}-${crypto.randomBytes(2).toString('hex')}`;
+  db.prepare('INSERT INTO students (id, nis, name, kelas) VALUES (?, ?, ?, ?)').run(
+    id,
+    cleanNis,
+    cleanName,
+    cleanKelas
+  );
+
+  return getPublicAppState();
+}
+
+export function deleteCustomStudentRecord(studentId: string): PublicAppState {
+  const db = getDatabase();
+  const isOfficialRoster = SMAN1_KEMANGKON_STUDENTS.some((s) => s.id === studentId);
+  if (isOfficialRoster) {
+    throw new Error('Data 610 siswa pokok SMAN 1 Kemangkon dilindungi dan tidak dapat dihapus.');
+  }
+  db.prepare('DELETE FROM students WHERE id = ?').run(studentId);
+  return getPublicAppState();
 }
 
 export function getAllSpreadsheets(): DailySpreadsheet[] {
@@ -608,6 +771,7 @@ export function getAllSpreadsheets(): DailySpreadsheet[] {
     created_by_id: string;
     created_by_name: string;
     finalized_at: string | null;
+    reopened_manually?: number;
   }>;
 
   const officerJoinRows = db
@@ -674,6 +838,7 @@ export function getAllSpreadsheets(): DailySpreadsheet[] {
       activeOfficers,
       finishedOfficers,
       finalizedAt: s.finalized_at ?? undefined,
+      reopenedManually: s.reopened_manually === 1,
       rows,
     };
   });
@@ -681,9 +846,18 @@ export function getAllSpreadsheets(): DailySpreadsheet[] {
 
 function persistSpreadsheet(db: DatabaseSync, sheet: DailySpreadsheet): void {
   db.prepare(
-    `INSERT OR REPLACE INTO spreadsheets (
-      id, date, title, hari, status, created_at, created_by_id, created_by_name, finalized_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO spreadsheets (
+      id, date, title, hari, status, created_at, created_by_id, created_by_name, finalized_at, reopened_manually
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      date = excluded.date,
+      title = excluded.title,
+      hari = excluded.hari,
+      status = excluded.status,
+      created_by_id = excluded.created_by_id,
+      created_by_name = excluded.created_by_name,
+      finalized_at = excluded.finalized_at,
+      reopened_manually = excluded.reopened_manually`
   ).run(
     sheet.id,
     sheet.date,
@@ -693,7 +867,8 @@ function persistSpreadsheet(db: DatabaseSync, sheet: DailySpreadsheet): void {
     sheet.createdAt,
     sheet.createdById,
     sheet.createdByName,
-    sheet.finalizedAt ?? null
+    sheet.finalizedAt ?? null,
+    sheet.reopenedManually ? 1 : 0
   );
 
   db.prepare('DELETE FROM spreadsheet_officers WHERE spreadsheet_id = ?').run(sheet.id);
@@ -704,6 +879,36 @@ function persistSpreadsheet(db: DatabaseSync, sheet: DailySpreadsheet): void {
   for (const officerId of sheet.activeOfficers) {
     insertOff.run(sheet.id, officerId, finishedSet.has(officerId) ? 1 : 0);
   }
+}
+
+export function syncAutoDailySpreadsheets(now = new Date()): number {
+  const db = getDatabase();
+  const dailySession = getDailySessionConfig();
+  const simulation = getSimulationConfig();
+  const spreadsheets = getAllSpreadsheets();
+  const { changedSheets } = evaluateAutoSpreadsheetLifecycle(
+    spreadsheets,
+    dailySession,
+    now,
+    simulation,
+    now.toISOString()
+  );
+
+  if (changedSheets.length === 0) {
+    return 0;
+  }
+
+  db.exec('BEGIN');
+  try {
+    for (const sheet of changedSheets) {
+      persistSpreadsheet(db, sheet);
+    }
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+  return changedSheets.length;
 }
 
 export function getPublicMeta(): PublicMetaState {
@@ -727,8 +932,10 @@ export function getPublicMeta(): PublicMetaState {
 
 export function getPublicAppState(): PublicAppState {
   const now = new Date();
+  syncAutoDailySpreadsheets(now);
   const simulation = getSimulationConfig();
   const weeklySchedule = getWeeklyRotationConfig();
+  const dailySession = getDailySessionConfig();
   const clock = getEffectiveClock(now, simulation);
   return {
     officers: getAllAccounts().map(sanitizeOfficer),
@@ -737,6 +944,7 @@ export function getPublicAppState(): PublicAppState {
     spreadsheets: getAllSpreadsheets(),
     simulation,
     weeklySchedule,
+    dailySession,
     serverDate: clock.dateKey,
     serverTime: clock.timeHHMM,
     serverHari: clock.hari,
@@ -909,6 +1117,54 @@ export function updateAccountScheduleRecord(
   return getPublicAppState();
 }
 
+export function updateAccountProfileRecord(
+  accountId: string,
+  updates: {
+    name?: string;
+    kelas?: string;
+    division?: string;
+    role?: RolePetugas;
+  }
+): PublicAppState {
+  const db = getDatabase();
+  const existing = findAccountById(accountId);
+  if (!existing) {
+    throw new Error('Akun tidak ditemukan.');
+  }
+
+  const nextName = updates.name?.trim() || existing.name;
+  const nextKelas = updates.kelas?.trim().toUpperCase() || existing.kelas;
+  const nextDivision = updates.division?.trim() || existing.division;
+  const nextRole: RolePetugas =
+    existing.isProtected || existing.role === 'developer'
+      ? 'developer'
+      : updates.role === 'admin' || updates.role === 'petugas'
+        ? updates.role
+        : existing.role;
+
+  db.exec('BEGIN');
+  try {
+    db.prepare(
+      'UPDATE accounts SET name = ?, kelas = ?, division = ?, role = ? WHERE id = ?'
+    ).run(nextName, nextKelas, nextDivision, nextRole, accountId);
+
+    db.prepare('UPDATE violations SET recorded_by_name = ? WHERE recorded_by_id = ?').run(
+      nextName,
+      accountId
+    );
+    db.prepare('UPDATE spreadsheets SET created_by_name = ? WHERE created_by_id = ?').run(
+      nextName,
+      accountId
+    );
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+
+  return getPublicAppState();
+}
+
 export function deleteAccountRecord(accountId: string): PublicAppState {
   const db = getDatabase();
   const target = findAccountById(accountId);
@@ -918,8 +1174,381 @@ export function deleteAccountRecord(accountId: string): PublicAppState {
   if (target.isProtected || target.role === 'developer') {
     throw new Error('Akun Developer utama dilindungi dan tidak dapat dihapus.');
   }
-  db.prepare('DELETE FROM accounts WHERE id = ? AND is_protected = 0').run(accountId);
+
+  const nowIso = new Date().toISOString();
+  const allSheets = getAllSpreadsheets();
+
+  db.exec('BEGIN');
+  try {
+    db.prepare('DELETE FROM accounts WHERE id = ? AND is_protected = 0').run(accountId);
+
+    for (const sheet of allSheets) {
+      if (
+        sheet.status === 'ACTIVE' &&
+        (sheet.activeOfficers.includes(accountId) || sheet.finishedOfficers.includes(accountId))
+      ) {
+        const cleaned = removeOfficerFromActiveSpreadsheet(sheet, accountId, nowIso);
+        persistSpreadsheet(db, cleaned);
+      }
+    }
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+
   return getPublicAppState();
+}
+
+export function exportSystemBackupPayload(): SystemBackupPayload {
+  const state = getPublicAppState();
+  const officialIds = new Set(SMAN1_KEMANGKON_STUDENTS.map((s) => s.id));
+  const customStudents = state.students.filter((s) => !officialIds.has(s.id));
+
+  return {
+    version: 1,
+    createdAt: new Date().toISOString(),
+    schoolName: 'SMA NEGERI 1 KEMANGKON',
+    officers: state.officers,
+    presets: state.presets,
+    customStudents,
+    spreadsheets: state.spreadsheets,
+    weeklySchedule: state.weeklySchedule,
+    dailySession: state.dailySession,
+    simulation: state.simulation,
+  };
+}
+
+export function restoreSystemBackupPayload(
+  payload: SystemBackupPayload,
+  developerAccountId: string
+): {
+  restoredSpreadsheets: number;
+  restoredViolations: number;
+  restoredAccounts: number;
+  restoredCredentials: GeneratedAccountCredential[];
+  state: PublicAppState;
+} {
+  const db = getDatabase();
+  const self = findAccountById(developerAccountId);
+  if (!self || self.role !== 'developer') {
+    throw new Error('Hanya akun Developer yang dapat memulihkan cadangan sistem.');
+  }
+
+  const nowIso = new Date().toISOString();
+  let restoredAccounts = 0;
+  let restoredSpreadsheets = 0;
+  let restoredViolations = 0;
+  const restoredCredentials: GeneratedAccountCredential[] = [];
+
+  db.exec('BEGIN');
+  try {
+    // 1. Restore presets if provided
+    if (Array.isArray(payload.presets) && payload.presets.length > 0) {
+      db.prepare('DELETE FROM presets').run();
+      const insertPreset = db.prepare(
+        'INSERT OR REPLACE INTO presets (id, code, label, category, points, default_action) VALUES (?, ?, ?, ?, ?, ?)'
+      );
+      for (const p of payload.presets) {
+        if (!p?.id || !p?.label) continue;
+        insertPreset.run(
+          p.id,
+          String(p.code || 'F1').toUpperCase(),
+          String(p.label),
+          p.category || 'F. Pelanggaran Lain-lain',
+          Math.max(1, Number(p.points || 5)),
+          String(p.defaultAction || 'Catat & teguran lisan')
+        );
+      }
+    }
+
+    // 2. Restore custom students if provided
+    if (Array.isArray(payload.customStudents)) {
+      const insertStu = db.prepare(
+        'INSERT OR REPLACE INTO students (id, nis, name, kelas) VALUES (?, ?, ?, ?)'
+      );
+      for (const s of payload.customStudents) {
+        if (!s?.id || !s?.name || !s?.kelas) continue;
+        insertStu.run(s.id, s.nis || '-', s.name, s.kelas.toUpperCase());
+      }
+    }
+
+    // 3. Upsert non-developer accounts from backup
+    if (Array.isArray(payload.officers)) {
+      for (const off of payload.officers) {
+        if (!off?.id || !off?.username || off.role === 'developer' || off.id === developerAccountId) {
+          continue;
+        }
+        const existingById = findAccountById(off.id);
+        const existingByUser = findAccountByUsername(off.username);
+        if (existingById) {
+          db.prepare(
+            `UPDATE accounts SET
+              name = ?, division = ?, kelas = ?, scheduled_days_json = ?, scheduled_weeks_json = ?,
+              shift_start = ?, shift_end = ?
+            WHERE id = ? AND is_protected = 0`
+          ).run(
+            off.name,
+            off.division || 'Sekbid Kedisiplinan',
+            off.kelas || 'XI-A',
+            JSON.stringify(off.scheduledDays ?? ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']),
+            JSON.stringify(off.scheduledWeeks ?? [...ALL_ROTATION_WEEKS]),
+            off.shiftStart || '06:30',
+            off.shiftEnd || '08:30',
+            off.id
+          );
+          restoredAccounts++;
+        } else if (!existingByUser) {
+          const tempPass = generateTemporaryPassword(8);
+          const passHash = hashPassword(tempPass);
+          const restoredRole = off.role === 'admin' ? 'admin' : 'petugas';
+          const restoredDiv = off.division || 'Sekbid Kedisiplinan';
+          const restoredKelas = off.kelas || 'XI-A';
+          const restoredDays = off.scheduledDays ?? [
+            'Senin',
+            'Selasa',
+            'Rabu',
+            'Kamis',
+            'Jumat',
+            'Sabtu',
+          ];
+          const restoredWeeks = off.scheduledWeeks ?? [...ALL_ROTATION_WEEKS];
+          const restoredStart = off.shiftStart || '06:30';
+          const restoredEnd = off.shiftEnd || '08:30';
+          db.prepare(
+            `INSERT INTO accounts (
+              id, name, username, password_hash, role, division, kelas, avatar_color,
+              scheduled_days_json, scheduled_weeks_json, shift_start, shift_end,
+              is_protected, must_change_password, created_by, created_at, password_changed_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1, ?, ?, NULL)`
+          ).run(
+            off.id,
+            off.name,
+            off.username,
+            passHash,
+            restoredRole,
+            restoredDiv,
+            restoredKelas,
+            off.avatarColor || '#2563EB',
+            JSON.stringify(restoredDays),
+            JSON.stringify(restoredWeeks),
+            restoredStart,
+            restoredEnd,
+            developerAccountId,
+            off.createdAt || nowIso
+          );
+          restoredCredentials.push({
+            id: off.id,
+            name: off.name,
+            username: off.username,
+            temporaryPassword: tempPass,
+            role: restoredRole,
+            division: restoredDiv,
+            kelas: restoredKelas,
+            scheduledDays: restoredDays,
+            scheduledWeeks: restoredWeeks,
+            shiftStart: restoredStart,
+            shiftEnd: restoredEnd,
+          });
+          restoredAccounts++;
+        }
+      }
+    }
+
+    // 4. Restore spreadsheets and violations
+    if (Array.isArray(payload.spreadsheets)) {
+      db.prepare('DELETE FROM violations').run();
+      db.prepare('DELETE FROM spreadsheet_officers').run();
+      db.prepare('DELETE FROM spreadsheets').run();
+
+      const insertViol = db.prepare(
+        `INSERT OR REPLACE INTO violations (
+          id, spreadsheet_id, timestamp, time_label, student_name, student_nis, kelas,
+          violation_code, violation_label, category, points, action_taken, notes,
+          recorded_by_id, recorded_by_name
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      );
+
+      for (const sheet of payload.spreadsheets) {
+        if (!sheet?.id || !sheet?.date) continue;
+        persistSpreadsheet(db, {
+          id: sheet.id,
+          date: sheet.date,
+          title: sheet.title || `Spreadsheet Piket — ${sheet.date}`,
+          hari: sheet.hari || 'Senin',
+          status: sheet.status === 'FINALIZED' ? 'FINALIZED' : 'ACTIVE',
+          createdAt: sheet.createdAt || nowIso,
+          createdById: sheet.createdById || developerAccountId,
+          createdByName: sheet.createdByName || self.name,
+          activeOfficers: Array.isArray(sheet.activeOfficers) ? sheet.activeOfficers : [],
+          finishedOfficers: Array.isArray(sheet.finishedOfficers) ? sheet.finishedOfficers : [],
+          finalizedAt: sheet.finalizedAt,
+          rows: [],
+        });
+        restoredSpreadsheets++;
+
+        if (Array.isArray(sheet.rows)) {
+          for (const r of sheet.rows) {
+            if (!r?.id || !r?.studentName) continue;
+            insertViol.run(
+              r.id,
+              sheet.id,
+              r.timestamp || nowIso,
+              r.timeLabel || '07:15',
+              r.studentName,
+              r.studentNis || '-',
+              (r.kelas || 'XI-A').toUpperCase(),
+              r.violationCode || 'CUSTOM',
+              r.violationLabel || 'Pelanggaran AKPS',
+              r.category || 'A. Kedisiplinan & Kehadiran',
+              Math.max(1, Number(r.points || 5)),
+              r.actionTaken || 'Teguran lisan',
+              r.notes || '',
+              r.recordedById || developerAccountId,
+              r.recordedByName || self.name
+            );
+            restoredViolations++;
+          }
+        }
+      }
+    }
+
+    // 5. Restore weekly rotation & simulation settings if present
+    if (payload.weeklySchedule?.cycleWeeks) {
+      db.prepare('INSERT OR REPLACE INTO app_settings (key, value_json) VALUES (?, ?)').run(
+        'weekly_schedule',
+        JSON.stringify({
+          cycleWeeks: clampCycleWeeks(payload.weeklySchedule.cycleWeeks),
+          anchorMonday:
+            payload.weeklySchedule.anchorMonday || getMondayDateKey(formatDateKey(new Date())),
+        })
+      );
+    }
+
+    if (payload.simulation && typeof payload.simulation === 'object') {
+      db.prepare('INSERT OR REPLACE INTO app_settings (key, value_json) VALUES (?, ?)').run(
+        'simulation',
+        JSON.stringify({
+          enabled: Boolean(payload.simulation.enabled),
+          simulatedTime: payload.simulation.simulatedTime || '07:15',
+          simulatedDay: payload.simulation.simulatedDay ?? null,
+          simulatedWeek: payload.simulation.simulatedWeek ?? null,
+        })
+      );
+    }
+
+    if (payload.dailySession && typeof payload.dailySession === 'object') {
+      const validDays = Array.isArray(payload.dailySession.activeDays)
+        ? payload.dailySession.activeDays.filter((d) => HARI_LIST.includes(d))
+        : [];
+      db.prepare('INSERT OR REPLACE INTO app_settings (key, value_json) VALUES (?, ?)').run(
+        'daily_session',
+        JSON.stringify({
+          activeDays:
+            validDays.length > 0 ? validDays : [...DEFAULT_DAILY_SESSION_CONFIG.activeDays],
+          startTime: payload.dailySession.startTime || DEFAULT_DAILY_SESSION_CONFIG.startTime,
+          endTime: payload.dailySession.endTime || DEFAULT_DAILY_SESSION_CONFIG.endTime,
+        })
+      );
+    }
+
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+
+  return {
+    restoredSpreadsheets,
+    restoredViolations,
+    restoredAccounts,
+    restoredCredentials,
+    state: getPublicAppState(),
+  };
+}
+
+export function resetAllDataExceptSelf(developerAccountId: string): {
+  deletedAccounts: number;
+  deletedSpreadsheets: number;
+  deletedViolations: number;
+  state: PublicAppState;
+} {
+  const db = getDatabase();
+  const self = findAccountById(developerAccountId);
+  if (!self || self.role !== 'developer') {
+    throw new Error('Hanya akun Developer yang dapat melakukan reset sistem.');
+  }
+
+  const accCountRow = db
+    .prepare('SELECT COUNT(*) as cnt FROM accounts WHERE id != ?')
+    .get(developerAccountId) as { cnt: number };
+  const sheetCountRow = db
+    .prepare('SELECT COUNT(*) as cnt FROM spreadsheets')
+    .get() as { cnt: number };
+  const violCountRow = db
+    .prepare('SELECT COUNT(*) as cnt FROM violations')
+    .get() as { cnt: number };
+
+  const defaultSim: SimulationConfig = {
+    enabled: false,
+    simulatedTime: '07:15',
+    simulatedDay: null,
+    simulatedWeek: null,
+  };
+  const defaultRotation: WeeklyRotationConfig = {
+    cycleWeeks: 2,
+    anchorMonday: getMondayDateKey(formatDateKey(new Date())),
+  };
+
+  db.exec('BEGIN');
+  try {
+    db.prepare('DELETE FROM violations').run();
+    db.prepare('DELETE FROM spreadsheet_officers').run();
+    db.prepare('DELETE FROM spreadsheets').run();
+    db.prepare('DELETE FROM accounts WHERE id != ?').run(developerAccountId);
+    db.prepare('UPDATE accounts SET is_protected = 1 WHERE id = ?').run(developerAccountId);
+
+    db.prepare('DELETE FROM presets').run();
+    const insertPreset = db.prepare(
+      'INSERT INTO presets (id, code, label, category, points, default_action) VALUES (?, ?, ?, ?, ?, ?)'
+    );
+    for (const p of OFFICIAL_AKPS_PRESETS) {
+      insertPreset.run(p.id, p.code, p.label, p.category, p.points, p.defaultAction);
+    }
+
+    db.prepare('DELETE FROM students').run();
+    const insertStudent = db.prepare(
+      'INSERT INTO students (id, nis, name, kelas) VALUES (?, ?, ?, ?)'
+    );
+    for (const s of SMAN1_KEMANGKON_STUDENTS) {
+      insertStudent.run(s.id, s.nis, s.name, s.kelas);
+    }
+
+    db.prepare('INSERT OR REPLACE INTO app_settings (key, value_json) VALUES (?, ?)').run(
+      'simulation',
+      JSON.stringify(defaultSim)
+    );
+    db.prepare('INSERT OR REPLACE INTO app_settings (key, value_json) VALUES (?, ?)').run(
+      'weekly_schedule',
+      JSON.stringify(defaultRotation)
+    );
+    db.prepare('INSERT OR REPLACE INTO app_settings (key, value_json) VALUES (?, ?)').run(
+      'daily_session',
+      JSON.stringify(DEFAULT_DAILY_SESSION_CONFIG)
+    );
+
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+
+  return {
+    deletedAccounts: accCountRow.cnt,
+    deletedSpreadsheets: sheetCountRow.cnt,
+    deletedViolations: violCountRow.cnt,
+    state: getPublicAppState(),
+  };
 }
 
 export function startOrJoinTodaySpreadsheet(officer: Officer, now: Date): {
@@ -928,6 +1557,7 @@ export function startOrJoinTodaySpreadsheet(officer: Officer, now: Date): {
   state: PublicAppState;
 } {
   const db = getDatabase();
+  syncAutoDailySpreadsheets(now);
   const sim = getSimulationConfig();
   const clock = getEffectiveClock(now, sim);
   const spreadsheets = getAllSpreadsheets();
@@ -951,16 +1581,26 @@ export function startOrJoinTodaySpreadsheet(officer: Officer, now: Date): {
 export function recordViolationInDb(
   officer: Officer,
   input: AddViolationInput,
-  now: Date
+  now: Date,
+  saveToStudentDirectory = false
 ): {
   createdSpreadsheet: boolean;
   spreadsheet: DailySpreadsheet;
   state: PublicAppState;
 } {
   const db = getDatabase();
+  syncAutoDailySpreadsheets(now);
   const sim = getSimulationConfig();
+  const dailySession = getDailySessionConfig();
   const clock = getEffectiveClock(now, sim);
   const spreadsheets = getAllSpreadsheets();
+  const existingToday = spreadsheets.find((s) => s.date === clock.dateKey);
+
+  if (!existingToday) {
+    throw new Error(
+      `Spreadsheet hari ini belum dibuka. Sesi akan dibuat otomatis pada pukul ${dailySession.startTime} WIB.`
+    );
+  }
 
   const joined = createOrJoinDailySpreadsheet(
     spreadsheets,
@@ -972,7 +1612,7 @@ export function recordViolationInDb(
 
   if (joined.spreadsheet.status === 'FINALIZED') {
     throw new Error(
-      'Spreadsheet hari ini sudah ditandai Selesai oleh semua petugas dan terkunci final.'
+      `Spreadsheet hari ini sudah ditutup otomatis sesuai jam selesai (${dailySession.endTime} WIB).`
     );
   }
 
@@ -1015,17 +1655,19 @@ export function recordViolationInDb(
       newEntry.recordedByName
     );
 
-    const existingStudent = db
-      .prepare('SELECT id FROM students WHERE LOWER(name) = LOWER(?) AND UPPER(kelas) = UPPER(?)')
-      .get(newEntry.studentName, newEntry.kelas) as { id: string } | undefined;
+    if (saveToStudentDirectory) {
+      const existingStudent = db
+        .prepare('SELECT id FROM students WHERE LOWER(name) = LOWER(?) AND UPPER(kelas) = UPPER(?)')
+        .get(newEntry.studentName, newEntry.kelas) as { id: string } | undefined;
 
-    if (!existingStudent) {
-      db.prepare('INSERT INTO students (id, nis, name, kelas) VALUES (?, ?, ?, ?)').run(
-        `stu-${Date.now()}-${crypto.randomBytes(2).toString('hex')}`,
-        newEntry.studentNis,
-        newEntry.studentName,
-        newEntry.kelas
-      );
+      if (!existingStudent) {
+        db.prepare('INSERT INTO students (id, nis, name, kelas) VALUES (?, ?, ?, ?)').run(
+          `stu-${Date.now()}-${crypto.randomBytes(2).toString('hex')}`,
+          newEntry.studentNis,
+          newEntry.studentName,
+          newEntry.kelas
+        );
+      }
     }
 
     db.exec('COMMIT');
@@ -1039,6 +1681,40 @@ export function recordViolationInDb(
     spreadsheet: updatedSheet,
     state: getPublicAppState(),
   };
+}
+
+export function updateViolationInDb(
+  spreadsheetId: string,
+  violationId: string,
+  input: AddViolationInput
+): PublicAppState {
+  const db = getDatabase();
+  db.prepare(
+    `UPDATE violations SET
+      student_name = ?,
+      student_nis = ?,
+      kelas = ?,
+      violation_code = ?,
+      violation_label = ?,
+      category = ?,
+      points = ?,
+      action_taken = ?,
+      notes = ?
+    WHERE id = ? AND spreadsheet_id = ?`
+  ).run(
+    input.studentName.trim(),
+    input.studentNis.trim() || '-',
+    input.kelas.trim().toUpperCase(),
+    (input.violationCode || 'CUSTOM').trim().toUpperCase(),
+    input.violationLabel.trim(),
+    input.category,
+    Math.round(input.points),
+    input.actionTaken.trim() || 'Teguran Lisan & Catat',
+    input.notes.trim(),
+    violationId,
+    spreadsheetId
+  );
+  return getPublicAppState();
 }
 
 export function deleteViolationInDb(spreadsheetId: string, violationId: string): PublicAppState {
@@ -1083,7 +1759,29 @@ export function reopenSpreadsheetInDb(spreadsheetId: string): PublicAppState {
     status: 'ACTIVE',
     finishedOfficers: [],
     finalizedAt: undefined,
+    reopenedManually: true,
   };
   persistSpreadsheet(db, reopened);
+  return getPublicAppState();
+}
+
+export function closeSpreadsheetManuallyInDb(
+  spreadsheetId: string,
+  nowIso: string
+): PublicAppState {
+  const db = getDatabase();
+  const sheet = getAllSpreadsheets().find((s) => s.id === spreadsheetId);
+  if (!sheet) {
+    throw new Error('Spreadsheet tidak ditemukan.');
+  }
+
+  const closed: DailySpreadsheet = {
+    ...sheet,
+    status: 'FINALIZED',
+    finishedOfficers: [...sheet.activeOfficers],
+    finalizedAt: nowIso,
+    reopenedManually: false,
+  };
+  persistSpreadsheet(db, closed);
   return getPublicAppState();
 }

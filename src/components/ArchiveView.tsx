@@ -1,6 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, Clock, Download, Eye, FileSpreadsheet, FileText } from 'lucide-react';
-import { formatIndonesianDateLabel, getConsensusProgress } from '../shared/piketLogic';
+import {
+  DEFAULT_DAILY_SESSION_CONFIG,
+  formatIndonesianDateLabel,
+  getConsensusProgress,
+} from '../shared/piketLogic';
 import type { PublicAppState } from '../shared/types';
 import { downloadSpreadsheetCsv, downloadSpreadsheetXlsx } from '../utils/exportSpreadsheet';
 import { downloadVisualPdfReport } from '../utils/exportVisualPdf';
@@ -20,8 +24,20 @@ export function ArchiveView({ appState, onNotify }: ArchiveViewProps) {
   const [selectedId, setSelectedId] = useState<string>(sortedSheets[0]?.id ?? '');
   const [previewVisual, setPreviewVisual] = useState(false);
 
+  useEffect(() => {
+    if (sortedSheets.length === 0) {
+      if (selectedId) setSelectedId('');
+      return;
+    }
+    if (!sortedSheets.some((s) => s.id === selectedId)) {
+      setSelectedId(sortedSheets[0].id);
+    }
+  }, [sortedSheets, selectedId]);
+
   const selectedSheet =
     sortedSheets.find((s) => s.id === selectedId) ?? sortedSheets[0] ?? null;
+
+  const selectedConsensus = selectedSheet ? getConsensusProgress(selectedSheet) : null;
 
   const officerMap = useMemo(
     () => new Map(appState.officers.map((o) => [o.id, o])),
@@ -44,7 +60,7 @@ export function ArchiveView({ appState, onNotify }: ArchiveViewProps) {
     if (!sheet) return;
     const consensus = getConsensusProgress(sheet);
     if (!consensus.exportUnlocked) {
-      onNotify('Ekspor terkunci sampai seluruh petugas aktif menekan Selesai.', 'error');
+      onNotify('Ekspor otomatis terbuka setelah jam selesai spreadsheet tercapai.', 'error');
       return;
     }
     try {
@@ -60,7 +76,7 @@ export function ArchiveView({ appState, onNotify }: ArchiveViewProps) {
     if (!sheet) return;
     const consensus = getConsensusProgress(sheet);
     if (!consensus.exportUnlocked) {
-      onNotify('Ekspor terkunci sampai seluruh petugas aktif menekan Selesai.', 'error');
+      onNotify('Ekspor otomatis terbuka setelah jam selesai spreadsheet tercapai.', 'error');
       return;
     }
     downloadSpreadsheetCsv(sheet);
@@ -69,7 +85,7 @@ export function ArchiveView({ appState, onNotify }: ArchiveViewProps) {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-6">
+      <section className="surface-3d animate-stagger-1 rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-6">
         <h1 className="font-display text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
           Arsip Laporan Piket Harian
         </h1>
@@ -97,10 +113,10 @@ export function ArchiveView({ appState, onNotify }: ArchiveViewProps) {
                   key={sheet.id}
                   type="button"
                   onClick={() => setSelectedId(sheet.id)}
-                  className={`w-full rounded-2xl border p-4 text-left transition-all active:scale-[0.99] ${
+                  className={`card-3d-interactive w-full rounded-2xl border p-4 text-left ${
                     isSelected
-                      ? 'border-blue-600 bg-blue-50/45 shadow-[0_1px_3px_rgba(37,99,235,0.08)]'
-                      : 'border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:-translate-y-0.5 hover:border-slate-300'
+                      ? 'border-blue-600 bg-blue-50/55 shadow-[0_3px_0_0_rgba(37,99,235,0.22),0_8px_18px_-6px_rgba(37,99,235,0.18)]'
+                      : 'border-slate-200/90 bg-white hover:border-blue-300'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
@@ -120,7 +136,7 @@ export function ArchiveView({ appState, onNotify }: ArchiveViewProps) {
                       ) : (
                         <>
                           <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-                          <span>Aktif ({consensus.finishedCount}/{consensus.activeCount})</span>
+                          <span>Aktif</span>
                         </>
                       )}
                     </span>
@@ -139,7 +155,7 @@ export function ArchiveView({ appState, onNotify }: ArchiveViewProps) {
 
           {/* Selected Sheet Preview */}
           {selectedSheet && (
-            <div className="rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.04)] lg:col-span-8">
+            <div key={selectedSheet.id} className="surface-3d animate-panel-reveal rounded-2xl border border-slate-200/90 bg-white lg:col-span-8">
               <div className="flex flex-col gap-4 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
                 <div className="min-w-0">
                   <h2 className="font-display text-lg font-bold text-slate-900 break-words">
@@ -156,7 +172,7 @@ export function ArchiveView({ appState, onNotify }: ArchiveViewProps) {
                 <div className="flex flex-wrap items-center gap-2 shrink-0">
                   <button
                     type="button"
-                    disabled={selectedSheet.status !== 'FINALIZED'}
+                    disabled={!selectedConsensus?.exportUnlocked}
                     onClick={() => handleExportXlsx(selectedSheet.id)}
                     className="btn-3d-soft inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
                   >
@@ -166,7 +182,7 @@ export function ArchiveView({ appState, onNotify }: ArchiveViewProps) {
 
                   <button
                     type="button"
-                    disabled={selectedSheet.status !== 'FINALIZED'}
+                    disabled={!selectedConsensus?.exportUnlocked}
                     onClick={() => handleExportPdf(selectedSheet.id)}
                     className="btn-3d-soft inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
                   >
@@ -176,7 +192,7 @@ export function ArchiveView({ appState, onNotify }: ArchiveViewProps) {
 
                   <button
                     type="button"
-                    disabled={selectedSheet.status !== 'FINALIZED'}
+                    disabled={!selectedConsensus?.exportUnlocked}
                     onClick={() => setPreviewVisual(true)}
                     className="btn-3d-soft inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
                   >
@@ -186,7 +202,7 @@ export function ArchiveView({ appState, onNotify }: ArchiveViewProps) {
 
                   <button
                     type="button"
-                    disabled={selectedSheet.status !== 'FINALIZED'}
+                    disabled={!selectedConsensus?.exportUnlocked}
                     onClick={() => handleExportCsv(selectedSheet.id)}
                     className="btn-3d-soft inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
                   >
@@ -196,11 +212,14 @@ export function ArchiveView({ appState, onNotify }: ArchiveViewProps) {
                 </div>
               </div>
 
-              {selectedSheet.status !== 'FINALIZED' && (
+              {!selectedConsensus?.exportUnlocked && (
                 <div className="border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-medium text-amber-800 sm:px-5">
                   Laporan ini masih berstatus Aktif. Tombol unduh Excel, PDF, dan pratinjau akan
-                  terbuka setelah semua petugas menekan <strong>Tandai Selesai Mencatat</strong> di
-                  menu <strong>Piket Hari Ini</strong>.
+                  terbuka otomatis setelah jam selesai piket (
+                  <strong className="font-mono-num">
+                    {(appState.dailySession ?? DEFAULT_DAILY_SESSION_CONFIG).endTime} WIB
+                  </strong>
+                  ).
                 </div>
               )}
 

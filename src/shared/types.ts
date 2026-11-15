@@ -108,6 +108,7 @@ export interface DailySpreadsheet {
   activeOfficers: string[];
   finishedOfficers: string[];
   finalizedAt?: string;
+  reopenedManually?: boolean;
   rows: ViolationEntry[];
 }
 
@@ -186,6 +187,12 @@ export interface WeeklyRotationConfig {
   anchorMonday: string; // YYYY-MM-DD (Senin minggu ke-1 siklus)
 }
 
+export interface DailySessionConfig {
+  activeDays: HariPiket[];
+  startTime: string; // HH:mm (24h)
+  endTime: string;   // HH:mm (24h)
+}
+
 export interface PublicMetaState {
   serverDate: string;
   serverTime: string;
@@ -201,7 +208,22 @@ export interface PublicAppState {
   spreadsheets: DailySpreadsheet[];
   simulation: SimulationConfig;
   weeklySchedule: WeeklyRotationConfig;
+  dailySession: DailySessionConfig;
   serverDate: string;
   serverTime: string;
   serverHari: HariPiket;
 }
+
+export interface SystemBackupPayload {
+  version: number;
+  createdAt: string;
+  schoolName: string;
+  officers: PublicOfficer[];
+  presets: ViolationPreset[];
+  customStudents?: StudentRecord[];
+  spreadsheets: DailySpreadsheet[];
+  weeklySchedule: WeeklyRotationConfig;
+  dailySession?: DailySessionConfig;
+  simulation?: SimulationConfig;
+}
+

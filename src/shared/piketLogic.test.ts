@@ -1,17 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  DEFAULT_DAILY_SESSION_CONFIG,
   addViolationToSpreadsheet,
   assignWeeklyRotationDistribution,
   calculateDailyOfficerProductivity,
   calculateStudentSummaries,
   canCreateRole,
   canDeleteAccount,
+  canEditAccountProfile,
+  canModifyViolationRow,
   createOrJoinDailySpreadsheet,
+  evaluateAutoSpreadsheetLifecycle,
   exportSpreadsheetToCsv,
   formatScheduledWeeksLabel,
   generateUniqueUsername,
   getActiveRotationWeek,
+  getAutoSessionWindowStatus,
   getCategoryBreakdown,
   getConsensusProgress,
   getMondayDateKey,
@@ -19,13 +24,24 @@ import {
   getTingkatPembinaan,
   groupViolationsByClass,
   parseBulkAccountEntries,
+  removeOfficerFromActiveSpreadsheet,
   searchSimilarStudents,
   shiftAnchorMondayForTargetWeek,
   toggleOfficerFinished,
+  validateDailySessionInput,
   validateNewPassword,
+  validateOfficerScheduleInput,
+  validatePresetInput,
+  validateViolationInput,
 } from './piketLogic';
 import type { DailySpreadsheet, Officer, StudentRecord } from './types';
 import { SMAN1_KEMANGKON_STUDENTS } from '../server/studentRoster';
+import {
+  deriveConnectionStatus,
+  getConnectionBannerInfo,
+  isReachableApiResponse,
+} from './connectionLogic';
+import { calculateTiltTransform, easeOutCubic } from './motionMath';
 
 test('getScheduleStatus allows scheduled day within shift hours and blocks off-schedule', () => {
   const officer: Pick<Officer, 'scheduledDays' | 'shiftStart' | 'shiftEnd'> = {
@@ -516,4 +532,302 @@ test('calculateDailyOfficerProductivity summarizes total violations and per-offi
   assert.equal(populated.officers[1].percentage, 33);
   assert.equal(populated.officers[1].isFinished, false);
 });
+
+test('removeOfficerFromActiveSpreadsheet prevents stuck consensus when an active officer account is deleted, and RBAC helpers validate row/profile edits', () => {
+  let sheet: DailySpreadsheet = {
+    id: 'sheet-2026-11-16',
+    date: '2026-11-16',
+    hari: 'Senin',
+    title: 'Spreadsheet Piket',
+    status: 'ACTIVE',
+    createdAt: '2026-11-16T06:40:00.000Z',
+    createdById: 'off-1',
+    createdByName: 'Petugas Satu',
+    activeOfficers: ['off-1', 'off-2'],
+    finishedOfficers: ['off-1'],
+    rows: [],
+  };
+
+  // off-1 already finished, off-2 has NOT finished yet. Now off-2 account is deleted:
+  sheet = removeOfficerFromActiveSpreadsheet(sheet, 'off-2', '2026-11-16T08:10:00.000Z');
+  assert.deepEqual(sheet.activeOfficers, ['off-1']);
+  assert.deepEqual(sheet.finishedOfficers, ['off-1']);
+  assert.equal(sheet.status, 'FINALIZED');
+  assert.equal(getConsensusProgress(sheet).exportUnlocked, true);
+
+  // Row edit/delete RBAC
+  assert.equal(canModifyViolationRow({ id: 'off-1', role: 'petugas' }, { recordedById: 'off-1' }), true);
+  assert.equal(canModifyViolationRow({ id: 'off-2', role: 'petugas' }, { recordedById: 'off-1' }), false);
+  assert.equal(canModifyViolationRow({ id: 'adm-1', role: 'admin' }, { recordedById: 'off-1' }), true);
+  assert.equal(canModifyViolationRow({ id: 'dev-1', role: 'developer' }, { recordedById: 'off-1' }), true);
+
+  // Account profile edit RBAC
+  assert.equal(canEditAccountProfile('developer', 'dev-1', { id: 'adm-1', role: 'admin', isProtected: false }), true);
+  assert.equal(canEditAccountProfile('admin', 'adm-1', { id: 'off-1', role: 'petugas', isProtected: false }), true);
+  assert.equal(canEditAccountProfile('admin', 'adm-1', { id: 'adm-2', role: 'admin', isProtected: false }), false);
+  assert.equal(canEditAccountProfile('admin', 'adm-1', { id: 'adm-1', role: 'admin', isProtected: false }), true);
+  assert.equal(canEditAccountProfile('petugas', 'off-1', { id: 'off-1', role: 'petugas', isProtected: false }), false);
+});
+
+test('finalized spreadsheets with empty activeOfficers unlock export and backend validators enforce bounds', () => {
+  const finalizedEmpty: DailySpreadsheet = {
+    id: 'sheet-2026-11-10',
+    date: '2026-11-10',
+    hari: 'Selasa',
+    title: 'Spreadsheet Kosong Final',
+    status: 'FINALIZED',
+    createdAt: '2026-11-10T07:00:00.000Z',
+    createdById: 'dev-1',
+    createdByName: 'Developer',
+    activeOfficers: [],
+    finishedOfficers: [],
+    finalizedAt: '2026-11-10T08:00:00.000Z',
+    rows: [],
+  };
+  assert.equal(getConsensusProgress(finalizedEmpty).exportUnlocked, true);
+  assert.equal(getConsensusProgress({ ...finalizedEmpty, status: 'ACTIVE' }).exportUnlocked, false);
+
+  assert.ok(
+    validateViolationInput({
+      studentName: 'Budi',
+      studentNis: '1234',
+      kelas: '10A',
+      violationLabel: 'Terlambat',
+      category: 'Z. Tidak Valid' as any,
+      points: 5,
+      actionTaken: 'Catat',
+      notes: '',
+    })
+  );
+
+  assert.ok(validatePresetInput({ label: 'Test', category: 'E. Kerapian', points: 101 }));
+  assert.ok(validatePresetInput({ label: 'Test', category: 'E. Kerapian', points: 5.5 }));
+  assert.equal(validatePresetInput({ label: 'Test', category: 'E. Kerapian', points: 15 }), null);
+
+  assert.ok(
+    validateOfficerScheduleInput({
+      scheduledDays: [],
+      shiftStart: '06:30',
+      shiftEnd: '08:30',
+    })
+  );
+  assert.ok(
+    validateOfficerScheduleInput({
+      scheduledDays: ['Senin'],
+      shiftStart: '09:00',
+      shiftEnd: '08:00',
+    })
+  );
+  assert.equal(
+    validateOfficerScheduleInput({
+      scheduledDays: ['Senin', 'Kamis'],
+      shiftStart: '06:30',
+      shiftEnd: '08:30',
+    }),
+    null
+  );
+});
+
+test('connectionLogic derives offline, server-unreachable, reconnecting, and reconnected states accurately', () => {
+  assert.equal(isReachableApiResponse(200, 'application/json'), true);
+  assert.equal(isReachableApiResponse(401, 'application/json'), true);
+  assert.equal(isReachableApiResponse(502, 'text/plain'), false);
+  assert.equal(isReachableApiResponse(503, 'application/json'), false);
+  assert.equal(isReachableApiResponse(200, 'text/html; charset=utf-8'), false);
+
+  assert.equal(
+    deriveConnectionStatus({ browserOnline: false, serverReachable: false, isChecking: false }),
+    'offline'
+  );
+  assert.equal(
+    deriveConnectionStatus({ browserOnline: true, serverReachable: false, isChecking: false }),
+    'server-unreachable'
+  );
+  assert.equal(
+    deriveConnectionStatus({ browserOnline: true, serverReachable: false, isChecking: true }),
+    'reconnecting'
+  );
+  assert.equal(
+    deriveConnectionStatus({ browserOnline: true, serverReachable: true, isChecking: false }),
+    'online'
+  );
+
+  const offlineBanner = getConnectionBannerInfo({ status: 'offline', justReconnected: false });
+  assert.equal(offlineBanner.visible, true);
+  assert.equal(offlineBanner.tone, 'red');
+  assert.equal(offlineBanner.role, 'alert');
+  assert.equal(offlineBanner.actionLabel, 'Cek Koneksi');
+
+  const serverDownBanner = getConnectionBannerInfo({
+    status: 'server-unreachable',
+    justReconnected: false,
+  });
+  assert.equal(serverDownBanner.visible, true);
+  assert.equal(serverDownBanner.actionLabel, 'Coba Sambungkan');
+
+  const recoveredBanner = getConnectionBannerInfo({ status: 'online', justReconnected: true });
+  assert.equal(recoveredBanner.visible, true);
+  assert.equal(recoveredBanner.tone, 'emerald');
+
+  const hiddenBanner = getConnectionBannerInfo({ status: 'online', justReconnected: false });
+  assert.equal(hiddenBanner.visible, false);
+});
+
+test('validateDailySessionInput, getAutoSessionWindowStatus, and evaluateAutoSpreadsheetLifecycle automate daily open/close by time', () => {
+  assert.ok(validateDailySessionInput({ activeDays: [], startTime: '06:30', endTime: '08:30' }));
+  assert.ok(validateDailySessionInput({ activeDays: ['Senin'], startTime: '08:30', endTime: '08:30' }));
+  assert.ok(validateDailySessionInput({ activeDays: ['Senin'], startTime: '09:00', endTime: '08:30' }));
+  assert.ok(validateDailySessionInput({ activeDays: ['Senin'], startTime: '25:00', endTime: '08:30' }));
+  assert.equal(
+    validateDailySessionInput({
+      activeDays: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'],
+      startTime: '06:30',
+      endTime: '08:30',
+    }),
+    null
+  );
+
+  const mondayBase = new Date('2026-11-16T07:00:00+07:00');
+  const sundayDate = new Date('2026-11-15T07:15:00+07:00');
+
+  const sundayStatus = getAutoSessionWindowStatus(DEFAULT_DAILY_SESSION_CONFIG, sundayDate);
+  assert.equal(sundayStatus.isActiveDay, false);
+  assert.equal(sundayStatus.phase, 'NON_ACTIVE_DAY');
+
+  const beforeStart = getAutoSessionWindowStatus(DEFAULT_DAILY_SESSION_CONFIG, mondayBase, {
+    enabled: true,
+    simulatedDay: 'Senin',
+    simulatedTime: '06:00',
+  });
+  assert.equal(beforeStart.phase, 'BEFORE_START');
+  assert.equal(beforeStart.minutesUntilStart, 30);
+
+  const openWindow = getAutoSessionWindowStatus(DEFAULT_DAILY_SESSION_CONFIG, mondayBase, {
+    enabled: true,
+    simulatedDay: 'Senin',
+    simulatedTime: '07:15',
+  });
+  assert.equal(openWindow.phase, 'OPEN');
+  assert.equal(openWindow.minutesUntilClose, 75);
+
+  const closedWindow = getAutoSessionWindowStatus(DEFAULT_DAILY_SESSION_CONFIG, mondayBase, {
+    enabled: true,
+    simulatedDay: 'Senin',
+    simulatedTime: '08:30',
+  });
+  assert.equal(closedWindow.phase, 'CLOSED');
+
+  // Before startTime: no spreadsheet created automatically
+  const beforeEval = evaluateAutoSpreadsheetLifecycle(
+    [],
+    DEFAULT_DAILY_SESSION_CONFIG,
+    mondayBase,
+    { enabled: true, simulatedDay: 'Senin', simulatedTime: '06:00' },
+    '2026-11-16T06:00:00+07:00'
+  );
+  assert.equal(beforeEval.changedSheets.length, 0);
+
+  // At OPEN time: today's spreadsheet is automatically created as ACTIVE
+  const openEval = evaluateAutoSpreadsheetLifecycle(
+    [],
+    DEFAULT_DAILY_SESSION_CONFIG,
+    mondayBase,
+    { enabled: true, simulatedDay: 'Senin', simulatedTime: '07:15' },
+    '2026-11-16T07:15:00+07:00'
+  );
+  assert.equal(openEval.changedSheets.length, 1);
+  const autoOpened = openEval.changedSheets[0];
+  assert.equal(autoOpened.date, '2026-11-16');
+  assert.equal(autoOpened.status, 'ACTIVE');
+  assert.equal(autoOpened.createdById, 'system-auto');
+  assert.equal(getConsensusProgress(autoOpened).exportUnlocked, false);
+
+  // At CLOSED time (endTime reached): ACTIVE sheet transitions automatically to FINALIZED & unlocks export
+  const closedEval = evaluateAutoSpreadsheetLifecycle(
+    [autoOpened],
+    DEFAULT_DAILY_SESSION_CONFIG,
+    mondayBase,
+    { enabled: true, simulatedDay: 'Senin', simulatedTime: '08:30' },
+    '2026-11-16T08:30:00+07:00'
+  );
+  assert.equal(closedEval.changedSheets.length, 1);
+  const autoClosed = closedEval.changedSheets[0];
+  assert.equal(autoClosed.status, 'FINALIZED');
+  assert.equal(getConsensusProgress(autoClosed).exportUnlocked, true);
+
+  // Extending endTime puts the day back in OPEN -> auto-finalized sheet reopens automatically
+  const extendedEval = evaluateAutoSpreadsheetLifecycle(
+    [autoClosed],
+    { ...DEFAULT_DAILY_SESSION_CONFIG, endTime: '10:00' },
+    mondayBase,
+    { enabled: true, simulatedDay: 'Senin', simulatedTime: '09:00' },
+    '2026-11-16T09:00:00+07:00'
+  );
+  assert.equal(extendedEval.changedSheets.length, 1);
+  assert.equal(extendedEval.changedSheets[0].status, 'ACTIVE');
+
+  // Manually reopened sheet stays ACTIVE during CLOSED until coordinator manually closes it
+  const reopenedManual: DailySpreadsheet = {
+    ...autoClosed,
+    status: 'ACTIVE',
+    reopenedManually: true,
+  };
+  const keepReopenedEval = evaluateAutoSpreadsheetLifecycle(
+    [reopenedManual],
+    DEFAULT_DAILY_SESSION_CONFIG,
+    mondayBase,
+    { enabled: true, simulatedDay: 'Senin', simulatedTime: '10:00' },
+    '2026-11-16T10:00:00+07:00'
+  );
+  assert.equal(keepReopenedEval.changedSheets.length, 0);
+
+  // Past-day stale ACTIVE sheet is auto-finalized automatically
+  const stalePastSheet: DailySpreadsheet = {
+    ...autoOpened,
+    id: 'sheet-2026-11-14',
+    date: '2026-11-14',
+    hari: 'Sabtu',
+    reopenedManually: false,
+  };
+  const pastFinalizeEval = evaluateAutoSpreadsheetLifecycle(
+    [stalePastSheet],
+    DEFAULT_DAILY_SESSION_CONFIG,
+    mondayBase,
+    { enabled: true, simulatedDay: 'Senin', simulatedTime: '06:00' },
+    '2026-11-16T06:00:00+07:00'
+  );
+  assert.equal(pastFinalizeEval.changedSheets.length, 1);
+  assert.equal(pastFinalizeEval.changedSheets[0].status, 'FINALIZED');
+});
+
+test('motionMath computes clamped 3D tilt angles, glare coords, and cubic ease-out cleanly', () => {
+  const center = calculateTiltTransform(0, 0, 8);
+  assert.equal(center.rotateX, 0);
+  assert.equal(center.rotateY, 0);
+  assert.equal(center.glareX, 50);
+  assert.equal(center.glareY, 50);
+
+  const clamped = calculateTiltTransform(2.5, -2.5, 8);
+  assert.equal(clamped.rotateY, 8);
+  assert.equal(clamped.rotateX, 8);
+  assert.equal(clamped.glareX, 100);
+  assert.equal(clamped.glareY, 0);
+
+  const safeNonFinite = calculateTiltTransform(Number.NaN, Number.POSITIVE_INFINITY, 6);
+  assert.equal(safeNonFinite.rotateY, 0);
+  assert.equal(safeNonFinite.rotateX, 0);
+
+  const angled = calculateTiltTransform(-2, 0.5, 6);
+  assert.equal(angled.rotateY, -6);
+  assert.equal(angled.rotateX, -3);
+
+  assert.equal(easeOutCubic(-1), 0);
+  assert.equal(easeOutCubic(0), 0);
+  assert.equal(easeOutCubic(1), 1);
+  assert.ok(easeOutCubic(0.5) > 0.85 && easeOutCubic(0.5) < 0.9);
+});
+
+
+
+
 

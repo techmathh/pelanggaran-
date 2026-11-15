@@ -1,23 +1,29 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
   CalendarDays,
   Clock,
+  Eye,
+  EyeOff,
   KeyRound,
   Lock,
+  Pencil,
   RefreshCw,
   Repeat,
   Save,
   Search,
   ShieldCheck,
+  Trash2,
   Users,
 } from 'lucide-react';
 import { apiFetch } from '../lib/apiClient';
 import {
   AKPS_CATEGORIES,
   ALL_ROTATION_WEEKS,
+  DEFAULT_DAILY_SESSION_CONFIG,
   HARI_LIST,
   formatScheduledWeeksLabel,
   getActiveRotationWeek,
+  getAutoSessionWindowStatus,
   getRoleLabel,
   getScheduleStatus,
   isManagerRole,
@@ -27,6 +33,7 @@ import type {
   KategoriPelanggaran,
   PublicAppState,
   PublicOfficer,
+  ViolationPreset,
 } from '../shared/types';
 
 interface ScheduleSettingsViewProps {
@@ -53,13 +60,45 @@ export function ScheduleSettingsView({
   onNotify,
 }: ScheduleSettingsViewProps) {
   const canManage = isManagerRole(officer.role);
-  const now = new Date();
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setNowTick(Date.now());
+    }, 30000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  const now = new Date(nowTick);
   const weekInfo = getActiveRotationWeek(
     appState.serverDate,
     appState.weeklySchedule,
     appState.simulation
   );
   const cycleWeeks = weekInfo.cycleWeeks;
+
+  // Daily automatic spreadsheet schedule form
+  const initialDaily = appState.dailySession ?? DEFAULT_DAILY_SESSION_CONFIG;
+  const [sessionDays, setSessionDays] = useState<HariPiket[]>(initialDaily.activeDays);
+  const [sessionStart, setSessionStart] = useState(initialDaily.startTime);
+  const [sessionEnd, setSessionEnd] = useState(initialDaily.endTime);
+  const [syncOfficersWithSession, setSyncOfficersWithSession] = useState(true);
+
+  useEffect(() => {
+    const nextDaily = appState.dailySession ?? DEFAULT_DAILY_SESSION_CONFIG;
+    setSessionDays(nextDaily.activeDays);
+    setSessionStart(nextDaily.startTime);
+    setSessionEnd(nextDaily.endTime);
+  }, [
+    appState.dailySession?.startTime,
+    appState.dailySession?.endTime,
+    appState.dailySession?.activeDays,
+  ]);
+
+  const autoWindow = getAutoSessionWindowStatus(
+    appState.dailySession ?? DEFAULT_DAILY_SESSION_CONFIG,
+    now,
+    appState.simulation
+  );
 
   // Simulation form
   const [simEnabled, setSimEnabled] = useState(appState.simulation.enabled);
@@ -68,6 +107,18 @@ export function ScheduleSettingsView({
   const [simWeek, setSimWeek] = useState<string>(
     appState.simulation.simulatedWeek ? String(appState.simulation.simulatedWeek) : ''
   );
+
+  useEffect(() => {
+    setSimEnabled(Boolean(appState.simulation.enabled));
+    setSimTime(appState.simulation.simulatedTime || '07:15');
+    setSimDay(appState.simulation.simulatedDay ?? '');
+    setSimWeek(appState.simulation.simulatedWeek ? String(appState.simulation.simulatedWeek) : '');
+  }, [
+    appState.simulation.enabled,
+    appState.simulation.simulatedTime,
+    appState.simulation.simulatedDay,
+    appState.simulation.simulatedWeek,
+  ]);
 
   // Editable officer schedules
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -80,6 +131,10 @@ export function ScheduleSettingsView({
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showSelfPasswords, setShowSelfPasswords] = useState(false);
+
+  // Interactive week filter in schedule list
+  const [selectedWeekFilter, setSelectedWeekFilter] = useState<number | null>(null);
 
   // New preset form
   const [presetCode, setPresetCode] = useState('');
@@ -90,10 +145,26 @@ export function ScheduleSettingsView({
   const [presetPoints, setPresetPoints] = useState(10);
   const [presetAction, setPresetAction] = useState('');
 
-  // Rule search filter
+  // Rule search filter & inline edit/delete state
   const [ruleSearch, setRuleSearch] = useState('');
+  const [editingPresetId, setEditingPresetId] = useState<string | null>(null);
+  const [editPresetCode, setEditPresetCode] = useState('');
+  const [editPresetLabel, setEditPresetLabel] = useState('');
+  const [editPresetCategory, setEditPresetCategory] = useState<KategoriPelanggaran>(
+    'A. Kedisiplinan & Kehadiran'
+  );
+  const [editPresetPoints, setEditPresetPoints] = useState(10);
+  const [editPresetAction, setEditPresetAction] = useState('');
+  const [confirmDeletePresetId, setConfirmDeletePresetId] = useState<string | null>(null);
 
   const [saving, setSaving] = useState(false);
+
+  const visibleOfficers = useMemo(() => {
+    if (!selectedWeekFilter || cycleWeeks <= 1) return appState.officers;
+    return appState.officers.filter(
+      (o) => !o.scheduledWeeks || o.scheduledWeeks.includes(selectedWeekFilter)
+    );
+  }, [appState.officers, selectedWeekFilter, cycleWeeks]);
 
   const filteredPresets = useMemo(() => {
     const q = ruleSearch.trim().toLowerCase();
@@ -107,6 +178,65 @@ export function ScheduleSettingsView({
         String(p.points).includes(q)
     );
   }, [appState.presets, ruleSearch]);
+
+  function startEditPreset(preset: ViolationPreset) {
+    setConfirmDeletePresetId(null);
+    setEditingPresetId(preset.id);
+    setEditPresetCode(preset.code);
+    setEditPresetLabel(preset.label);
+    setEditPresetCategory(preset.category);
+    setEditPresetPoints(preset.points);
+    setEditPresetAction(preset.defaultAction);
+  }
+
+  async function handleSaveEditPreset(presetId: string) {
+    setSaving(true);
+    try {
+      const res = await apiFetch(`/api/presets/${presetId}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          code: editPresetCode,
+          label: editPresetLabel,
+          category: editPresetCategory,
+          points: editPresetPoints,
+          defaultAction: editPresetAction,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        onNotify(data.error || 'Gagal memperbarui aturan pelanggaran.', 'error');
+        return;
+      }
+      onStateUpdate(data.state);
+      setEditingPresetId(null);
+      onNotify('Aturan pelanggaran AKPS berhasil diperbarui.', 'success');
+    } catch {
+      onNotify('Gagal terhubung ke server.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDeletePreset(presetId: string, code: string) {
+    setSaving(true);
+    try {
+      const res = await apiFetch(`/api/presets/${presetId}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        onNotify(data.error || 'Gagal menghapus aturan pelanggaran.', 'error');
+        return;
+      }
+      onStateUpdate(data.state);
+      setConfirmDeletePresetId(null);
+      onNotify(`Aturan pelanggaran ${code} berhasil dihapus.`, 'info');
+    } catch {
+      onNotify('Gagal terhubung ke server.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   function startEditOfficer(target: PublicOfficer) {
     setEditingId(target.id);
@@ -221,6 +351,36 @@ export function ScheduleSettingsView({
     }
   }
 
+  async function handleSaveDailySession(e: FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await apiFetch('/api/settings/daily-session', {
+        method: 'PUT',
+        body: JSON.stringify({
+          activeDays: sessionDays,
+          startTime: sessionStart,
+          endTime: sessionEnd,
+          syncOfficers: syncOfficersWithSession,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        onNotify(data.error || 'Gagal menyimpan jadwal otomatis spreadsheet.', 'error');
+        return;
+      }
+      onStateUpdate(data.state);
+      onNotify(
+        `Jadwal otomatis spreadsheet diperbarui: buka ${sessionStart} WIB, tutup ${sessionEnd} WIB.`,
+        'success'
+      );
+    } catch {
+      onNotify('Gagal terhubung ke server.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function handleSaveSimulation(e: FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -315,7 +475,7 @@ export function ScheduleSettingsView({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+      <section className="surface-3d animate-stagger-1 rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="font-display text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
@@ -334,8 +494,156 @@ export function ScheduleSettingsView({
         </div>
       </section>
 
+      {/* Automatic Daily Spreadsheet Open/Close Schedule */}
+      <section className="surface-3d animate-stagger-2 rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-6">
+        <div className="flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-blue-600" aria-hidden="true" />
+              <h2 className="font-display text-lg font-bold text-slate-900">
+                Jadwal Otomatis Buka &amp; Tutup Spreadsheet Harian
+              </h2>
+            </div>
+            <p className="mt-1 text-xs text-slate-600">
+              Spreadsheet harian dibuat otomatis sesuai Jam Mulai dan tertutup/final otomatis sesuai Jam Selesai tanpa tombol manual.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span
+              className={`rounded-xl border px-3 py-1.5 font-semibold ${
+                autoWindow.phase === 'OPEN'
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                  : autoWindow.phase === 'BEFORE_START'
+                    ? 'border-blue-200 bg-blue-50 text-blue-700'
+                    : autoWindow.phase === 'CLOSED'
+                      ? 'border-slate-200 bg-slate-100 text-slate-700'
+                      : 'border-amber-200 bg-amber-50 text-amber-800'
+              }`}
+            >
+              {autoWindow.phase === 'OPEN'
+                ? `Sedang Terbuka Otomatis (${autoWindow.startTime}–${autoWindow.endTime} WIB)`
+                : autoWindow.phase === 'BEFORE_START'
+                  ? `Menunggu Jam Mulai (${autoWindow.startTime} WIB)`
+                  : autoWindow.phase === 'CLOSED'
+                    ? `Sudah Ditutup Otomatis (${autoWindow.endTime} WIB)`
+                    : `Hari ${autoWindow.hari} Tidak Aktif`}
+            </span>
+          </div>
+        </div>
+
+        {canManage ? (
+          <form onSubmit={handleSaveDailySession} className="mt-4 space-y-4">
+            <div>
+              <p className="mb-2 text-xs font-semibold text-slate-700">
+                Hari Aktif Pembuatan Spreadsheet Otomatis
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {HARI_LIST.map((day) => {
+                  const checked = sessionDays.includes(day);
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => toggleDay(day, sessionDays, setSessionDays)}
+                      className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                        checked
+                          ? 'border-blue-600 bg-blue-600 text-white'
+                          : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      {day}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:max-w-lg">
+              <div>
+                <label
+                  htmlFor="daily-session-start"
+                  className="block text-xs font-semibold text-slate-700"
+                >
+                  Jam Mulai (Buka Otomatis)
+                </label>
+                <input
+                  id="daily-session-start"
+                  type="time"
+                  required
+                  value={sessionStart}
+                  onChange={(e) => setSessionStart(e.target.value)}
+                  className="font-mono-num mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-900 focus:border-blue-600 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="daily-session-end"
+                  className="block text-xs font-semibold text-slate-700"
+                >
+                  Jam Selesai (Tutup Otomatis)
+                </label>
+                <input
+                  id="daily-session-end"
+                  type="time"
+                  required
+                  value={sessionEnd}
+                  onChange={(e) => setSessionEnd(e.target.value)}
+                  className="font-mono-num mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-900 focus:border-blue-600 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <label className="flex items-center gap-2.5 text-xs font-medium text-slate-700">
+              <input
+                type="checkbox"
+                checked={syncOfficersWithSession}
+                onChange={(e) => setSyncOfficersWithSession(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-blue-600"
+              />
+              <span>Selaraskan jam tugas seluruh petugas &amp; admin dengan jam ini</span>
+            </label>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="submit"
+                disabled={saving}
+                className="btn-3d-primary inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+              >
+                <Save className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>Simpan Jadwal Otomatis Spreadsheet</span>
+              </button>
+              <span className="text-xs text-slate-500">
+                Saat jam selesai tercapai, file Excel &amp; PDF otomatis terbuka untuk diunduh.
+              </span>
+            </div>
+          </form>
+        ) : (
+          <div className="mt-4 grid grid-cols-1 gap-3 text-xs sm:grid-cols-3">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+              <p className="text-slate-500">Hari Aktif Otomatis</p>
+              <p className="mt-1 font-semibold text-slate-900">
+                {(appState.dailySession?.activeDays ?? DEFAULT_DAILY_SESSION_CONFIG.activeDays).join(', ')}
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+              <p className="text-slate-500">Jam Buka Otomatis</p>
+              <p className="font-mono-num mt-1 text-sm font-bold text-slate-900">
+                {autoWindow.startTime} WIB
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+              <p className="text-slate-500">Jam Tutup Otomatis</p>
+              <p className="font-mono-num mt-1 text-sm font-bold text-slate-900">
+                {autoWindow.endTime} WIB
+              </p>
+            </div>
+          </div>
+        )}
+      </section>
+
       {/* Weekly Rotation Overview & Controls */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+      <section className="surface-3d animate-stagger-3 rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-6">
         <div className="flex flex-col gap-4 border-b border-slate-100 pb-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="flex items-center gap-2">
@@ -424,36 +732,41 @@ export function ScheduleSettingsView({
           >
             {Array.from({ length: cycleWeeks }, (_, i) => i + 1).map((weekNum) => {
               const isActive = weekNum === weekInfo.currentWeek;
+              const isFiltered = selectedWeekFilter === weekNum;
               const weekPetugas = appState.officers.filter(
                 (o) =>
                   o.role === 'petugas' &&
                   (!o.scheduledWeeks || o.scheduledWeeks.includes(weekNum))
               );
               return (
-                <div
+                <button
                   key={weekNum}
-                  className={`rounded-xl border p-3.5 ${
-                    isActive
-                      ? 'border-blue-600 bg-blue-50/40'
-                      : 'border-slate-200 bg-slate-50/60'
+                  type="button"
+                  onClick={() =>
+                    setSelectedWeekFilter((prev) => (prev === weekNum ? null : weekNum))
+                  }
+                  className={`card-3d-interactive rounded-xl border p-3.5 text-left ${
+                    isFiltered
+                      ? 'border-blue-600 bg-blue-50/75 ring-2 ring-blue-600/15'
+                      : isActive
+                        ? 'border-blue-300 bg-blue-50/35 hover:border-blue-400'
+                        : 'border-slate-200 bg-slate-50/60 hover:border-slate-300 hover:bg-white'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-display text-sm font-bold text-slate-900">
                       Minggu ke-{weekNum}
                     </p>
-                    {isActive && (
-                      <span className="text-[11px] font-semibold text-blue-700">
-                        Aktif Sekarang
-                      </span>
-                    )}
+                    <span className="text-[11px] font-semibold text-blue-700">
+                      {isFiltered ? 'Difilter' : isActive ? 'Aktif Sekarang' : `${weekPetugas.length} petugas`}
+                    </span>
                   </div>
                   <p className="mt-1.5 text-xs text-slate-600">
                     {weekPetugas.length > 0
                       ? weekPetugas.map((p) => p.name).join(', ')
                       : 'Belum ada Petugas Piket di minggu ini'}
                   </p>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -461,20 +774,29 @@ export function ScheduleSettingsView({
       </section>
 
       {/* Officer Schedule Table */}
-      <section className="rounded-2xl border border-slate-200 bg-white">
+      <section className="surface-3d animate-stagger-4 rounded-2xl border border-slate-200/90 bg-white">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-4 sm:p-5">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2.5">
             <CalendarDays className="h-5 w-5 text-blue-600" aria-hidden="true" />
             <h2 className="font-display text-lg font-bold text-slate-900">
               Daftar Jadwal Petugas & Pengurus OSIS
             </h2>
+            {selectedWeekFilter && (
+              <button
+                type="button"
+                onClick={() => setSelectedWeekFilter(null)}
+                className="rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+              >
+                Minggu ke-{selectedWeekFilter} · Tampilkan Semua
+              </button>
+            )}
           </div>
 
           {canManage && (
             <button
               type="button"
               onClick={onOpenAccounts}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100"
             >
               <Users className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
               <span>Tambah / Kelola Akun di Menu Kelola Akun</span>
@@ -483,7 +805,7 @@ export function ScheduleSettingsView({
         </div>
 
         <div className="divide-y divide-slate-100">
-          {appState.officers.map((off) => {
+          {visibleOfficers.map((off) => {
             const status = getScheduleStatus(
               off,
               now,
@@ -558,7 +880,7 @@ export function ScheduleSettingsView({
                 </div>
 
                 {isEditing && (
-                  <div className="mt-4 space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="animate-panel-reveal mt-4 space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
                     {cycleWeeks > 1 && (
                       <div>
                         <p className="mb-2 text-xs font-semibold text-slate-700">
@@ -676,12 +998,31 @@ export function ScheduleSettingsView({
       {/* Account Password Change (All Users) + Simulation Controls (Managers) */}
       <div className={`grid grid-cols-1 gap-6 ${canManage ? 'lg:grid-cols-2' : ''}`}>
         {/* Change Own Password */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
-          <div className="flex items-center gap-2">
-            <KeyRound className="h-5 w-5 text-blue-600" aria-hidden="true" />
-            <h2 className="font-display text-lg font-bold text-slate-900">
-              Ubah Password Akun Saya
-            </h2>
+        <section className="surface-3d rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-6">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-blue-600" aria-hidden="true" />
+              <h2 className="font-display text-lg font-bold text-slate-900">
+                Ubah Password Akun Saya
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowSelfPasswords((prev) => !prev)}
+              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+            >
+              {showSelfPasswords ? (
+                <>
+                  <EyeOff className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>Sembunyikan</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>Lihat</span>
+                </>
+              )}
+            </button>
           </div>
           <p className="mt-1 text-xs text-slate-500">
             Ganti password akun Anda (@{officer.username}) agar lebih aman dan mudah diingat. Password lama otomatis tidak berlaku lagi.
@@ -694,7 +1035,7 @@ export function ScheduleSettingsView({
               </label>
               <input
                 id="self-cur-pw"
-                type="password"
+                type={showSelfPasswords ? 'text' : 'password'}
                 required
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
@@ -710,7 +1051,7 @@ export function ScheduleSettingsView({
                 </label>
                 <input
                   id="self-new-pw"
-                  type="password"
+                  type={showSelfPasswords ? 'text' : 'password'}
                   required
                   minLength={6}
                   value={newPassword}
@@ -725,7 +1066,7 @@ export function ScheduleSettingsView({
                 </label>
                 <input
                   id="self-cfm-pw"
-                  type="password"
+                  type={showSelfPasswords ? 'text' : 'password'}
                   required
                   minLength={6}
                   value={confirmPassword}
@@ -749,7 +1090,7 @@ export function ScheduleSettingsView({
 
         {/* Morning Session Simulation (Developer / Admin) */}
         {canManage && (
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+          <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-6">
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-blue-600" aria-hidden="true" />
               <h2 className="font-display text-lg font-bold text-slate-900">
@@ -757,7 +1098,7 @@ export function ScheduleSettingsView({
               </h2>
             </div>
             <p className="mt-1 text-xs text-slate-500">
-              Aktifkan jika ingin mencoba mencatat pelanggaran kapan saja di luar jam piket pagi (06:30–08:30).
+              Aktifkan jika ingin mencoba membuka, mencatat, atau menguji penutupan otomatis di luar jam piket ({autoWindow.startTime}–{autoWindow.endTime} WIB).
             </p>
 
             <form onSubmit={handleSaveSimulation} className="mt-4 space-y-4">
@@ -838,7 +1179,7 @@ export function ScheduleSettingsView({
       </div>
 
       {/* Violation Presets Table + Add Preset */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+      <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="font-display text-lg font-bold text-slate-900">
@@ -849,7 +1190,7 @@ export function ScheduleSettingsView({
             </p>
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="relative w-full sm:w-64">
               <Search
                 className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
@@ -864,6 +1205,15 @@ export function ScheduleSettingsView({
                 className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-8 pr-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15"
               />
             </div>
+            {ruleSearch && (
+              <button
+                type="button"
+                onClick={() => setRuleSearch('')}
+                className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100"
+              >
+                Reset
+              </button>
+            )}
             <span className="font-mono-num shrink-0 text-xs font-semibold text-slate-500">
               {filteredPresets.length === appState.presets.length
                 ? `${appState.presets.length} Aturan`
@@ -873,7 +1223,7 @@ export function ScheduleSettingsView({
         </div>
 
         <div className="mt-4 overflow-x-auto">
-          <table className="min-w-[680px] w-full border-collapse text-left text-sm">
+          <table className="min-w-[740px] w-full border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
                 <th className="w-20 px-4 py-2.5">Kode</th>
@@ -881,29 +1231,158 @@ export function ScheduleSettingsView({
                 <th className="px-4 py-2.5">Kategori AKPS</th>
                 <th className="px-4 py-2.5 text-right">Angka Kredit</th>
                 <th className="px-4 py-2.5">Tindak Lanjut & Catatan</th>
+                {canManage && <th className="w-28 px-4 py-2.5 text-right">Aksi</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredPresets.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-xs text-slate-500">
+                  <td
+                    colSpan={canManage ? 6 : 5}
+                    className="px-4 py-8 text-center text-xs text-slate-500"
+                  >
                     Tidak ada aturan yang cocok dengan kata kunci &ldquo;{ruleSearch}&rdquo;.
                   </td>
                 </tr>
               ) : (
-                filteredPresets.map((p) => (
-                  <tr key={p.id} className="hover:bg-slate-50/60">
-                    <td className="font-mono-num px-4 py-2.5 text-xs font-bold text-blue-700">
-                      {p.code}
-                    </td>
-                    <td className="px-4 py-2.5 font-medium text-slate-900">{p.label}</td>
-                    <td className="px-4 py-2.5 text-xs text-slate-600">{p.category}</td>
-                    <td className="font-mono-num px-4 py-2.5 text-right font-semibold text-red-700">
-                      +{p.points}
-                    </td>
-                    <td className="px-4 py-2.5 text-xs text-slate-600">{p.defaultAction}</td>
-                  </tr>
-                ))
+                filteredPresets.map((p) => {
+                  const isEditingThis = editingPresetId === p.id;
+                  return (
+                    <tr key={p.id} className="hover:bg-slate-50/60">
+                      <td className="font-mono-num px-4 py-2.5 text-xs font-bold text-blue-700">
+                        {isEditingThis ? (
+                          <input
+                            type="text"
+                            value={editPresetCode}
+                            onChange={(e) => setEditPresetCode(e.target.value)}
+                            className="font-mono-num w-16 rounded-lg border border-slate-200 px-2 py-1 text-xs uppercase"
+                          />
+                        ) : (
+                          p.code
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5 font-medium text-slate-900">
+                        {isEditingThis ? (
+                          <input
+                            type="text"
+                            value={editPresetLabel}
+                            onChange={(e) => setEditPresetLabel(e.target.value)}
+                            className="w-full rounded-lg border border-slate-200 px-2.5 py-1 text-xs"
+                          />
+                        ) : (
+                          p.label
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5 text-xs text-slate-600">
+                        {isEditingThis ? (
+                          <select
+                            value={editPresetCategory}
+                            onChange={(e) =>
+                              setEditPresetCategory(e.target.value as KategoriPelanggaran)
+                            }
+                            className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
+                          >
+                            {AKPS_CATEGORIES.map((c) => (
+                              <option key={c} value={c}>
+                                {c}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          p.category
+                        )}
+                      </td>
+                      <td className="font-mono-num px-4 py-2.5 text-right font-semibold text-red-700">
+                        {isEditingThis ? (
+                          <input
+                            type="number"
+                            min={1}
+                            max={100}
+                            value={editPresetPoints}
+                            onChange={(e) => setEditPresetPoints(Number(e.target.value))}
+                            className="font-mono-num w-16 rounded-lg border border-slate-200 px-2 py-1 text-right text-xs"
+                          />
+                        ) : (
+                          `+${p.points}`
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5 text-xs text-slate-600">
+                        {isEditingThis ? (
+                          <input
+                            type="text"
+                            value={editPresetAction}
+                            onChange={(e) => setEditPresetAction(e.target.value)}
+                            className="w-full rounded-lg border border-slate-200 px-2.5 py-1 text-xs"
+                          />
+                        ) : (
+                          p.defaultAction
+                        )}
+                      </td>
+                      {canManage && (
+                        <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                          {isEditingThis ? (
+                            <div className="inline-flex items-center gap-1">
+                              <button
+                                type="button"
+                                disabled={saving}
+                                onClick={() => handleSaveEditPreset(p.id)}
+                                className="rounded-md bg-blue-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-blue-700"
+                              >
+                                Simpan
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditingPresetId(null)}
+                                className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-50"
+                              >
+                                Batal
+                              </button>
+                            </div>
+                          ) : confirmDeletePresetId === p.id ? (
+                            <div className="inline-flex items-center gap-1">
+                              <button
+                                type="button"
+                                disabled={saving}
+                                onClick={() => handleDeletePreset(p.id, p.code)}
+                                className="rounded-md bg-red-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-red-700"
+                              >
+                                Hapus
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeletePresetId(null)}
+                                className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-50"
+                              >
+                                Batal
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="inline-flex items-center justify-end gap-1">
+                              <button
+                                type="button"
+                                disabled={saving}
+                                onClick={() => startEditPreset(p)}
+                                aria-label={`Edit aturan ${p.code}`}
+                                className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-blue-50 hover:text-blue-600"
+                              >
+                                <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={saving}
+                                onClick={() => setConfirmDeletePresetId(p.id)}
+                                aria-label={`Hapus aturan ${p.code}`}
+                                className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

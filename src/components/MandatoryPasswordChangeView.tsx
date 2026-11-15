@@ -12,6 +12,7 @@ import { buildApiUrl } from '../lib/apiClient';
 import { formatIndonesianDateLabel, getRoleLabel } from '../shared/piketLogic';
 import type { PublicAppState, PublicMetaState, PublicOfficer } from '../shared/types';
 import { CuteMascot3D } from './CuteMascot3D';
+import { Tilt3DCard } from './Tilt3DCard';
 
 export interface PendingPasswordChange {
   token: string;
@@ -130,7 +131,7 @@ export function MandatoryPasswordChangeView({
         </header>
 
         {/* Focused single-task card */}
-        <main className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-8">
+        <main className="surface-3d animate-stagger-1 rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-8">
           <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-semibold text-amber-700">
@@ -145,13 +146,16 @@ export function MandatoryPasswordChangeView({
               </p>
             </div>
 
-            <div className="hidden w-44 shrink-0 rounded-xl border border-sky-100 bg-gradient-to-b from-sky-50/75 to-white p-2 sm:block">
+            <Tilt3DCard
+              maxTiltDeg={6}
+              className="hidden w-44 shrink-0 rounded-xl border border-sky-100 bg-gradient-to-b from-sky-50/75 to-white p-2 sm:block"
+            >
               <CuteMascot3D
                 mood="recording"
                 compact
                 caption="Buat password baru dulu ya!"
               />
-            </div>
+            </Tilt3DCard>
           </div>
 
           {/* Logged-in officer summary */}

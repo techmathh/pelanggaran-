@@ -41,7 +41,7 @@ export function downloadSpreadsheetXlsx(
 ): void {
   const progress = getConsensusProgress(spreadsheet);
   if (!progress.exportUnlocked) {
-    throw new Error('Spreadsheet hanya dapat diekspor setelah semua petugas aktif menekan Selesai.');
+    throw new Error('Spreadsheet hanya dapat diekspor setelah jam selesai piket (status Final).');
   }
 
   const wb = XLSX.utils.book_new();

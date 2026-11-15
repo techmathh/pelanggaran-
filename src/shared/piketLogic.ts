@@ -1,6 +1,7 @@
 import type {
   CategoryBreakdownItem,
   ClassViolationGroup,
+  DailySessionConfig,
   DailySessionProductivitySummary,
   DailySpreadsheet,
   HariPiket,
@@ -16,6 +17,12 @@ import type {
   ViolationEntry,
   WeeklyRotationConfig,
 } from './types';
+
+export const DEFAULT_DAILY_SESSION_CONFIG: DailySessionConfig = {
+  activeDays: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'],
+  startTime: '06:30',
+  endTime: '08:30',
+};
 
 export const ALL_ROTATION_WEEKS = [1, 2, 3, 4];
 
@@ -481,8 +488,55 @@ export function validateViolationInput(input: AddViolationInput): string | null 
   if (!input.violationLabel.trim()) {
     return 'Jenis pelanggaran wajib diisi.';
   }
+  if (!AKPS_CATEGORIES.includes(input.category)) {
+    return 'Kategori pelanggaran AKPS tidak valid.';
+  }
   if (!Number.isFinite(input.points) || input.points < 1 || input.points > 100) {
     return 'Angka kredit pelanggaran harus antara 1 hingga 100.';
+  }
+  return null;
+}
+
+export function validatePresetInput(input: {
+  label?: string;
+  category?: KategoriPelanggaran;
+  points?: number;
+}): string | null {
+  if (!input.label || !input.label.trim()) {
+    return 'Nama aturan pelanggaran wajib diisi.';
+  }
+  if (input.category !== undefined && !AKPS_CATEGORIES.includes(input.category)) {
+    return 'Kategori pelanggaran AKPS tidak valid.';
+  }
+  const pts = Number(input.points);
+  if (!Number.isFinite(pts) || !Number.isInteger(pts) || pts < 1 || pts > 100) {
+    return 'Poin pelanggaran harus berupa bilangan bulat antara 1 hingga 100.';
+  }
+  return null;
+}
+
+const HHMM_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+export function validateOfficerScheduleInput(input: {
+  scheduledDays?: HariPiket[];
+  shiftStart?: string;
+  shiftEnd?: string;
+}): string | null {
+  if (!Array.isArray(input.scheduledDays) || input.scheduledDays.length === 0) {
+    return 'Pilih minimal satu hari jadwal piket.';
+  }
+  const hasInvalidDay = input.scheduledDays.some((d) => !HARI_LIST.includes(d));
+  if (hasInvalidDay) {
+    return 'Hari jadwal piket tidak valid.';
+  }
+  if (!input.shiftStart || !HHMM_REGEX.test(input.shiftStart)) {
+    return 'Format jam mulai harus HH:MM (00:00–23:59).';
+  }
+  if (!input.shiftEnd || !HHMM_REGEX.test(input.shiftEnd)) {
+    return 'Format jam selesai harus HH:MM (00:00–23:59).';
+  }
+  if (parseMinutes(input.shiftStart) > parseMinutes(input.shiftEnd)) {
+    return 'Jam mulai piket tidak boleh lebih besar dari jam selesai.';
   }
   return null;
 }
@@ -530,6 +584,200 @@ export function addViolationToSpreadsheet(
   };
 }
 
+export function validateDailySessionInput(input: {
+  activeDays?: HariPiket[];
+  startTime?: string;
+  endTime?: string;
+}): string | null {
+  if (!Array.isArray(input.activeDays) || input.activeDays.length === 0) {
+    return 'Pilih minimal satu hari aktif spreadsheet piket.';
+  }
+  if (input.activeDays.some((d) => !HARI_LIST.includes(d))) {
+    return 'Hari aktif spreadsheet tidak valid.';
+  }
+  if (!input.startTime || !HHMM_REGEX.test(input.startTime)) {
+    return 'Format jam mulai spreadsheet harus HH:MM (00:00–23:59).';
+  }
+  if (!input.endTime || !HHMM_REGEX.test(input.endTime)) {
+    return 'Format jam selesai spreadsheet harus HH:MM (00:00–23:59).';
+  }
+  if (parseMinutes(input.startTime) >= parseMinutes(input.endTime)) {
+    return 'Jam selesai spreadsheet harus lebih akhir daripada jam mulai.';
+  }
+  return null;
+}
+
+export type AutoSessionPhase = 'NON_ACTIVE_DAY' | 'BEFORE_START' | 'OPEN' | 'CLOSED';
+
+export interface AutoSessionWindowStatus {
+  isActiveDay: boolean;
+  phase: AutoSessionPhase;
+  startTime: string;
+  endTime: string;
+  currentTime: string;
+  hari: HariPiket;
+  dateKey: string;
+  minutesUntilStart: number;
+  minutesUntilClose: number;
+}
+
+export function getAutoSessionWindowStatus(
+  dailySession: DailySessionConfig,
+  now: Date,
+  simulation?: SimulationConfig
+): AutoSessionWindowStatus {
+  const { dateKey, hari, timeHHMM } = getEffectiveClock(now, simulation);
+  const startTime = dailySession?.startTime || DEFAULT_DAILY_SESSION_CONFIG.startTime;
+  const endTime = dailySession?.endTime || DEFAULT_DAILY_SESSION_CONFIG.endTime;
+  const activeDays =
+    Array.isArray(dailySession?.activeDays) && dailySession.activeDays.length > 0
+      ? dailySession.activeDays
+      : DEFAULT_DAILY_SESSION_CONFIG.activeDays;
+
+  const isActiveDay = activeDays.includes(hari);
+  const currentMin = parseMinutes(timeHHMM);
+  const startMin = parseMinutes(startTime);
+  const endMin = parseMinutes(endTime);
+
+  if (!isActiveDay) {
+    return {
+      isActiveDay: false,
+      phase: 'NON_ACTIVE_DAY',
+      startTime,
+      endTime,
+      currentTime: timeHHMM,
+      hari,
+      dateKey,
+      minutesUntilStart: 0,
+      minutesUntilClose: 0,
+    };
+  }
+
+  if (currentMin < startMin) {
+    return {
+      isActiveDay: true,
+      phase: 'BEFORE_START',
+      startTime,
+      endTime,
+      currentTime: timeHHMM,
+      hari,
+      dateKey,
+      minutesUntilStart: Math.max(0, startMin - currentMin),
+      minutesUntilClose: 0,
+    };
+  }
+
+  if (currentMin < endMin) {
+    return {
+      isActiveDay: true,
+      phase: 'OPEN',
+      startTime,
+      endTime,
+      currentTime: timeHHMM,
+      hari,
+      dateKey,
+      minutesUntilStart: 0,
+      minutesUntilClose: Math.max(0, endMin - currentMin),
+    };
+  }
+
+  return {
+    isActiveDay: true,
+    phase: 'CLOSED',
+    startTime,
+    endTime,
+    currentTime: timeHHMM,
+    hari,
+    dateKey,
+    minutesUntilStart: 0,
+    minutesUntilClose: 0,
+  };
+}
+
+export function evaluateAutoSpreadsheetLifecycle(
+  spreadsheets: DailySpreadsheet[],
+  dailySession: DailySessionConfig,
+  now: Date,
+  simulation: SimulationConfig | undefined,
+  nowIso: string
+): {
+  changedSheets: DailySpreadsheet[];
+  windowStatus: AutoSessionWindowStatus;
+} {
+  const windowStatus = getAutoSessionWindowStatus(dailySession, now, simulation);
+  const changedSheets: DailySpreadsheet[] = [];
+
+  // 1. Auto-finalize any stale past-day ACTIVE spreadsheets that weren't closed before midnight
+  for (const sheet of spreadsheets) {
+    if (sheet.date < windowStatus.dateKey && sheet.status === 'ACTIVE' && !sheet.reopenedManually) {
+      changedSheets.push({
+        ...sheet,
+        status: 'FINALIZED',
+        finishedOfficers: [...sheet.activeOfficers],
+        finalizedAt: sheet.finalizedAt || nowIso,
+      });
+    }
+  }
+
+  const todaySheet = spreadsheets.find((s) => s.date === windowStatus.dateKey);
+
+  // 2. Automatically open at startTime and automatically finalize at endTime
+  if (windowStatus.phase === 'OPEN') {
+    if (!todaySheet) {
+      changedSheets.push({
+        id: `sheet-${windowStatus.dateKey}`,
+        date: windowStatus.dateKey,
+        hari: windowStatus.hari,
+        title: `Spreadsheet Piket OSIS — ${formatIndonesianDateLabel(windowStatus.dateKey, windowStatus.hari)}`,
+        status: 'ACTIVE',
+        createdAt: nowIso,
+        createdById: 'system-auto',
+        createdByName: 'Sistem Otomatis',
+        activeOfficers: [],
+        finishedOfficers: [],
+        reopenedManually: false,
+        rows: [],
+      });
+    } else if (todaySheet.status === 'FINALIZED' && !todaySheet.reopenedManually) {
+      // If Jam Selesai was extended while today is back inside OPEN hours, reopen automatically
+      changedSheets.push({
+        ...todaySheet,
+        status: 'ACTIVE',
+        finishedOfficers: [],
+        finalizedAt: undefined,
+        reopenedManually: false,
+      });
+    }
+  } else if (windowStatus.phase === 'CLOSED') {
+    if (!todaySheet) {
+      changedSheets.push({
+        id: `sheet-${windowStatus.dateKey}`,
+        date: windowStatus.dateKey,
+        hari: windowStatus.hari,
+        title: `Spreadsheet Piket OSIS — ${formatIndonesianDateLabel(windowStatus.dateKey, windowStatus.hari)}`,
+        status: 'FINALIZED',
+        createdAt: nowIso,
+        createdById: 'system-auto',
+        createdByName: 'Sistem Otomatis',
+        activeOfficers: [],
+        finishedOfficers: [],
+        finalizedAt: nowIso,
+        reopenedManually: false,
+        rows: [],
+      });
+    } else if (todaySheet.status === 'ACTIVE' && !todaySheet.reopenedManually) {
+      changedSheets.push({
+        ...todaySheet,
+        status: 'FINALIZED',
+        finishedOfficers: [...todaySheet.activeOfficers],
+        finalizedAt: todaySheet.finalizedAt || nowIso,
+      });
+    }
+  }
+
+  return { changedSheets, windowStatus };
+}
+
 export function getConsensusProgress(spreadsheet: DailySpreadsheet): {
   activeCount: number;
   finishedCount: number;
@@ -538,9 +786,12 @@ export function getConsensusProgress(spreadsheet: DailySpreadsheet): {
 } {
   const activeCount = spreadsheet.activeOfficers.length;
   const finishedSet = new Set(spreadsheet.finishedOfficers);
-  const finishedCount = spreadsheet.activeOfficers.filter((id) => finishedSet.has(id)).length;
-  const allFinished = activeCount > 0 && finishedCount === activeCount;
-  const exportUnlocked = spreadsheet.status === 'FINALIZED' && allFinished;
+  const isFinal = spreadsheet.status === 'FINALIZED';
+  const finishedCount = isFinal
+    ? activeCount
+    : spreadsheet.activeOfficers.filter((id) => finishedSet.has(id)).length;
+  const allFinished = isFinal || (activeCount > 0 && finishedCount === activeCount);
+  const exportUnlocked = isFinal;
 
   return {
     activeCount,
@@ -794,6 +1045,58 @@ export function canCreateRole(actorRole: RolePetugas, targetRole: RolePetugas): 
   }
   if (actorRole === 'admin') {
     return targetRole === 'petugas';
+  }
+  return false;
+}
+
+export function removeOfficerFromActiveSpreadsheet(
+  spreadsheet: DailySpreadsheet,
+  deletedOfficerId: string,
+  nowIso: string
+): DailySpreadsheet {
+  if (spreadsheet.status === 'FINALIZED') {
+    return spreadsheet;
+  }
+  if (
+    !spreadsheet.activeOfficers.includes(deletedOfficerId) &&
+    !spreadsheet.finishedOfficers.includes(deletedOfficerId)
+  ) {
+    return spreadsheet;
+  }
+
+  const nextActive = spreadsheet.activeOfficers.filter((id) => id !== deletedOfficerId);
+  const finishedSet = new Set(
+    spreadsheet.finishedOfficers.filter((id) => id !== deletedOfficerId)
+  );
+  const nextFinished = nextActive.filter((id) => finishedSet.has(id));
+  const everyoneDone = nextActive.length > 0 && nextFinished.length === nextActive.length;
+
+  return {
+    ...spreadsheet,
+    activeOfficers: nextActive,
+    finishedOfficers: nextFinished,
+    status: everyoneDone ? 'FINALIZED' : 'ACTIVE',
+    finalizedAt: everyoneDone ? nowIso : undefined,
+  };
+}
+
+export function canModifyViolationRow(
+  actor: Pick<Officer, 'id' | 'role'>,
+  row: Pick<ViolationEntry, 'recordedById'>
+): boolean {
+  if (isManagerRole(actor.role)) return true;
+  return row.recordedById === actor.id;
+}
+
+export function canEditAccountProfile(
+  actorRole: RolePetugas,
+  actorId: string,
+  target: Pick<Officer, 'id' | 'role' | 'isProtected'>
+): boolean {
+  if (actorRole === 'developer') return true;
+  if (actorRole === 'admin') {
+    if (target.isProtected || target.role === 'developer') return false;
+    return target.role === 'petugas' || target.id === actorId;
   }
   return false;
 }

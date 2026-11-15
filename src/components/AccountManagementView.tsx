@@ -1,21 +1,31 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import {
+  AlertTriangle,
+  BookOpen,
   Cloud,
   Copy,
   Download,
   FileSpreadsheet,
   KeyRound,
   Lock,
+  Pencil,
   RefreshCw,
+  RotateCcw,
+  Save,
+  Search,
   Shield,
   Trash2,
+  Upload,
   UserPlus,
 } from 'lucide-react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { apiFetch } from '../lib/apiClient';
 import {
   auth,
+  extractBackupPayloadFromDigestAsync,
   fetchUserCloudBackups,
+  getDisplaySummaryDigest,
+  hasEmbeddedBackupDigest,
   signInCloudSyncWithGoogle,
   signOutCloudSync,
   syncSnapshotToFirestore,
@@ -26,6 +36,7 @@ import {
   HARI_LIST,
   canCreateRole,
   canDeleteAccount,
+  canEditAccountProfile,
   formatScheduledWeeksLabel,
   getRoleLabel,
   parseBulkAccountEntries,
@@ -36,12 +47,23 @@ import type {
   PublicAppState,
   PublicOfficer,
   RolePetugas,
+  SystemBackupPayload,
 } from '../shared/types';
 import {
   downloadAccountsCredentialsCsv,
   downloadAccountsCredentialsXlsx,
   downloadRegisteredAccountsDirectoryXlsx,
 } from '../utils/exportSpreadsheet';
+import { downloadUsageGuidePdf } from '../utils/exportGuidePdf';
+import { AnimatedNumber } from './AnimatedNumber';
+import { Tilt3DCard } from './Tilt3DCard';
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'OS';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+}
 
 interface AccountManagementViewProps {
   officer: PublicOfficer;
@@ -89,10 +111,28 @@ export function AccountManagementView({
   // Two-step inline delete confirmation
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  // Firebase Cloud Sync state
+  // Inline account profile edit state
+  const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
+  const [editAccName, setEditAccName] = useState('');
+  const [editAccKelas, setEditAccKelas] = useState('');
+  const [editAccDivision, setEditAccDivision] = useState('');
+  const [editAccRole, setEditAccRole] = useState<'admin' | 'petugas'>('petugas');
+
+  // Account directory search filter
+  const [accountSearch, setAccountSearch] = useState('');
+
+  // Developer system reset state
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetConfirmText, setResetConfirmText] = useState('');
+  const [resettingAll, setResettingAll] = useState(false);
+
+  // Firebase Cloud Sync & Local JSON Backup/Restore state
   const [firebaseUser, setFirebaseUser] = useState<User | null>(auth.currentUser);
   const [cloudBackups, setCloudBackups] = useState<CloudBackupSummary[]>([]);
   const [syncingCloud, setSyncingCloud] = useState(false);
+  const [restoringBackup, setRestoringBackup] = useState(false);
+  const [confirmRestoreBackupId, setConfirmRestoreBackupId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
@@ -112,6 +152,19 @@ export function AccountManagementView({
   }, []);
 
   const parsedEntries = useMemo(() => parseBulkAccountEntries(namesText), [namesText]);
+
+  const filteredOfficers = useMemo(() => {
+    const q = accountSearch.trim().toLowerCase();
+    if (!q) return appState.officers;
+    return appState.officers.filter(
+      (acc) =>
+        acc.name.toLowerCase().includes(q) ||
+        acc.username.toLowerCase().includes(q) ||
+        acc.kelas.toLowerCase().includes(q) ||
+        acc.division.toLowerCase().includes(q) ||
+        getRoleLabel(acc.role).toLowerCase().includes(q)
+    );
+  }, [appState.officers, accountSearch]);
 
   function toggleDay(day: HariPiket) {
     setScheduledDays((prev) =>
@@ -177,6 +230,42 @@ export function AccountManagementView({
       );
     } catch {
       onNotify('Gagal terhubung ke server saat membuat akun.', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function startEditAccount(target: PublicOfficer) {
+    setConfirmDeleteId(null);
+    setEditingAccountId(target.id);
+    setEditAccName(target.name);
+    setEditAccKelas(target.kelas);
+    setEditAccDivision(target.division);
+    setEditAccRole(target.role === 'admin' ? 'admin' : 'petugas');
+  }
+
+  async function handleSaveAccountProfile(targetId: string) {
+    setSubmitting(true);
+    try {
+      const res = await apiFetch(`/api/accounts/${targetId}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: editAccName,
+          kelas: editAccKelas,
+          division: editAccDivision,
+          role: isDeveloper ? editAccRole : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        onNotify(data.error || 'Gagal memperbarui profil akun.', 'error');
+        return;
+      }
+      onStateUpdate(data.state);
+      setEditingAccountId(null);
+      onNotify('Profil akun berhasil diperbarui.', 'success');
+    } catch {
+      onNotify('Gagal terhubung ke server.', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -269,13 +358,30 @@ export function AccountManagementView({
       if (!firebaseUser) {
         await signInCloudSyncWithGoogle();
       }
-      const saved = await syncSnapshotToFirestore(officer.role, appState);
+      let exportedBackup: SystemBackupPayload | undefined;
+      try {
+        const expRes = await apiFetch('/api/backup/export');
+        if (expRes.ok) {
+          const expData = await expRes.json();
+          exportedBackup = expData.backup;
+        }
+      } catch {
+        // fallback to public state snapshot
+      }
+      const saved = await syncSnapshotToFirestore(officer.role, appState, exportedBackup);
       const list = await fetchUserCloudBackups();
       setCloudBackups(list);
-      onNotify(
-        `Cadangan data berhasil disimpan ke akun Google Anda (${saved.id}).`,
-        'success'
-      );
+      if (saved.restoreEmbedded === false) {
+        onNotify(
+          `Ringkasan disimpan ke Google (${saved.id}), tetapi data penuh melebihi batas ukuran Cloud — unduh juga file Cadangan (.json) lokal.`,
+          'info'
+        );
+      } else {
+        onNotify(
+          `Cadangan data berhasil disimpan ke akun Google Anda (${saved.id}).`,
+          'success'
+        );
+      }
     } catch (err: any) {
       onNotify(err?.message || 'Gagal menyimpan cadangan online.', 'error');
     } finally {
@@ -283,10 +389,158 @@ export function AccountManagementView({
     }
   }
 
+  async function handleDownloadLocalBackupJson() {
+    setSyncingCloud(true);
+    try {
+      const res = await apiFetch('/api/backup/export');
+      const data = await res.json();
+      if (!res.ok || !data.backup) {
+        onNotify(data.error || 'Gagal mengunduh cadangan sistem.', 'error');
+        return;
+      }
+      const blob = new Blob([JSON.stringify(data.backup, null, 2)], {
+        type: 'application/json',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Cadangan-SiPiket-OSIS-${appState.serverDate}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      onNotify(`File Cadangan-SiPiket-OSIS-${appState.serverDate}.json berhasil diunduh.`, 'success');
+    } catch {
+      onNotify('Gagal mengunduh file cadangan.', 'error');
+    } finally {
+      setSyncingCloud(false);
+    }
+  }
+
+  async function handleRestoreBackupPayload(payload: SystemBackupPayload, sourceLabel: string) {
+    setRestoringBackup(true);
+    try {
+      const res = await apiFetch('/api/backup/restore', {
+        method: 'POST',
+        body: JSON.stringify({ backup: payload }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        onNotify(data.error || 'Gagal memulihkan cadangan data.', 'error');
+        return;
+      }
+      onStateUpdate(data.state);
+      setConfirmRestoreBackupId(null);
+      const restoredCreds = Array.isArray(data.restoredCredentials)
+        ? (data.restoredCredentials as GeneratedAccountCredential[])
+        : [];
+      if (restoredCreds.length > 0) {
+        setGeneratedBatch(restoredCreds);
+      }
+      onNotify(
+        restoredCreds.length > 0
+          ? `Berhasil memulihkan ${data.restoredSpreadsheets} spreadsheet, ${data.restoredViolations} pelanggaran, & ${data.restoredAccounts} akun. Password sementara akun baru ditampilkan di bawah.`
+          : `Berhasil memulihkan ${data.restoredSpreadsheets} spreadsheet, ${data.restoredViolations} catatan pelanggaran, & ${data.restoredAccounts} akun dari ${sourceLabel}.`,
+        'success'
+      );
+    } catch {
+      onNotify('Gagal terhubung ke server saat memulihkan cadangan.', 'error');
+    } finally {
+      setRestoringBackup(false);
+    }
+  }
+
+  async function handleRestoreCloudBackup(backup: CloudBackupSummary) {
+    setRestoringBackup(true);
+    try {
+      const parsed = await extractBackupPayloadFromDigestAsync(backup.summaryDigest);
+      if (!parsed) {
+        onNotify(
+          'Cadangan Cloud ini hanya menyimpan ringkasan atau gagal didekompresi. Gunakan file Cadangan (.json) lokal.',
+          'error'
+        );
+        return;
+      }
+      await handleRestoreBackupPayload(parsed, `Cloud ${backup.id}`);
+    } finally {
+      setRestoringBackup(false);
+    }
+  }
+
+  function handleImportBackupFileChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result ?? '')) as SystemBackupPayload;
+        if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.spreadsheets)) {
+          onNotify('File JSON tidak valid sebagai cadangan SiPiket OSIS.', 'error');
+          return;
+        }
+        void handleRestoreBackupPayload(parsed, `file ${file.name}`);
+      } catch {
+        onNotify('Gagal membaca file JSON cadangan.', 'error');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function handleDownloadGuidePdf() {
+    try {
+      downloadUsageGuidePdf({
+        serverDate: appState.serverDate,
+        serverHari: appState.serverHari,
+        developerName: officer.name,
+      });
+      onNotify('Berhasil mengunduh Panduan-Penggunaan-SiPiket-OSIS.pdf', 'success');
+    } catch (err: any) {
+      onNotify(err?.message || 'Gagal membuat PDF panduan.', 'error');
+    }
+  }
+
+  async function handleResetAllSystemData(e: FormEvent) {
+    e.preventDefault();
+    if (!isDeveloper) return;
+    if (resetConfirmText.trim().toUpperCase() !== 'RESET DATA') {
+      onNotify('Ketik RESET DATA dengan benar untuk mengonfirmasi reset seluruh sistem.', 'error');
+      return;
+    }
+
+    setResettingAll(true);
+    try {
+      const res = await apiFetch('/api/developer/reset-all', {
+        method: 'POST',
+        body: JSON.stringify({ confirmText: resetConfirmText }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        onNotify(data.error || 'Gagal mereset data sistem.', 'error');
+        return;
+      }
+      onStateUpdate(data.state);
+      setGeneratedBatch([]);
+      setEditingAccountId(null);
+      setConfirmDeleteId(null);
+      setConfirmRestoreBackupId(null);
+      setShowResetConfirm(false);
+      setResetConfirmText('');
+      onNotify(
+        `Reset selesai! ${data.deletedAccounts} akun lain, ${data.deletedSpreadsheets} spreadsheet, dan ${data.deletedViolations} pelanggaran dihapus. Akun Developer Anda tetap aman.`,
+        'success'
+      );
+    } catch {
+      onNotify('Gagal terhubung ke server saat mereset sistem.', 'error');
+    } finally {
+      setResettingAll(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header Summary */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+      <section className="surface-3d animate-stagger-1 rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="font-display text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
@@ -294,23 +548,160 @@ export function AccountManagementView({
             </h1>
             <p className="mt-1 text-sm text-slate-600">
               {isDeveloper
-                ? 'Anda bisa membuat akun Admin OSIS maupun Petugas Piket sekaligus, lalu membagikan username & passwordnya.'
+                ? 'Buat akun Admin OSIS maupun Petugas Piket sekaligus, unduh panduan website, serta kelola reset data sistem.'
                 : 'Anda bisa membuat akun Petugas Piket sekaligus, mengunduh daftar login, dan mengatur jadwal petugas.'}
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-600">
-            <span className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 font-mono-num">
-              Total Akun: <strong className="text-slate-900">{appState.officers.length}</strong>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 shrink-0">
+            <span>
+              Total Akun: <strong className="text-slate-900"><AnimatedNumber value={appState.officers.length} /></strong>
             </span>
-            <span className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-blue-800">
-              Jabatan Anda: <strong>{getRoleLabel(officer.role)}</strong>
+            <span aria-hidden="true">·</span>
+            <span>
+              Jabatan Anda: <strong className="text-blue-700">{getRoleLabel(officer.role)}</strong>
             </span>
           </div>
         </div>
       </section>
 
+      {/* Developer Control Panel (Strictly visible to Developer role) */}
+      {isDeveloper && (
+        <section
+          aria-label="Panel Khusus Developer"
+          className="surface-3d animate-stagger-2 rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6"
+        >
+          <div className="flex flex-col gap-1 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-display text-lg font-bold text-slate-900">
+                Panel Khusus Developer
+              </h2>
+              <p className="text-xs text-slate-500">
+                Alat khusus Developer untuk membagikan panduan penggunaan website serta membersihkan seluruh data operasional tanpa menghapus akun Anda sendiri.
+              </p>
+            </div>
+            <span className="text-xs font-semibold text-slate-700 shrink-0">
+              Akses Penuh Developer
+            </span>
+          </div>
+
+          <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
+            {/* Card 1: PDF Usage Guide */}
+            <Tilt3DCard
+              maxTiltDeg={4}
+              scaleOnHover={1.008}
+              className="flex flex-col justify-between rounded-xl border border-sky-100 bg-gradient-to-br from-sky-50/70 via-white to-slate-50/60 p-4 sm:p-5"
+            >
+              <div>
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-blue-600" aria-hidden="true" />
+                  <h3 className="font-display text-base font-bold text-slate-900">
+                    Panduan Penggunaan Website (PDF)
+                  </h3>
+                </div>
+                <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
+                  Unduh buku panduan lengkap siap cetak/bagikan via WhatsApp berisi alur piket harian,
+                  aktivasi password baru, tabel sanksi poin AKPS, rotasi mingguan, dan FAQ petugas.
+                </p>
+              </div>
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={handleDownloadGuidePdf}
+                  className="btn-3d-primary inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700"
+                >
+                  <Download className="h-4 w-4" aria-hidden="true" />
+                  <span>Unduh Panduan Penggunaan (.pdf)</span>
+                </button>
+              </div>
+            </Tilt3DCard>
+
+            {/* Card 2: Reset / Delete All System Data Except Self */}
+            <Tilt3DCard
+              maxTiltDeg={4}
+              scaleOnHover={1.008}
+              className="flex flex-col justify-between rounded-xl border border-red-200/80 bg-red-50/35 p-4 sm:p-5"
+            >
+              <div>
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-red-600" aria-hidden="true" />
+                  <h3 className="font-display text-base font-bold text-red-950">
+                    Reset / Hapus Semua Data Sistem
+                  </h3>
+                </div>
+                <p className="mt-1.5 text-xs leading-relaxed text-red-900/90">
+                  Menghapus <strong>seluruh akun Admin &amp; Petugas lain</strong>, semua catatan
+                  pelanggaran, arsip spreadsheet, serta mereset aturan tambahan &amp; simulasi waktu.{' '}
+                  <strong>Akun Developer Anda (@{officer.username}) tetap aman</strong> dan akun lain
+                  yang sedang aktif akan otomatis keluar (logout).
+                </p>
+              </div>
+
+              {!showResetConfirm ? (
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    disabled={resettingAll}
+                    onClick={() => {
+                      setShowResetConfirm(true);
+                      setResetConfirmText('');
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl border border-red-300 bg-white px-4 py-2.5 text-xs font-semibold text-red-700 transition-colors hover:bg-red-50"
+                  >
+                    <RotateCcw className="h-4 w-4" aria-hidden="true" />
+                    <span>Reset Semua Data (Kecuali Akun Saya)</span>
+                  </button>
+                </div>
+              ) : (
+                <form
+                  onSubmit={handleResetAllSystemData}
+                  className="animate-panel-reveal mt-4 space-y-2.5 rounded-xl border border-red-200 bg-white p-3.5"
+                >
+                  <label
+                    htmlFor="confirm-reset-all-input"
+                    className="block text-xs font-semibold text-red-900"
+                  >
+                    Ketik <span className="font-mono-num">RESET DATA</span> untuk konfirmasi:
+                  </label>
+                  <input
+                    id="confirm-reset-all-input"
+                    type="text"
+                    required
+                    disabled={resettingAll}
+                    value={resetConfirmText}
+                    onChange={(e) => setResetConfirmText(e.target.value)}
+                    placeholder="RESET DATA"
+                    className="font-mono-num w-full rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold uppercase text-slate-900 focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-600/15"
+                  />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="submit"
+                      disabled={resettingAll || resetConfirmText.trim().toUpperCase() !== 'RESET DATA'}
+                      className="btn-3d-danger inline-flex items-center gap-1.5 rounded-xl bg-red-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>{resettingAll ? 'Mereset Sistem...' : 'Ya, Hapus & Reset Semua'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={resettingAll}
+                      onClick={() => {
+                        setShowResetConfirm(false);
+                        setResetConfirmText('');
+                      }}
+                      className="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                    >
+                      Batal
+                    </button>
+                  </div>
+                </form>
+              )}
+            </Tilt3DCard>
+          </div>
+        </section>
+      )}
+
       {/* Bulk Account Creation Form */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+      <section className="surface-3d animate-stagger-3 rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6">
         <div className="flex items-start gap-2.5 border-b border-slate-100 pb-4">
           <UserPlus className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" aria-hidden="true" />
           <div>
@@ -616,26 +1007,43 @@ export function AccountManagementView({
       )}
 
       {/* Registered Accounts Directory */}
-      <section className="rounded-2xl border border-slate-200 bg-white">
-        <div className="flex flex-col gap-3 border-b border-slate-200 p-5 sm:flex-row sm:items-center sm:justify-between">
+      <section className="surface-3d animate-stagger-4 rounded-2xl border border-slate-200/90 bg-white">
+        <div className="flex flex-col gap-3 border-b border-slate-200 p-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="font-display text-lg font-bold text-slate-900">
               Daftar Akun Terdaftar
             </h2>
             <p className="text-xs text-slate-500">
-              Akun Developer utama dilindungi sistem dan tidak dapat dihapus.
+              Menampilkan {filteredOfficers.length} dari {appState.officers.length} akun · Akun
+              Developer utama dilindungi sistem.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() =>
-              downloadRegisteredAccountsDirectoryXlsx(appState.officers, appState.serverDate)
-            }
-            className="btn-3d-soft inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50 shrink-0"
-          >
-            <Download className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>Unduh Daftar Akun (.xlsx)</span>
-          </button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="relative w-full sm:w-56">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
+                aria-hidden="true"
+              />
+              <input
+                type="search"
+                aria-label="Cari akun pengurus atau petugas"
+                value={accountSearch}
+                onChange={(e) => setAccountSearch(e.target.value)}
+                placeholder="Cari nama atau username..."
+                className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-8 pr-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                downloadRegisteredAccountsDirectoryXlsx(appState.officers, appState.serverDate)
+              }
+              className="btn-3d-soft inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50 shrink-0"
+            >
+              <Download className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>Unduh Daftar Akun (.xlsx)</span>
+            </button>
+          </div>
         </div>
 
         {/* Desktop & Tablet Table */}
@@ -651,64 +1059,303 @@ export function AccountManagementView({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {appState.officers.map((acc) => {
-                const deletable = canDeleteAccount(officer.role, acc);
-                const resettable =
-                  !acc.isProtected &&
-                  acc.role !== 'developer' &&
-                  (isDeveloper || acc.role === 'petugas');
-                const isConfirmingDelete = confirmDeleteId === acc.id;
+              {filteredOfficers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-xs text-slate-500">
+                    Tidak ada akun yang cocok dengan pencarian &ldquo;{accountSearch}&rdquo;.
+                  </td>
+                </tr>
+              ) : (
+                filteredOfficers.map((acc) => {
+                  const deletable = canDeleteAccount(officer.role, acc);
+                  const editable = canEditAccountProfile(officer.role, officer.id, acc);
+                  const resettable =
+                    !acc.isProtected &&
+                    acc.role !== 'developer' &&
+                    (isDeveloper || acc.role === 'petugas');
+                  const isConfirmingDelete = confirmDeleteId === acc.id;
+                  const isEditingThis = editingAccountId === acc.id;
 
-                return (
-                  <tr key={acc.id} className="hover:bg-slate-50/70">
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-slate-900">{acc.name}</p>
-                      <p className="text-xs text-slate-500">
-                        {acc.division} · {acc.kelas} ·{' '}
-                        <span className="font-medium text-blue-700">
-                          {formatScheduledWeeksLabel(acc.scheduledWeeks, cycleWeeks)}
-                        </span>
-                      </p>
-                    </td>
-                    <td className="font-mono-num px-4 py-3 text-xs font-semibold text-slate-700">
-                      @{acc.username}
-                    </td>
-                    <td className="px-4 py-3 text-xs font-semibold">
-                      <span
-                        className={
-                          acc.role === 'developer'
-                            ? 'text-slate-900'
-                            : acc.role === 'admin'
-                              ? 'text-blue-700'
-                              : 'text-teal-700'
-                        }
+                  return (
+                    <tr key={acc.id} className="transition-colors hover:bg-slate-50/80">
+                      <td className="px-4 py-3">
+                        {isEditingThis ? (
+                          <div className="space-y-1.5">
+                            <input
+                              type="text"
+                              value={editAccName}
+                              onChange={(e) => setEditAccName(e.target.value)}
+                              placeholder="Nama lengkap"
+                              className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-900"
+                            />
+                            <div className="flex gap-1.5">
+                              <input
+                                type="text"
+                                value={editAccKelas}
+                                onChange={(e) => setEditAccKelas(e.target.value)}
+                                placeholder="Kelas"
+                                className="w-24 rounded-lg border border-slate-200 px-2 py-1 text-xs uppercase"
+                              />
+                              <input
+                                type="text"
+                                value={editAccDivision}
+                                onChange={(e) => setEditAccDivision(e.target.value)}
+                                placeholder="Divisi / Sekbid"
+                                className="flex-1 rounded-lg border border-slate-200 px-2 py-1 text-xs"
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3">
+                            <div
+                              aria-hidden="true"
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
+                              style={{ backgroundColor: acc.avatarColor || '#2563EB' }}
+                            >
+                              {getInitials(acc.name)}
+                            </div>
+                            <div>
+                              <p className="font-medium text-slate-900">{acc.name}</p>
+                              <p className="text-xs text-slate-500">
+                                {acc.division} · {acc.kelas} ·{' '}
+                                <span className="font-medium text-blue-700">
+                                  {formatScheduledWeeksLabel(acc.scheduledWeeks, cycleWeeks)}
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </td>
+                      <td className="font-mono-num px-4 py-3 text-xs font-semibold text-slate-700">
+                        @{acc.username}
+                      </td>
+                      <td className="px-4 py-3 text-xs font-semibold">
+                        {isEditingThis && isDeveloper && !acc.isProtected && acc.role !== 'developer' ? (
+                          <select
+                            value={editAccRole}
+                            onChange={(e) =>
+                              setEditAccRole(e.target.value as 'admin' | 'petugas')
+                            }
+                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-800"
+                          >
+                            <option value="petugas">Petugas Piket</option>
+                            <option value="admin">Admin OSIS</option>
+                          </select>
+                        ) : (
+                          <span
+                            className={
+                              acc.role === 'developer'
+                                ? 'text-slate-900'
+                                : acc.role === 'admin'
+                                  ? 'text-blue-700'
+                                  : 'text-teal-700'
+                            }
+                          >
+                            {getRoleLabel(acc.role)}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-xs">
+                        {acc.mustChangePassword ? (
+                          <span className="inline-flex items-center gap-1 font-medium text-amber-700">
+                            <KeyRound className="h-3.5 w-3.5" aria-hidden="true" />
+                            <span>Wajib Ganti Saat Masuk</span>
+                          </span>
+                        ) : (
+                          <span className="text-emerald-700 font-medium">Aktif & Aman</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {isEditingThis ? (
+                          <div className="inline-flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              disabled={submitting}
+                              onClick={() => handleSaveAccountProfile(acc.id)}
+                              className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-blue-700"
+                            >
+                              <Save className="h-3 w-3" aria-hidden="true" />
+                              <span>Simpan</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingAccountId(null)}
+                              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                            >
+                              Batal
+                            </button>
+                          </div>
+                        ) : isConfirmingDelete ? (
+                          <div className="inline-flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              disabled={submitting}
+                              onClick={() => handleDeleteAccount(acc)}
+                              className="rounded-lg bg-red-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-red-700"
+                            >
+                              Yakin Hapus?
+                            </button>
+                            <button
+                              type="button"
+                              disabled={submitting}
+                              onClick={() => setConfirmDeleteId(null)}
+                              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                            >
+                              Batal
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="inline-flex flex-wrap items-center justify-end gap-1.5">
+                            {editable && (
+                              <button
+                                type="button"
+                                disabled={submitting}
+                                onClick={() => startEditAccount(acc)}
+                                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                              >
+                                <Pencil className="h-3 w-3" aria-hidden="true" />
+                                <span>Edit</span>
+                              </button>
+                            )}
+                            {acc.isProtected || acc.role === 'developer' ? (
+                              <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500">
+                                <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                                <span>Dilindungi</span>
+                              </span>
+                            ) : (
+                              <>
+                                {resettable && (
+                                  <button
+                                    type="button"
+                                    disabled={submitting}
+                                    onClick={() => handleResetPassword(acc)}
+                                    className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                                  >
+                                    <RefreshCw className="h-3 w-3" aria-hidden="true" />
+                                    <span>Buat Ulang Password</span>
+                                  </button>
+                                )}
+                                {deletable && (
+                                  <button
+                                    type="button"
+                                    disabled={submitting}
+                                    onClick={() => setConfirmDeleteId(acc.id)}
+                                    aria-label={`Hapus akun ${acc.name}`}
+                                    className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-3 w-3" aria-hidden="true" />
+                                    <span>Hapus</span>
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile Card List (< md) */}
+        <div className="divide-y divide-slate-100 md:hidden">
+          {filteredOfficers.map((acc) => {
+            const deletable = canDeleteAccount(officer.role, acc);
+            const editable = canEditAccountProfile(officer.role, officer.id, acc);
+            const resettable =
+              !acc.isProtected &&
+              acc.role !== 'developer' &&
+              (isDeveloper || acc.role === 'petugas');
+            const isConfirmingDelete = confirmDeleteId === acc.id;
+            const isEditingThis = editingAccountId === acc.id;
+
+            return (
+              <div key={acc.id} className="space-y-2.5 p-4">
+                {isEditingThis ? (
+                  <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <input
+                      type="text"
+                      value={editAccName}
+                      onChange={(e) => setEditAccName(e.target.value)}
+                      placeholder="Nama lengkap"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-900"
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        value={editAccKelas}
+                        onChange={(e) => setEditAccKelas(e.target.value)}
+                        placeholder="Kelas"
+                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs uppercase"
+                      />
+                      <input
+                        type="text"
+                        value={editAccDivision}
+                        onChange={(e) => setEditAccDivision(e.target.value)}
+                        placeholder="Divisi / Sekbid"
+                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs"
+                      />
+                    </div>
+                    {isDeveloper && !acc.isProtected && acc.role !== 'developer' && (
+                      <select
+                        value={editAccRole}
+                        onChange={(e) => setEditAccRole(e.target.value as 'admin' | 'petugas')}
+                        className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-800"
                       >
+                        <option value="petugas">Petugas Piket</option>
+                        <option value="admin">Admin OSIS</option>
+                      </select>
+                    )}
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        disabled={submitting}
+                        onClick={() => handleSaveAccountProfile(acc.id)}
+                        className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white"
+                      >
+                        Simpan Profil
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingAccountId(null)}
+                        className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700"
+                      >
+                        Batal
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-slate-900">{acc.name}</p>
+                        <p className="font-mono-num text-xs text-slate-500">
+                          @{acc.username} · {acc.kelas} ·{' '}
+                          <span className="font-sans font-medium text-blue-700">
+                            {formatScheduledWeeksLabel(acc.scheduledWeeks, cycleWeeks)}
+                          </span>
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-xs font-semibold text-blue-700">
                         {getRoleLabel(acc.role)}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-xs">
-                      {acc.mustChangePassword ? (
-                        <span className="inline-flex items-center gap-1 font-medium text-amber-700">
-                          <KeyRound className="h-3.5 w-3.5" aria-hidden="true" />
-                          <span>Wajib Ganti Saat Masuk</span>
-                        </span>
-                      ) : (
-                        <span className="text-emerald-700 font-medium">Aktif & Aman</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {acc.isProtected || acc.role === 'developer' ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500">
-                          <Lock className="h-3.5 w-3.5" aria-hidden="true" />
-                          <span>Dilindungi</span>
-                        </span>
-                      ) : isConfirmingDelete ? (
-                        <div className="inline-flex items-center gap-1.5">
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <span
+                        className={acc.mustChangePassword ? 'text-amber-700' : 'text-emerald-700'}
+                      >
+                        {acc.mustChangePassword ? 'Wajib ganti password' : 'Aktif & Aman'}
+                      </span>
+                      {isConfirmingDelete ? (
+                        <div className="flex items-center gap-1.5">
                           <button
                             type="button"
                             disabled={submitting}
                             onClick={() => handleDeleteAccount(acc)}
-                            className="rounded-lg bg-red-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-red-700"
+                            className="rounded-lg bg-red-600 px-2.5 py-1 font-semibold text-white"
                           >
                             Yakin Hapus?
                           </button>
@@ -716,189 +1363,194 @@ export function AccountManagementView({
                             type="button"
                             disabled={submitting}
                             onClick={() => setConfirmDeleteId(null)}
-                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 font-medium text-slate-700"
                           >
                             Batal
                           </button>
                         </div>
                       ) : (
-                        <div className="inline-flex items-center gap-2">
-                          {resettable && (
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {editable && (
                             <button
                               type="button"
                               disabled={submitting}
-                              onClick={() => handleResetPassword(acc)}
-                              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                              onClick={() => startEditAccount(acc)}
+                              className="rounded-lg border border-slate-200 px-2.5 py-1 font-medium text-slate-700"
                             >
-                              <RefreshCw className="h-3 w-3" aria-hidden="true" />
-                              <span>Buat Ulang Password</span>
+                              Edit
                             </button>
                           )}
-                          {deletable && (
-                            <button
-                              type="button"
-                              disabled={submitting}
-                              onClick={() => setConfirmDeleteId(acc.id)}
-                              aria-label={`Hapus akun ${acc.name}`}
-                              className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-3 w-3" aria-hidden="true" />
-                              <span>Hapus</span>
-                            </button>
+                          {acc.isProtected || acc.role === 'developer' ? (
+                            <span className="inline-flex items-center gap-1 text-slate-500">
+                              <Shield className="h-3.5 w-3.5" aria-hidden="true" />
+                              <span>Dilindungi</span>
+                            </span>
+                          ) : (
+                            <>
+                              {resettable && (
+                                <button
+                                  type="button"
+                                  disabled={submitting}
+                                  onClick={() => handleResetPassword(acc)}
+                                  className="rounded-lg border border-slate-200 px-2.5 py-1 font-medium text-slate-700"
+                                >
+                                  Buat Ulang Password
+                                </button>
+                              )}
+                              {deletable && (
+                                <button
+                                  type="button"
+                                  disabled={submitting}
+                                  onClick={() => setConfirmDeleteId(acc.id)}
+                                  className="rounded-lg border border-red-200 px-2.5 py-1 font-medium text-red-700"
+                                >
+                                  Hapus
+                                </button>
+                              )}
+                            </>
                           )}
                         </div>
                       )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Mobile Card List (< md) */}
-        <div className="divide-y divide-slate-100 md:hidden">
-          {appState.officers.map((acc) => {
-            const deletable = canDeleteAccount(officer.role, acc);
-            const resettable =
-              !acc.isProtected &&
-              acc.role !== 'developer' &&
-              (isDeveloper || acc.role === 'petugas');
-            const isConfirmingDelete = confirmDeleteId === acc.id;
-
-            return (
-              <div key={acc.id} className="space-y-2.5 p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold text-slate-900">{acc.name}</p>
-                    <p className="font-mono-num text-xs text-slate-500">
-                      @{acc.username} · {acc.kelas} ·{' '}
-                      <span className="font-sans font-medium text-blue-700">
-                        {formatScheduledWeeksLabel(acc.scheduledWeeks, cycleWeeks)}
-                      </span>
-                    </p>
-                  </div>
-                  <span className="shrink-0 text-xs font-semibold text-blue-700">
-                    {getRoleLabel(acc.role)}
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className={acc.mustChangePassword ? 'text-amber-700' : 'text-emerald-700'}>
-                    {acc.mustChangePassword ? 'Wajib ganti password' : 'Aktif & Aman'}
-                  </span>
-                  {acc.isProtected || acc.role === 'developer' ? (
-                    <span className="inline-flex items-center gap-1 text-slate-500">
-                      <Shield className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>Dilindungi</span>
-                    </span>
-                  ) : isConfirmingDelete ? (
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        disabled={submitting}
-                        onClick={() => handleDeleteAccount(acc)}
-                        className="rounded-lg bg-red-600 px-2.5 py-1 font-semibold text-white"
-                      >
-                        Yakin Hapus?
-                      </button>
-                      <button
-                        type="button"
-                        disabled={submitting}
-                        onClick={() => setConfirmDeleteId(null)}
-                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 font-medium text-slate-700"
-                      >
-                        Batal
-                      </button>
                     </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      {resettable && (
-                        <button
-                          type="button"
-                          disabled={submitting}
-                          onClick={() => handleResetPassword(acc)}
-                          className="rounded-lg border border-slate-200 px-2.5 py-1 font-medium text-slate-700"
-                        >
-                          Buat Ulang Password
-                        </button>
-                      )}
-                      {deletable && (
-                        <button
-                          type="button"
-                          disabled={submitting}
-                          onClick={() => setConfirmDeleteId(acc.id)}
-                          className="rounded-lg border border-red-200 px-2.5 py-1 font-medium text-red-700"
-                        >
-                          Hapus
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
+                  </>
+                )}
               </div>
             );
           })}
         </div>
       </section>
 
-      {/* Optional Firebase Cloud Snapshot Sync (Firestore) */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="flex items-center gap-2 font-display text-base font-bold text-slate-900">
-              <Cloud className="h-4 w-4 text-blue-600" aria-hidden="true" />
-              <span>Simpan Cadangan Data Online (Google / Firestore)</span>
-            </h2>
-            <p className="mt-1 text-xs text-slate-500">
-              {firebaseUser
-                ? `Terhubung dengan akun Google (${firebaseUser.email}). Klik tombol di kanan jika ingin mencadangkan salinan data ke penyimpanan online Google Anda.`
-                : 'Opsional: Hubungkan akun Google Anda jika ingin menyimpan salinan cadangan data secara online.'}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <button
-              type="button"
-              disabled={syncingCloud}
-              onClick={handleConnectAndSyncFirebase}
-              className="btn-3d-soft inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-60"
-            >
-              <Cloud className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
-              <span>
-                {syncingCloud
-                  ? 'Sedang Menyimpan...'
-                  : firebaseUser
-                    ? 'Simpan Cadangan Online'
-                    : 'Hubungkan Google & Simpan Cadangan'}
-              </span>
-            </button>
-            {firebaseUser && (
+      {/* Full Backup & Restore (Developer-only: Local JSON + Cloud Firestore Snapshot) */}
+      {isDeveloper && (
+        <section className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="flex items-center gap-2 font-display text-base font-bold text-slate-900">
+                <Cloud className="h-4 w-4 text-blue-600" aria-hidden="true" />
+                <span>Cadangkan & Pulihkan Data Sistem (Cloud Google & File JSON)</span>
+              </h2>
+              <p className="mt-1 text-xs text-slate-500">
+                {firebaseUser
+                  ? `Terhubung dengan akun Google (${firebaseUser.email}). Anda dapat mencadangkan atau memulihkan seluruh data dari penyimpanan Cloud maupun file JSON lokal.`
+                  : 'Simpan cadangan lengkap (spreadsheet, pelanggaran, akun, jadwal) ke file JSON lokal atau hubungkan akun Google untuk cadangan Cloud.'}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json,application/json"
+                onChange={handleImportBackupFileChange}
+                className="hidden"
+              />
               <button
                 type="button"
-                onClick={() => signOutCloudSync()}
-                className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                disabled={syncingCloud || restoringBackup}
+                onClick={handleDownloadLocalBackupJson}
+                className="btn-3d-soft inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-60"
               >
-                Putuskan Google
+                <Download className="h-3.5 w-3.5 text-slate-700" aria-hidden="true" />
+                <span>Unduh Cadangan (.json)</span>
               </button>
-            )}
-          </div>
-        </div>
-
-        {cloudBackups.length > 0 && (
-          <div className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200 bg-slate-50/50 text-xs">
-            {cloudBackups.map((b) => (
-              <div
-                key={b.id}
-                className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5"
+              <button
+                type="button"
+                disabled={syncingCloud || restoringBackup}
+                onClick={() => fileInputRef.current?.click()}
+                className="btn-3d-soft inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-60"
               >
-                <span className="font-mono-num font-semibold text-slate-800">{b.id}</span>
-                <span className="text-slate-600">
-                  {b.spreadsheetCount} spreadsheet · {b.violationCount} pelanggaran
+                <Upload className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
+                <span>{restoringBackup ? 'Memulihkan...' : 'Pulihkan dari File (.json)'}</span>
+              </button>
+              <button
+                type="button"
+                disabled={syncingCloud || restoringBackup}
+                onClick={handleConnectAndSyncFirebase}
+                className="btn-3d-soft inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-60"
+              >
+                <Cloud className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
+                <span>
+                  {syncingCloud
+                    ? 'Sedang Menyimpan...'
+                    : firebaseUser
+                      ? 'Simpan Cadangan Cloud'
+                      : 'Hubungkan Google & Simpan'}
                 </span>
-              </div>
-            ))}
+              </button>
+              {firebaseUser && (
+                <button
+                  type="button"
+                  onClick={() => signOutCloudSync()}
+                  className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                >
+                  Putuskan Google
+                </button>
+              )}
+            </div>
           </div>
-        )}
-      </section>
+
+          {cloudBackups.length > 0 && (
+            <div className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200 bg-slate-50/50 text-xs">
+              {cloudBackups.map((b) => {
+                const hasEmbedded = hasEmbeddedBackupDigest(b.summaryDigest);
+                const displayDigest = getDisplaySummaryDigest(b.summaryDigest);
+                const isConfirmingRestore = confirmRestoreBackupId === b.id;
+                return (
+                  <div
+                    key={b.id}
+                    className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono-num font-semibold text-slate-800">{b.id}</span>
+                        <span className="text-slate-600">
+                          · {b.spreadsheetCount} spreadsheet · {b.violationCount} pelanggaran
+                        </span>
+                      </div>
+                      {displayDigest && (
+                        <p className="mt-0.5 truncate text-[11px] text-slate-500">{displayDigest}</p>
+                      )}
+                    </div>
+                    <div className="shrink-0">
+                      {!hasEmbedded ? (
+                        <span className="text-[11px] font-medium text-amber-700">
+                          Hanya ringkasan (gunakan file .json untuk pulihkan)
+                        </span>
+                      ) : isConfirmingRestore ? (
+                        <div className="inline-flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            disabled={restoringBackup}
+                            onClick={() => handleRestoreCloudBackup(b)}
+                            className="rounded-lg bg-blue-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-blue-700"
+                          >
+                            Ya, Pulihkan Sekarang
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmRestoreBackupId(null)}
+                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                          >
+                            Batal
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={restoringBackup}
+                          onClick={() => setConfirmRestoreBackupId(b.id)}
+                          className="rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+                        >
+                          Pulihkan Data
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }
