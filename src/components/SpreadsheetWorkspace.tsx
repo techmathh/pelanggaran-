@@ -117,6 +117,7 @@ export function SpreadsheetWorkspace({
   const [showGuide, setShowGuide] = useState(false);
   const [showManualDetails, setShowManualDetails] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [lastAddedRowId, setLastAddedRowId] = useState<string | null>(null);
 
   const matchingStudents = useMemo(
     () => searchSimilarStudents(appState.students, studentName, 10),
@@ -309,6 +310,13 @@ export function SpreadsheetWorkspace({
         return;
       }
       onStateUpdate(data.state);
+      const addedId: string | undefined = data.violation?.id ?? data.spreadsheet?.rows?.[0]?.id;
+      if (addedId) {
+        setLastAddedRowId(addedId);
+        window.setTimeout(() => {
+          setLastAddedRowId((curr) => (curr === addedId ? null : curr));
+        }, 2500);
+      }
       setMascotPulse((c) => c + 1);
       setStudentName('');
       setStudentNis('');
@@ -514,20 +522,46 @@ export function SpreadsheetWorkspace({
               )}
             </div>
 
-            {/* Plain-language 3-step duty orientation */}
-            <div className="mt-4 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-slate-500">
+            {/* Interactive 3-step duty orientation */}
+            <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-slate-500">
               <span className="font-semibold text-slate-700">Alur bertugas:</span>
-              <span className={!isSheetFinalized ? 'font-semibold text-blue-700' : 'text-emerald-700 font-medium'}>
+              <button
+                type="button"
+                onClick={() => document.getElementById('student-name')?.focus()}
+                className={`rounded-md px-1.5 py-0.5 transition-colors hover:bg-blue-50 ${
+                  !isSheetFinalized ? 'font-semibold text-blue-700' : 'text-emerald-700 font-medium'
+                }`}
+              >
                 1. Catat siswa
-              </span>
+              </button>
               <span aria-hidden="true">→</span>
-              <span className={todaySheet && !isSheetFinalized ? 'font-semibold text-blue-700' : isSheetFinalized ? 'text-emerald-700 font-medium' : ''}>
+              <button
+                type="button"
+                onClick={() =>
+                  document.getElementById('consensus-export-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                }
+                className={`rounded-md px-1.5 py-0.5 transition-colors hover:bg-blue-50 ${
+                  todaySheet && !isSheetFinalized
+                    ? 'font-semibold text-blue-700'
+                    : isSheetFinalized
+                      ? 'text-emerald-700 font-medium'
+                      : 'hover:text-slate-800'
+                }`}
+              >
                 2. Semua petugas tekan Selesai
-              </span>
+              </button>
               <span aria-hidden="true">→</span>
-              <span className={consensus.exportUnlocked ? 'font-semibold text-emerald-700' : ''}>
+              <button
+                type="button"
+                onClick={() =>
+                  document.getElementById('consensus-export-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                }
+                className={`rounded-md px-1.5 py-0.5 transition-colors hover:bg-emerald-50 ${
+                  consensus.exportUnlocked ? 'font-semibold text-emerald-700' : 'hover:text-slate-800'
+                }`}
+              >
                 3. Unduh Excel &amp; PDF
-              </span>
+              </button>
             </div>
 
             {showGuide && (
@@ -923,21 +957,99 @@ export function SpreadsheetWorkspace({
 
             <div className="space-y-4">
               <div>
-                <label
-                  htmlFor="category-select"
-                  className="block text-sm font-medium text-slate-700"
-                >
-                  1. Pilih Kategori Pelanggaran (A – F)
-                </label>
+                <div className="flex items-center justify-between gap-2">
+                  <label
+                    htmlFor="category-select"
+                    className="block text-sm font-medium text-slate-700"
+                  >
+                    1. Pilih Kategori Pelanggaran (A – F)
+                  </label>
+                  {selectedCategory && (
+                    <button
+                      type="button"
+                      disabled={!canRecordNow || submitting}
+                      onClick={() => handleCategoryChange('')}
+                      className="text-xs font-medium text-slate-500 hover:text-slate-800 underline disabled:opacity-50"
+                    >
+                      Ganti kategori
+                    </button>
+                  )}
+                </div>
+
+                {/* Interactive 1-tap category grid synced with #category-select */}
+                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {AKPS_CATEGORIES.map((cat) => {
+                    const count = appState.presets.filter((p) => p.category === cat).length;
+                    const code = cat.split('.')[0];
+                    const cardLabels: Record<string, string> = {
+                      A: 'Kedisiplinan',
+                      B: 'Perilaku & Sikap',
+                      C: 'Sepeda & Motor',
+                      D: 'HP & Teknologi',
+                      E: 'Kerapihan',
+                      F: 'Lain-lain AKPS',
+                    };
+                    const shortLabel = cardLabels[code] ?? cat.replace(/^[A-F]\.\s*/, '');
+                    const isActive = selectedCategory === cat;
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        title={cat}
+                        disabled={!canRecordNow || submitting}
+                        onClick={() => handleCategoryChange(cat)}
+                        className={`group rounded-xl border px-3 py-2 text-left transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${
+                          isActive
+                            ? 'border-blue-600 bg-blue-50/90 text-blue-950 shadow-xs'
+                            : 'border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-1">
+                          <span
+                            className={`font-mono-num text-[11px] font-bold ${
+                              isActive ? 'text-blue-700' : 'text-slate-500 group-hover:text-blue-600'
+                            }`}
+                          >
+                            Kat. {code}
+                          </span>
+                          <span className="font-mono-num text-[11px] text-slate-400">
+                            {count}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 truncate text-xs font-semibold leading-tight">
+                          {shortLabel}
+                        </p>
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    disabled={!canRecordNow || submitting}
+                    onClick={() => handleCategoryChange('CUSTOM')}
+                    className={`rounded-xl border px-3 py-2 text-left transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${
+                      selectedCategory === 'CUSTOM'
+                        ? 'border-blue-600 bg-blue-50/90 text-blue-950 shadow-xs'
+                        : 'border-dashed border-slate-300 bg-slate-50/60 text-slate-700 hover:border-blue-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span className="font-mono-num text-[11px] font-bold text-slate-500">
+                      Lainnya
+                    </span>
+                    <p className="mt-0.5 truncate text-xs font-semibold leading-tight">
+                      Isi Manual
+                    </p>
+                  </button>
+                </div>
+
                 <select
                   id="category-select"
                   required
                   disabled={!canRecordNow || submitting}
                   value={selectedCategory}
                   onChange={(e) => handleCategoryChange(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
+                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-700 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
                 >
-                  <option value="">-- Pilih kategori dulu (A sampai F) --</option>
+                  <option value="">-- Atau pilih kategori dari daftar (A sampai F) --</option>
                   {AKPS_CATEGORIES.map((cat) => {
                     const count = appState.presets.filter((p) => p.category === cat).length;
                     return (
@@ -950,13 +1062,13 @@ export function SpreadsheetWorkspace({
                 </select>
                 {!selectedCategory && (
                   <p className="mt-1.5 text-xs text-slate-500">
-                    Daftar aturan akan muncul otomatis setelah Anda memilih kategori di atas.
+                    Klik salah satu kartu kategori di atas agar daftar aturannya langsung muncul.
                   </p>
                 )}
               </div>
 
               {selectedCategory && selectedCategory !== 'CUSTOM' && (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
+                <div className="animate-panel-reveal grid grid-cols-1 gap-4 rounded-xl border border-blue-100 bg-blue-50/35 p-3.5 sm:grid-cols-12">
                   <div className="sm:col-span-9">
                     <label
                       htmlFor="preset-select"
@@ -1251,7 +1363,10 @@ export function SpreadsheetWorkspace({
           </section>
 
           {/* Panel Konsensus Selesai & Ekspor */}
-          <section className="flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-6">
+          <section
+            id="consensus-export-card"
+            className="flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-6"
+          >
             <div>
               <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
                 <div>
@@ -1523,6 +1638,19 @@ export function SpreadsheetWorkspace({
                 </option>
               ))}
             </select>
+
+            {(searchQuery || filterCategory !== 'ALL') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setFilterCategory('ALL');
+                }}
+                className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 whitespace-nowrap"
+              >
+                Reset
+              </button>
+            )}
           </div>
         </div>
 
@@ -1570,7 +1698,12 @@ export function SpreadsheetWorkspace({
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {grp.rows.map((row, idx) => (
-                        <tr key={row.id} className="hover:bg-slate-50/80">
+                        <tr
+                          key={row.id}
+                          className={`hover:bg-slate-50/80 transition-colors ${
+                            row.id === lastAddedRowId ? 'animate-row-flash' : ''
+                          }`}
+                        >
                           <td className="font-mono-num px-4 py-2.5 text-center text-xs text-slate-500">
                             {idx + 1}
                           </td>
@@ -1658,7 +1791,12 @@ export function SpreadsheetWorkspace({
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredRows.map((row, idx) => (
-                  <tr key={row.id} className="hover:bg-slate-50/80 transition-colors">
+                  <tr
+                    key={row.id}
+                    className={`hover:bg-slate-50/80 transition-colors ${
+                      row.id === lastAddedRowId ? 'animate-row-flash' : ''
+                    }`}
+                  >
                     <td className="font-mono-num px-4 py-3 text-center text-xs text-slate-500">
                       {filteredRows.length - idx}
                     </td>

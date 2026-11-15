@@ -69,7 +69,7 @@ export function StudentRecapView({ appState, onNotify }: StudentRecapViewProps) 
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+      <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="font-display text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
@@ -109,7 +109,7 @@ export function StudentRecapView({ appState, onNotify }: StudentRecapViewProps) 
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white">
+      <section className="rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
         <div className="flex flex-col gap-3 border-b border-slate-200 p-4 lg:flex-row lg:items-center lg:justify-between sm:p-5">
           <div className="relative w-full lg:w-72">
             <Search
@@ -175,6 +175,22 @@ export function StudentRecapView({ appState, onNotify }: StudentRecapViewProps) 
               />
               <span>Hanya yang memiliki poin</span>
             </label>
+
+            {(query || kelasFilter !== 'ALL' || tierFilter !== 'ALL' || onlyViolators) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery('');
+                  setKelasFilter('ALL');
+                  setTierFilter('ALL');
+                  setOnlyViolators(false);
+                  setVisibleLimit(30);
+                }}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+              >
+                Reset Filter
+              </button>
+            )}
           </div>
         </div>
 
@@ -197,7 +213,7 @@ export function StudentRecapView({ appState, onNotify }: StudentRecapViewProps) 
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {visibleRows.map((stu) => (
-                  <tr key={stu.key} className="hover:bg-slate-50/70">
+                  <tr key={stu.key} className="transition-colors hover:bg-slate-50/80">
                     <td className="px-4 py-3">
                       <p className="font-medium text-slate-900">{stu.studentName}</p>
                       <p className="font-mono-num text-xs text-slate-500">NIS {stu.studentNis}</p>

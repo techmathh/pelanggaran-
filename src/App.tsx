@@ -194,38 +194,40 @@ export default function App() {
             onLogout={handleLogout}
           />
           <main className="mx-auto max-w-7xl px-3 py-5 sm:px-6 sm:py-6 lg:py-8">
-            {effectiveTab === 'piket' && (
-              <SpreadsheetWorkspace
-                officer={currentOfficer}
-                appState={appState}
-                onStateUpdate={handleStateUpdate}
-                onNotify={notify}
-              />
-            )}
-            {effectiveTab === 'rekap' && (
-              <StudentRecapView appState={appState} onNotify={notify} />
-            )}
-            {effectiveTab === 'arsip' && (
-              <ArchiveView appState={appState} onNotify={notify} />
-            )}
-            {effectiveTab === 'jadwal' && (
-              <ScheduleSettingsView
-                officer={currentOfficer}
-                appState={appState}
-                onStateUpdate={handleStateUpdate}
-                onPasswordUpdated={handlePasswordUpdated}
-                onOpenAccounts={() => setActiveTab('akun')}
-                onNotify={notify}
-              />
-            )}
-            {effectiveTab === 'akun' && isManagerRole(currentOfficer.role) && (
-              <AccountManagementView
-                officer={currentOfficer}
-                appState={appState}
-                onStateUpdate={handleStateUpdate}
-                onNotify={notify}
-              />
-            )}
+            <div key={effectiveTab} className="animate-panel-reveal">
+              {effectiveTab === 'piket' && (
+                <SpreadsheetWorkspace
+                  officer={currentOfficer}
+                  appState={appState}
+                  onStateUpdate={handleStateUpdate}
+                  onNotify={notify}
+                />
+              )}
+              {effectiveTab === 'rekap' && (
+                <StudentRecapView appState={appState} onNotify={notify} />
+              )}
+              {effectiveTab === 'arsip' && (
+                <ArchiveView appState={appState} onNotify={notify} />
+              )}
+              {effectiveTab === 'jadwal' && (
+                <ScheduleSettingsView
+                  officer={currentOfficer}
+                  appState={appState}
+                  onStateUpdate={handleStateUpdate}
+                  onPasswordUpdated={handlePasswordUpdated}
+                  onOpenAccounts={() => setActiveTab('akun')}
+                  onNotify={notify}
+                />
+              )}
+              {effectiveTab === 'akun' && isManagerRole(currentOfficer.role) && (
+                <AccountManagementView
+                  officer={currentOfficer}
+                  appState={appState}
+                  onStateUpdate={handleStateUpdate}
+                  onNotify={notify}
+                />
+              )}
+            </div>
           </main>
         </>
       )}

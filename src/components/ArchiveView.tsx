@@ -69,7 +69,7 @@ export function ArchiveView({ appState, onNotify }: ArchiveViewProps) {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+      <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-6">
         <h1 className="font-display text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
           Arsip Laporan Piket Harian
         </h1>
@@ -97,10 +97,10 @@ export function ArchiveView({ appState, onNotify }: ArchiveViewProps) {
                   key={sheet.id}
                   type="button"
                   onClick={() => setSelectedId(sheet.id)}
-                  className={`w-full rounded-2xl border p-4 text-left transition-colors ${
+                  className={`w-full rounded-2xl border p-4 text-left transition-all active:scale-[0.99] ${
                     isSelected
-                      ? 'border-blue-600 bg-blue-50/40'
-                      : 'border-slate-200 bg-white hover:border-slate-300'
+                      ? 'border-blue-600 bg-blue-50/45 shadow-[0_1px_3px_rgba(37,99,235,0.08)]'
+                      : 'border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:-translate-y-0.5 hover:border-slate-300'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
@@ -139,7 +139,7 @@ export function ArchiveView({ appState, onNotify }: ArchiveViewProps) {
 
           {/* Selected Sheet Preview */}
           {selectedSheet && (
-            <div className="rounded-2xl border border-slate-200 bg-white lg:col-span-8">
+            <div className="rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.04)] lg:col-span-8">
               <div className="flex flex-col gap-4 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
                 <div className="min-w-0">
                   <h2 className="font-display text-lg font-bold text-slate-900 break-words">
@@ -224,7 +224,7 @@ export function ArchiveView({ appState, onNotify }: ArchiveViewProps) {
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {selectedSheet.rows.map((row) => (
-                        <tr key={row.id} className="hover:bg-slate-50/70">
+                        <tr key={row.id} className="transition-colors hover:bg-slate-50/80">
                           <td className="font-mono-num px-4 py-3 text-xs text-slate-600">
                             {row.timeLabel}
                           </td>

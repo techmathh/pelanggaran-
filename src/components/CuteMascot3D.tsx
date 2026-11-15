@@ -13,6 +13,27 @@ interface CuteMascot3DProps {
 
 const _pointerVec = new THREE.Vector2(0, 0);
 
+const INTERACTIVE_TIPS: Record<MascotMood, string[]> = {
+  idle: [
+    'Halo! Klik Piko atau masuk dengan akun OSIS untuk mulai.',
+    'Tips: Ketik beberapa huruf nama siswa — kelas terisi otomatis.',
+    'Semangat bertugas! Piko siap menemani piket pagi hari ini.',
+  ],
+  recording: [
+    'Piko siaga menemani pencatatan piket hari ini.',
+    'Tips: Pilih kategori A–F dulu supaya daftar aturan langsung rapi.',
+    'Jangan lupa tekan Selesai setelah jam piket selesai agar laporan terbuka!',
+  ],
+  locked: [
+    'Piko sedang istirahat — di luar jadwal piket Anda.',
+    'Anda tetap bisa melihat Rekap Siswa dan Arsip Piket kapan saja.',
+  ],
+  celebrate: [
+    'Yeay! Semua petugas sudah Selesai. Laporan Excel & PDF siap diunduh!',
+    'Terima kasih sudah menjaga ketertiban SMA Negeri 1 Kemangkon hari ini!',
+  ],
+};
+
 function detectSoftwareWebGL(): boolean {
   try {
     const probeCanvas = document.createElement('canvas');
@@ -37,20 +58,31 @@ export function CuteMascot3D({
   const mountRef = useRef<HTMLDivElement | null>(null);
   const moodRef = useRef<MascotMood>(mood);
   const hopImpulseRef = useRef<number>(0);
+  const spinImpulseRef = useRef<number>(0);
   const [webglReady, setWebglReady] = useState(true);
+  const [tipIndex, setTipIndex] = useState(0);
 
   useEffect(() => {
     moodRef.current = mood;
+    setTipIndex(0);
     if (mood === 'celebrate') {
       hopImpulseRef.current = 1.0;
+      spinImpulseRef.current = Math.PI * 2;
     }
   }, [mood]);
 
   useEffect(() => {
     if (triggerPulse > 0) {
-      hopImpulseRef.current = 0.85;
+      hopImpulseRef.current = 0.95;
+      spinImpulseRef.current = Math.PI * 2;
     }
   }, [triggerPulse]);
+
+  function triggerMascotInteraction() {
+    hopImpulseRef.current = 1.0;
+    spinImpulseRef.current = Math.PI * 2;
+    setTipIndex((prev) => prev + 1);
+  }
 
   useEffect(() => {
     const container = mountRef.current;
@@ -118,7 +150,6 @@ export function CuteMascot3D({
     rimLight.position.set(-3.0, 2.5, -2.8);
     scene.add(rimLight);
 
-    // Track geometries & materials for clean disposal
     const geometries: THREE.BufferGeometry[] = [];
     const materials: THREE.Material[] = [];
     const trackGeo = <T extends THREE.BufferGeometry>(g: T): T => {
@@ -130,7 +161,6 @@ export function CuteMascot3D({
       return m;
     };
 
-    // Materials (varied roughness & metalness)
     const deskWoodMat = trackMat(
       new THREE.MeshStandardMaterial({ color: 0xe2c799, roughness: 0.65, metalness: 0.04 })
     );
@@ -172,11 +202,17 @@ export function CuteMascot3D({
     const paperMat = trackMat(
       new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, metalness: 0.0 })
     );
+    const pencilMat = trackMat(
+      new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.45, metalness: 0.05 })
+    );
+    const eraserMat = trackMat(
+      new THREE.MeshStandardMaterial({ color: 0xfb7185, roughness: 0.65, metalness: 0.0 })
+    );
 
     const rootGroup = new THREE.Group();
     scene.add(rootGroup);
 
-    // 1. Ceramic/Wood Desk Pedestal (grounded at y = 0)
+    // 1. Ceramic/Wood Desk Pedestal
     const pedestal = new THREE.Mesh(
       trackGeo(new THREE.CylinderGeometry(1.18, 1.28, 0.22, 36)),
       deskTrimMat
@@ -193,7 +229,6 @@ export function CuteMascot3D({
     deskTop.receiveShadow = true;
     rootGroup.add(deskTop);
 
-    // Contact shadow disc
     const shadowDisc = new THREE.Mesh(
       trackGeo(new THREE.CircleGeometry(0.68, 28)),
       trackMat(
@@ -214,7 +249,6 @@ export function CuteMascot3D({
     owlGroup.position.y = 0.27;
     rootGroup.add(owlGroup);
 
-    // Body (smooth capsule-sphere silhouette)
     const bodyMesh = new THREE.Mesh(
       trackGeo(new THREE.SphereGeometry(0.62, 32, 24)),
       bodyMat
@@ -224,7 +258,6 @@ export function CuteMascot3D({
     bodyMesh.castShadow = true;
     owlGroup.add(bodyMesh);
 
-    // Cream Belly Patch
     const bellyMesh = new THREE.Mesh(
       trackGeo(new THREE.SphereGeometry(0.46, 28, 20)),
       bellyMat
@@ -233,7 +266,7 @@ export function CuteMascot3D({
     bellyMesh.position.set(0, 0.56, 0.36);
     owlGroup.add(bellyMesh);
 
-    // Cute Ear Tufts (left & right)
+    // Cute Ear Tufts
     const tuftGeo = trackGeo(new THREE.ConeGeometry(0.14, 0.28, 16));
     const leftTuft = new THREE.Mesh(tuftGeo, bodyMat);
     leftTuft.position.set(-0.42, 1.24, 0.05);
@@ -245,11 +278,13 @@ export function CuteMascot3D({
     rightTuft.rotation.z = -0.42;
     owlGroup.add(rightTuft);
 
-    // Face / Eyes (with white rings, glossy pupils, specular catchlights, and blinking eyelids)
+    // Face / Eyes
     const eyeRingGeo = trackGeo(new THREE.CylinderGeometry(0.21, 0.21, 0.06, 24));
     const pupilGeo = trackGeo(new THREE.SphereGeometry(0.115, 20, 16));
     const shineGeo = trackGeo(new THREE.SphereGeometry(0.036, 12, 10));
-    const lidGeo = trackGeo(new THREE.SphereGeometry(0.14, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2));
+    const lidGeo = trackGeo(
+      new THREE.SphereGeometry(0.14, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2)
+    );
 
     const leftEyeGroup = new THREE.Group();
     leftEyeGroup.position.set(-0.22, 0.86, 0.52);
@@ -299,7 +334,7 @@ export function CuteMascot3D({
     rightCheek.position.set(0.36, 0.7, 0.5);
     owlGroup.add(rightCheek);
 
-    // Cute Rounded Beak
+    // Beak
     const beakMesh = new THREE.Mesh(
       trackGeo(new THREE.ConeGeometry(0.095, 0.16, 18)),
       beakMat
@@ -308,7 +343,7 @@ export function CuteMascot3D({
     beakMesh.position.set(0, 0.73, 0.62);
     owlGroup.add(beakMesh);
 
-    // Wings (pivot at shoulder)
+    // Wings
     const wingGeo = trackGeo(new THREE.SphereGeometry(0.22, 18, 14));
     const leftWingPivot = new THREE.Group();
     leftWingPivot.position.set(-0.58, 0.68, 0.05);
@@ -353,7 +388,9 @@ export function CuteMascot3D({
     capGroup.add(capCrown);
 
     const capVisor = new THREE.Mesh(
-      trackGeo(new THREE.CylinderGeometry(0.36, 0.36, 0.035, 24, 1, false, -Math.PI * 0.45, Math.PI * 0.9)),
+      trackGeo(
+        new THREE.CylinderGeometry(0.36, 0.36, 0.035, 24, 1, false, -Math.PI * 0.45, Math.PI * 0.9)
+      ),
       capNavyMat
     );
     capVisor.position.set(0, -0.06, 0.14);
@@ -367,9 +404,9 @@ export function CuteMascot3D({
     osisPin.position.set(0, 0.02, 0.34);
     capGroup.add(osisPin);
 
-    // 3. Floating Mini Clipboard & Pencil Props beside Piko
+    // 3. Floating Mini Clipboard (right) + Cute Pencil (left)
     const clipboardGroup = new THREE.Group();
-    clipboardGroup.position.set(0.86, 0.62, 0.32);
+    clipboardGroup.position.set(0.88, 0.62, 0.32);
     clipboardGroup.rotation.set(-0.18, -0.45, 0.12);
     rootGroup.add(clipboardGroup);
 
@@ -394,6 +431,45 @@ export function CuteMascot3D({
     clipMetal.position.y = 0.23;
     clipboardGroup.add(clipMetal);
 
+    const pencilGroup = new THREE.Group();
+    pencilGroup.position.set(-0.92, 0.64, 0.3);
+    pencilGroup.rotation.set(0.18, 0.2, 0.42);
+    rootGroup.add(pencilGroup);
+
+    const pencilShaft = new THREE.Mesh(
+      trackGeo(new THREE.CylinderGeometry(0.036, 0.036, 0.42, 12)),
+      pencilMat
+    );
+    pencilShaft.castShadow = true;
+    pencilGroup.add(pencilShaft);
+
+    const pencilTip = new THREE.Mesh(
+      trackGeo(new THREE.ConeGeometry(0.036, 0.1, 12)),
+      deskWoodMat
+    );
+    pencilTip.position.y = -0.26;
+    pencilTip.rotation.z = Math.PI;
+    pencilGroup.add(pencilTip);
+
+    const pencilEraser = new THREE.Mesh(
+      trackGeo(new THREE.CylinderGeometry(0.038, 0.038, 0.06, 12)),
+      eraserMat
+    );
+    pencilEraser.position.y = 0.24;
+    pencilGroup.add(pencilEraser);
+
+    // 4. Celebration / Interactive Star Sparkles (shown during celebrate or click burst)
+    const starGroup = new THREE.Group();
+    rootGroup.add(starGroup);
+    const starGeo = trackGeo(new THREE.OctahedronGeometry(0.065, 0));
+    const starMeshes: THREE.Mesh[] = [];
+    for (let i = 0; i < 4; i++) {
+      const star = new THREE.Mesh(starGeo, goldBadgeMat);
+      star.scale.setScalar(0.01);
+      starGroup.add(star);
+      starMeshes.push(star);
+    }
+
     // Pointer interaction
     const onPointerMove = (e: PointerEvent) => {
       const rect = renderer.domElement.getBoundingClientRect();
@@ -403,13 +479,12 @@ export function CuteMascot3D({
     };
 
     const onClickCanvas = () => {
-      hopImpulseRef.current = 1.0;
+      triggerMascotInteraction();
     };
 
     renderer.domElement.addEventListener('pointermove', onPointerMove);
     renderer.domElement.addEventListener('click', onClickCanvas);
 
-    // Animation state & software-WebGL paced loop
     let frameId = 0;
     let disposed = false;
     let lastTimeMs = performance.now();
@@ -417,6 +492,7 @@ export function CuteMascot3D({
     let currentRotY = 0;
     let currentRotX = 0;
     let currentHopY = 0;
+    let currentSpinY = 0;
     let blinkTimer = 0;
 
     function afterDraw(cb: () => void) {
@@ -448,24 +524,36 @@ export function CuteMascot3D({
       const elapsed = (nowMs - startTimeMs) / 1000;
       const activeMood = moodRef.current;
 
-      // Decay hop impulse
       if (hopImpulseRef.current > 0.01) {
-        hopImpulseRef.current = THREE.MathUtils.damp(hopImpulseRef.current, 0, 5.5, dt);
+        hopImpulseRef.current = THREE.MathUtils.damp(hopImpulseRef.current, 0, 5.2, dt);
       } else {
         hopImpulseRef.current = 0;
+      }
+
+      if (spinImpulseRef.current > 0.02) {
+        const nextSpin = THREE.MathUtils.damp(spinImpulseRef.current, 0, 6.0, dt);
+        currentSpinY += spinImpulseRef.current - nextSpin;
+        spinImpulseRef.current = nextSpin;
+      } else {
+        spinImpulseRef.current = 0;
+        currentSpinY = currentSpinY % (Math.PI * 2);
+        currentSpinY = THREE.MathUtils.damp(currentSpinY, 0, 10, dt);
       }
 
       const targetHop =
         activeMood === 'celebrate'
           ? Math.abs(Math.sin(elapsed * 4.5)) * 0.22 + hopImpulseRef.current * 0.28
-          : hopImpulseRef.current * 0.34;
+          : hopImpulseRef.current * 0.36;
       currentHopY = THREE.MathUtils.damp(currentHopY, targetHop, 12, dt);
 
-      // Gentle breathing bob
-      const bobY = activeMood === 'locked' ? Math.sin(elapsed * 1.4) * 0.015 : Math.sin(elapsed * 2.6) * 0.03;
+      const bobY =
+        activeMood === 'locked' ? Math.sin(elapsed * 1.4) * 0.015 : Math.sin(elapsed * 2.6) * 0.03;
       owlGroup.position.y = 0.27 + currentHopY + bobY;
 
-      // Look gently toward cursor
+      // Subtle contact shadow scaling when Piko hops
+      const shadowScale = Math.max(0.65, 1 - currentHopY * 0.7);
+      shadowDisc.scale.set(shadowScale, shadowScale, 1);
+
       const targetRotY = THREE.MathUtils.clamp(_pointerVec.x * 0.35, -0.45, 0.45);
       const targetRotX =
         activeMood === 'locked'
@@ -474,33 +562,57 @@ export function CuteMascot3D({
 
       currentRotY = THREE.MathUtils.damp(currentRotY, targetRotY, 6, dt);
       currentRotX = THREE.MathUtils.damp(currentRotX, targetRotX, 6, dt);
-      owlGroup.rotation.y = currentRotY + (activeMood === 'celebrate' ? Math.sin(elapsed * 3) * 0.22 : 0);
+      owlGroup.rotation.y =
+        currentRotY + currentSpinY + (activeMood === 'celebrate' ? Math.sin(elapsed * 3) * 0.22 : 0);
       owlGroup.rotation.x = currentRotX;
 
-      // Wing wave
       const wingWave =
         activeMood === 'celebrate'
           ? 0.55 + Math.sin(elapsed * 9) * 0.45
           : activeMood === 'recording'
-            ? 0.16 + Math.sin(elapsed * 3.5) * 0.12
+            ? 0.16 + Math.sin(elapsed * 3.5) * 0.12 + hopImpulseRef.current * 0.65
             : activeMood === 'locked'
-              ? 0.04
-              : 0.12 + Math.sin(elapsed * 2.1) * 0.08 + hopImpulseRef.current * 0.65;
+              ? 0.04 + hopImpulseRef.current * 0.45
+              : 0.12 + Math.sin(elapsed * 2.1) * 0.08 + hopImpulseRef.current * 0.72;
 
       leftWingPivot.rotation.z = wingWave;
       rightWingPivot.rotation.z = -wingWave;
 
-      // Blinking or sleepy eyelids when locked
+      // Ear tuft wiggle on hop
+      leftTuft.rotation.z = 0.42 + hopImpulseRef.current * 0.18;
+      rightTuft.rotation.z = -0.42 - hopImpulseRef.current * 0.18;
+
       blinkTimer += dt;
-      const isBlinking = (blinkTimer % 3.6) > 3.44;
+      const isBlinking = blinkTimer % 3.6 > 3.44;
       const lidScaleY = activeMood === 'locked' ? 0.62 : isBlinking ? 1.05 : 0.05;
       leftLid.scale.y = THREE.MathUtils.damp(leftLid.scale.y, lidScaleY, 18, dt);
       rightLid.scale.y = THREE.MathUtils.damp(rightLid.scale.y, lidScaleY, 18, dt);
 
-      // Floating clipboard prop
       clipboardGroup.position.y = 0.62 + Math.sin(elapsed * 2.2 + 0.8) * 0.045;
       clipboardGroup.rotation.z = 0.12 + Math.sin(elapsed * 1.6) * 0.05;
+      pencilGroup.position.y = 0.64 + Math.sin(elapsed * 2.4 + 2.2) * 0.045;
+      pencilGroup.rotation.z = 0.42 + Math.cos(elapsed * 1.8) * 0.06;
       osisPin.rotation.y = elapsed * 1.2;
+
+      // Orbit celebratory star sparkles
+      const showStars = activeMood === 'celebrate' || hopImpulseRef.current > 0.12;
+      const targetStarScale = showStars
+        ? activeMood === 'celebrate'
+          ? 0.95
+          : Math.min(1, hopImpulseRef.current * 1.4)
+        : 0.001;
+      starMeshes.forEach((star, idx) => {
+        const angle = elapsed * 2.4 + (idx * Math.PI * 2) / starMeshes.length;
+        star.position.set(
+          Math.cos(angle) * 0.95,
+          1.45 + Math.sin(elapsed * 3.5 + idx) * 0.14,
+          Math.sin(angle) * 0.65
+        );
+        star.rotation.y = elapsed * 2.5 + idx;
+        star.rotation.x = elapsed * 1.8;
+        const s = THREE.MathUtils.damp(star.scale.x, targetStarScale, 12, dt);
+        star.scale.setScalar(s);
+      });
 
       renderer.render(scene, camera);
 
@@ -511,7 +623,6 @@ export function CuteMascot3D({
       }
     }
 
-    // Handle container resize
     const handleResize = () => {
       if (!container || disposed) return;
       const nextW = Math.max(container.clientWidth, 160);
@@ -541,14 +652,9 @@ export function CuteMascot3D({
     };
   }, [compact]);
 
-  const moodLabel =
-    mood === 'celebrate'
-      ? 'Piko senang! Sesi piket hari ini selesai & siap diekspor.'
-      : mood === 'locked'
-        ? 'Piko sedang istirahat — di luar jadwal piket Anda.'
-        : mood === 'recording'
-          ? 'Piko siaga menemani pencatatan piket hari ini.'
-          : 'Halo! Klik Piko atau masuk dengan akun OSIS untuk mulai.';
+  const tips = INTERACTIVE_TIPS[mood];
+  const activeTip = tips[tipIndex % tips.length];
+  const displayCaption = tipIndex > 0 ? activeTip : (caption ?? activeTip);
 
   return (
     <div className="flex flex-col items-center">
@@ -567,11 +673,16 @@ export function CuteMascot3D({
           </div>
         )}
       </div>
-      {caption !== undefined ? (
-        <p className="mt-1 text-center text-xs text-slate-500">{caption}</p>
-      ) : (
-        <p className="mt-1 text-center text-xs text-slate-500">{moodLabel}</p>
-      )}
+      <div className="mt-1.5 flex flex-col items-center gap-1.5 px-2 text-center">
+        <p className="text-xs leading-relaxed text-slate-600">{displayCaption}</p>
+        <button
+          type="button"
+          onClick={triggerMascotInteraction}
+          className="rounded-lg border border-sky-200/80 bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-blue-700 transition-all hover:border-blue-300 hover:bg-white active:scale-95"
+        >
+          Sapa Piko
+        </button>
+      </div>
     </div>
   );
 }

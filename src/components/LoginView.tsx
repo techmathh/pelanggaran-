@@ -165,20 +165,26 @@ export function LoginView({ meta, onLoginSuccess }: LoginViewProps) {
               <CuteMascot3D mood={pendingChange ? 'recording' : 'idle'} />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 sm:grid-cols-3">
-              <div>
-                <p className="text-xs font-semibold text-slate-900">01. Masuk Akun Piket</p>
+            <div className="grid grid-cols-1 gap-3 border-t border-slate-100 pt-5 sm:grid-cols-3">
+              <button
+                type="button"
+                onClick={() => document.getElementById('login-username')?.focus()}
+                className="group rounded-xl border border-transparent p-2.5 text-left transition-all hover:border-sky-200 hover:bg-sky-50/50"
+              >
+                <p className="text-xs font-semibold text-slate-900 group-hover:text-blue-700">
+                  01. Masuk Akun Piket
+                </p>
                 <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
                   Login sesuai akun petugas OSIS yang sudah dibagikan pengurus.
                 </p>
-              </div>
-              <div>
+              </button>
+              <div className="rounded-xl p-2.5">
                 <p className="text-xs font-semibold text-slate-900">02. Catat Siswa Cepat</p>
                 <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
                   Ketik beberapa huruf nama siswa — kelas dan poin AKPS terisi otomatis.
                 </p>
               </div>
-              <div>
+              <div className="rounded-xl p-2.5">
                 <p className="text-xs font-semibold text-slate-900">03. Klik Selesai &amp; Unduh</p>
                 <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
                   Setelah semua petugas klik Selesai, file Excel &amp; PDF siap diunduh.
@@ -217,7 +223,7 @@ export function LoginView({ meta, onLoginSuccess }: LoginViewProps) {
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       placeholder="Masukkan username Anda"
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15"
+                      className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15"
                     />
                   </div>
 
