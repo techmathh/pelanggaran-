@@ -31,6 +31,8 @@ import type {
   PublicOfficer,
   RolePetugas,
   SimulationConfig,
+  StudentImportEntry,
+  StudentImportMode,
   StudentRecord,
   SystemBackupPayload,
   ViolationEntry,
@@ -44,6 +46,18 @@ const DATA_DIR = process.env.DATA_DIR
   ? path.resolve(process.env.DATA_DIR)
   : path.resolve(process.cwd(), 'data');
 const SQLITE_PATH = path.join(DATA_DIR, 'sipiket.db');
+
+const BOOT_NONCE = crypto.randomBytes(4).toString('hex');
+let stateRevision = 1;
+
+export function getStateVersion(): string {
+  return `${BOOT_NONCE}-${stateRevision}`;
+}
+
+export function bumpStateVersion(): string {
+  stateRevision += 1;
+  return getStateVersion();
+}
 
 const AVATAR_PALETTE = ['#2563EB', '#0D9488', '#D97706', '#4F46E5', '#DB2777', '#059669'];
 const PASSWORD_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
@@ -231,6 +245,10 @@ function createSchemaAndSeed(db: DatabaseSync): void {
       key TEXT PRIMARY KEY,
       value_json TEXT NOT NULL
     );
+
+    CREATE INDEX IF NOT EXISTS idx_violations_spreadsheet ON violations(spreadsheet_id, timestamp DESC);
+    CREATE INDEX IF NOT EXISTS idx_violations_student ON violations(student_name, kelas);
+    CREATE INDEX IF NOT EXISTS idx_students_kelas_name ON students(kelas, name);
   `);
 
   // Ensure scheduled_weeks_json column exists on pre-existing databases
@@ -300,25 +318,35 @@ function createSchemaAndSeed(db: DatabaseSync): void {
     }
   }
 
-  // Ensure the official SMA Negeri 1 Kemangkon student roster (610 students) is seeded idempotently
-  const insertStudent = db.prepare(
-    'INSERT OR IGNORE INTO students (id, nis, name, kelas) VALUES (?, ?, ?, ?)'
-  );
-  const updateStudentNisIfMissing = db.prepare(
-    "UPDATE students SET nis = ? WHERE id = ? AND (nis = '-' OR nis = '')"
-  );
-  db.exec('BEGIN');
-  try {
-    for (const s of SMAN1_KEMANGKON_STUDENTS) {
-      insertStudent.run(s.id, s.nis, s.name, s.kelas);
-      if (s.nis && s.nis !== '-') {
-        updateStudentNisIfMissing.run(s.nis, s.id);
+  // Ensure the official SMA Negeri 1 Kemangkon student roster (610 students) is seeded only if roster hasn't been customized/replaced
+  const rosterInitRow = db
+    .prepare('SELECT value_json FROM app_settings WHERE key = ?')
+    .get('roster_initialized') as { value_json: string } | undefined;
+
+  if (!rosterInitRow) {
+    const insertStudent = db.prepare(
+      'INSERT OR IGNORE INTO students (id, nis, name, kelas) VALUES (?, ?, ?, ?)'
+    );
+    const updateStudentNisIfMissing = db.prepare(
+      "UPDATE students SET nis = ? WHERE id = ? AND (nis = '-' OR nis = '')"
+    );
+    db.exec('BEGIN');
+    try {
+      for (const s of SMAN1_KEMANGKON_STUDENTS) {
+        insertStudent.run(s.id, s.nis, s.name, s.kelas);
+        if (s.nis && s.nis !== '-') {
+          updateStudentNisIfMissing.run(s.nis, s.id);
+        }
       }
+      db.prepare('INSERT OR REPLACE INTO app_settings (key, value_json) VALUES (?, ?)').run(
+        'roster_initialized',
+        JSON.stringify('default')
+      );
+      db.exec('COMMIT');
+    } catch (err) {
+      db.exec('ROLLBACK');
+      throw err;
     }
-    db.exec('COMMIT');
-  } catch (err) {
-    db.exec('ROLLBACK');
-    throw err;
   }
 
   // Ensure default simulation setting exists
@@ -458,6 +486,7 @@ export function setSimulationConfig(config: SimulationConfig): PublicAppState {
     JSON.stringify(config)
   );
   syncAutoDailySpreadsheets(new Date());
+  bumpStateVersion();
   return getPublicAppState();
 }
 
@@ -512,6 +541,7 @@ export function setDailySessionConfigRecord(
     throw err;
   }
   syncAutoDailySpreadsheets(now);
+  bumpStateVersion();
   return getPublicAppState();
 }
 
@@ -554,6 +584,7 @@ export function setWeeklyRotationConfigRecord(
     'weekly_schedule',
     JSON.stringify(updated)
   );
+  bumpStateVersion();
   return getPublicAppState();
 }
 
@@ -584,6 +615,7 @@ export function autoDistributePetugasWeeksRecord(cycleWeeksOverride?: number): P
     throw err;
   }
 
+  bumpStateVersion();
   return getPublicAppState();
 }
 
@@ -625,6 +657,7 @@ export function updateAccountPassword(accountId: string, newPlainPassword: strin
 
   const updated = findAccountById(accountId);
   if (!updated) throw new Error('Akun tidak ditemukan setelah pembaruan.');
+  bumpStateVersion();
   return sanitizeOfficer(updated);
 }
 
@@ -662,6 +695,7 @@ export function addPresetRecord(preset: ViolationPreset): PublicAppState {
     preset.points,
     preset.defaultAction
   );
+  bumpStateVersion();
   return getPublicAppState();
 }
 
@@ -694,6 +728,7 @@ export function updatePresetRecord(
     'UPDATE presets SET code = ?, label = ?, category = ?, points = ?, default_action = ? WHERE id = ?'
   ).run(nextCode, nextLabel, nextCategory, nextPoints, nextAction, presetId);
 
+  bumpStateVersion();
   return getPublicAppState();
 }
 
@@ -704,6 +739,7 @@ export function deletePresetRecord(presetId: string): PublicAppState {
     throw new Error('Aturan pelanggaran tidak ditemukan.');
   }
   db.prepare('DELETE FROM presets WHERE id = ?').run(presetId);
+  bumpStateVersion();
   return getPublicAppState();
 }
 
@@ -744,17 +780,132 @@ export function addCustomStudentRecord(params: {
     cleanKelas
   );
 
+  bumpStateVersion();
   return getPublicAppState();
 }
 
 export function deleteCustomStudentRecord(studentId: string): PublicAppState {
   const db = getDatabase();
-  const isOfficialRoster = SMAN1_KEMANGKON_STUDENTS.some((s) => s.id === studentId);
+  const rosterRow = db
+    .prepare('SELECT value_json FROM app_settings WHERE key = ?')
+    .get('roster_initialized') as { value_json: string } | undefined;
+  const rosterMode = rosterRow ? (JSON.parse(rosterRow.value_json) as string) : 'default';
+
+  const isOfficialRoster =
+    rosterMode !== 'custom' && SMAN1_KEMANGKON_STUDENTS.some((s) => s.id === studentId);
   if (isOfficialRoster) {
     throw new Error('Data 610 siswa pokok SMAN 1 Kemangkon dilindungi dan tidak dapat dihapus.');
   }
   db.prepare('DELETE FROM students WHERE id = ?').run(studentId);
+  bumpStateVersion();
   return getPublicAppState();
+}
+
+export function importStudentsRosterRecord(params: {
+  mode: StudentImportMode;
+  entries: StudentImportEntry[];
+}): {
+  importedCount: number;
+  updatedCount: number;
+  skippedCount: number;
+  totalStudents: number;
+  state: PublicAppState;
+} {
+  const db = getDatabase();
+  const cleanEntries: StudentImportEntry[] = [];
+  const seen = new Set<string>();
+  let skippedCount = 0;
+
+  for (const raw of params.entries) {
+    const name = String(raw?.name ?? '').replace(/\s+/g, ' ').trim();
+    const kelas = String(raw?.kelas ?? '')
+      .trim()
+      .toUpperCase()
+      .replace(/^KELAS\s+/i, '');
+    const nis = String(raw?.nis ?? '').trim() || '-';
+    if (!name || !kelas) {
+      skippedCount++;
+      continue;
+    }
+    const key = `${name.toLowerCase()}__${kelas}`;
+    if (seen.has(key)) {
+      skippedCount++;
+      continue;
+    }
+    seen.add(key);
+    cleanEntries.push({ name, kelas, nis });
+  }
+
+  if (cleanEntries.length === 0) {
+    throw new Error('Tidak ada baris siswa valid (Nama dan Kelas wajib terisi) untuk diimpor.');
+  }
+
+  let importedCount = 0;
+  let updatedCount = 0;
+  const batchToken = Date.now().toString(36);
+
+  db.exec('BEGIN');
+  try {
+    if (params.mode === 'replace_all') {
+      db.prepare('DELETE FROM students').run();
+      const insertStmt = db.prepare(
+        'INSERT INTO students (id, nis, name, kelas) VALUES (?, ?, ?, ?)'
+      );
+      cleanEntries.forEach((entry, idx) => {
+        const id = `stu-imp-${batchToken}-${idx + 1}`;
+        insertStmt.run(id, entry.nis, entry.name, entry.kelas);
+        importedCount++;
+      });
+      db.prepare('INSERT OR REPLACE INTO app_settings (key, value_json) VALUES (?, ?)').run(
+        'roster_initialized',
+        JSON.stringify('custom')
+      );
+    } else {
+      const existingRows = db
+        .prepare('SELECT id, nis, name, kelas FROM students')
+        .all() as unknown as StudentRecord[];
+      const existingByKey = new Map<string, StudentRecord>();
+      for (const row of existingRows) {
+        existingByKey.set(`${row.name.toLowerCase()}__${row.kelas.toUpperCase()}`, row);
+      }
+
+      const insertStmt = db.prepare(
+        'INSERT INTO students (id, nis, name, kelas) VALUES (?, ?, ?, ?)'
+      );
+      const updateNisStmt = db.prepare('UPDATE students SET nis = ? WHERE id = ?');
+
+      cleanEntries.forEach((entry, idx) => {
+        const key = `${entry.name.toLowerCase()}__${entry.kelas}`;
+        const found = existingByKey.get(key);
+        if (found) {
+          if (entry.nis !== '-' && found.nis !== entry.nis) {
+            updateNisStmt.run(entry.nis, found.id);
+            updatedCount++;
+          } else {
+            skippedCount++;
+          }
+        } else {
+          const id = `stu-imp-${batchToken}-${idx + 1}`;
+          insertStmt.run(id, entry.nis, entry.name, entry.kelas);
+          importedCount++;
+        }
+      });
+    }
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+
+  const totalRow = db.prepare('SELECT COUNT(*) as cnt FROM students').get() as { cnt: number };
+  bumpStateVersion();
+  return {
+    importedCount,
+    updatedCount,
+    skippedCount,
+    totalStudents: totalRow.cnt,
+    state: getPublicAppState(),
+  };
 }
 
 export function getAllSpreadsheets(): DailySpreadsheet[] {
@@ -908,6 +1059,7 @@ export function syncAutoDailySpreadsheets(now = new Date()): number {
     db.exec('ROLLBACK');
     throw err;
   }
+  bumpStateVersion();
   return changedSheets.length;
 }
 
@@ -948,6 +1100,41 @@ export function getPublicAppState(): PublicAppState {
     serverDate: clock.dateKey,
     serverTime: clock.timeHHMM,
     serverHari: clock.hari,
+    stateVersion: getStateVersion(),
+  };
+}
+
+export function getSessionSyncSnapshot(clientVersion?: string): {
+  unchanged: boolean;
+  stateVersion: string;
+  serverDate: string;
+  serverTime: string;
+  serverHari: HariPiket;
+  state?: PublicAppState;
+} {
+  const now = new Date();
+  syncAutoDailySpreadsheets(now);
+  const currentVersion = getStateVersion();
+  const simulation = getSimulationConfig();
+  const clock = getEffectiveClock(now, simulation);
+
+  if (clientVersion && clientVersion === currentVersion) {
+    return {
+      unchanged: true,
+      stateVersion: currentVersion,
+      serverDate: clock.dateKey,
+      serverTime: clock.timeHHMM,
+      serverHari: clock.hari,
+    };
+  }
+
+  return {
+    unchanged: false,
+    stateVersion: currentVersion,
+    serverDate: clock.dateKey,
+    serverTime: clock.timeHHMM,
+    serverHari: clock.hari,
+    state: getPublicAppState(),
   };
 }
 
@@ -1050,6 +1237,7 @@ export function createAccountsBulk(params: {
     throw err;
   }
 
+  bumpStateVersion();
   return {
     credentials,
     state: getPublicAppState(),
@@ -1072,6 +1260,7 @@ export function resetAccountTemporaryPassword(accountId: string): {
     'UPDATE accounts SET password_hash = ?, must_change_password = 1 WHERE id = ?'
   ).run(newHash, accountId);
 
+  bumpStateVersion();
   return {
     credential: {
       id: target.id,
@@ -1114,6 +1303,7 @@ export function updateAccountScheduleRecord(
     shiftEnd,
     accountId
   );
+  bumpStateVersion();
   return getPublicAppState();
 }
 
@@ -1162,6 +1352,7 @@ export function updateAccountProfileRecord(
     throw err;
   }
 
+  bumpStateVersion();
   return getPublicAppState();
 }
 
@@ -1197,6 +1388,7 @@ export function deleteAccountRecord(accountId: string): PublicAppState {
     throw err;
   }
 
+  bumpStateVersion();
   return getPublicAppState();
 }
 
@@ -1458,6 +1650,7 @@ export function restoreSystemBackupPayload(
     throw err;
   }
 
+  bumpStateVersion();
   return {
     restoredSpreadsheets,
     restoredViolations,
@@ -1536,6 +1729,10 @@ export function resetAllDataExceptSelf(developerAccountId: string): {
       'daily_session',
       JSON.stringify(DEFAULT_DAILY_SESSION_CONFIG)
     );
+    db.prepare('INSERT OR REPLACE INTO app_settings (key, value_json) VALUES (?, ?)').run(
+      'roster_initialized',
+      JSON.stringify('default')
+    );
 
     db.exec('COMMIT');
   } catch (err) {
@@ -1543,6 +1740,7 @@ export function resetAllDataExceptSelf(developerAccountId: string): {
     throw err;
   }
 
+  bumpStateVersion();
   return {
     deletedAccounts: accCountRow.cnt,
     deletedSpreadsheets: sheetCountRow.cnt,
@@ -1571,6 +1769,7 @@ export function startOrJoinTodaySpreadsheet(officer: Officer, now: Date): {
   );
 
   persistSpreadsheet(db, result.spreadsheet);
+  bumpStateVersion();
   return {
     created: result.created,
     spreadsheet: result.spreadsheet,
@@ -1676,6 +1875,7 @@ export function recordViolationInDb(
     throw err;
   }
 
+  bumpStateVersion();
   return {
     createdSpreadsheet: joined.created,
     spreadsheet: updatedSheet,
@@ -1714,6 +1914,7 @@ export function updateViolationInDb(
     violationId,
     spreadsheetId
   );
+  bumpStateVersion();
   return getPublicAppState();
 }
 
@@ -1723,6 +1924,7 @@ export function deleteViolationInDb(spreadsheetId: string, violationId: string):
     violationId,
     spreadsheetId
   );
+  bumpStateVersion();
   return getPublicAppState();
 }
 
@@ -1740,6 +1942,7 @@ export function finishSpreadsheetInDb(
 
   const updated = toggleOfficerFinished(sheet, officerId, finished, nowIso);
   persistSpreadsheet(db, updated);
+  bumpStateVersion();
 
   return {
     spreadsheet: updated,
@@ -1762,6 +1965,7 @@ export function reopenSpreadsheetInDb(spreadsheetId: string): PublicAppState {
     reopenedManually: true,
   };
   persistSpreadsheet(db, reopened);
+  bumpStateVersion();
   return getPublicAppState();
 }
 
@@ -1783,5 +1987,6 @@ export function closeSpreadsheetManuallyInDb(
     reopenedManually: false,
   };
   persistSpreadsheet(db, closed);
+  bumpStateVersion();
   return getPublicAppState();
 }

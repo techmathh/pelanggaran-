@@ -13,6 +13,7 @@ import type {
   DailySpreadsheet,
   GeneratedAccountCredential,
   PublicOfficer,
+  StudentRecord,
   StudentSummary,
 } from '../shared/types';
 
@@ -571,6 +572,56 @@ export function downloadRegisteredAccountsDirectoryXlsx(
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
   triggerDownload(blob, `Direktori-Akun-SiPiket-${dateLabel}.xlsx`);
+}
+
+export function downloadStudentRosterTemplateXlsx(): void {
+  const wb = XLSX.utils.book_new();
+  const sheetRows: (string | number)[][] = [
+    ['No', 'NIS', 'Nama Lengkap', 'Kelas'],
+    [1, '3101', 'Contoh: Budi Santoso', '10A'],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(sheetRows);
+  ws['!cols'] = [{ wch: 6 }, { wch: 14 }, { wch: 32 }, { wch: 12 }];
+
+  const guideRows: string[][] = [
+    ['PANDUAN IMPORT ROSTER SISWA SIPIKET OSIS'],
+    ['1. Gunakan sheet "Roster Siswa" (hapus baris contoh sebelum mengisi data asli).'],
+    ['2. Kolom wajib: Nama Lengkap dan Kelas (contoh: 10A, 11B, 12C). Kolom NIS boleh dikosongkan atau diisi "-".'],
+    ['3. Untuk kenaikan kelas tahun ajaran baru, Anda dapat mengunduh Roster Saat Ini, menaikkan kelas di Excel, menghapus kelas 12 yang lulus, lalu menambah siswa kelas 10 baru.'],
+    ['4. Pilih mode "Tambah / Gabung" untuk menambah siswa baru, atau "Ganti Total Roster" untuk memperbarui seluruh daftar siswa tahun ajaran baru.'],
+  ];
+  const wsGuide = XLSX.utils.aoa_to_sheet(guideRows);
+  wsGuide['!cols'] = [{ wch: 96 }];
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Roster Siswa');
+  XLSX.utils.book_append_sheet(wb, wsGuide, 'Petunjuk');
+
+  const arrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([arrayBuffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  triggerDownload(blob, 'Template-Import-Roster-Siswa-SiPiket.xlsx');
+}
+
+export function downloadCurrentStudentRosterXlsx(
+  students: StudentRecord[],
+  dateLabel: string
+): void {
+  const wb = XLSX.utils.book_new();
+  const rows: (string | number)[][] = [['No', 'NIS', 'Nama Lengkap', 'Kelas']];
+  students.forEach((s, idx) => {
+    rows.push([idx + 1, s.nis || '-', s.name, s.kelas]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{ wch: 6 }, { wch: 14 }, { wch: 34 }, { wch: 12 }];
+  XLSX.utils.book_append_sheet(wb, ws, 'Roster Siswa');
+
+  const arrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([arrayBuffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  triggerDownload(blob, `Roster-Siswa-SMAN1-Kemangkon-${dateLabel}.xlsx`);
 }
 
 function triggerDownload(blob: Blob, filename: string): void {

@@ -201,6 +201,14 @@ export interface PublicMetaState {
   developerUsesDefaultPassword: boolean;
 }
 
+export type StudentImportMode = 'append' | 'replace_all';
+
+export interface StudentImportEntry {
+  name: string;
+  kelas: string;
+  nis: string;
+}
+
 export interface PublicAppState {
   officers: PublicOfficer[];
   presets: ViolationPreset[];
@@ -212,6 +220,7 @@ export interface PublicAppState {
   serverDate: string;
   serverTime: string;
   serverHari: HariPiket;
+  stateVersion?: string;
 }
 
 export interface SystemBackupPayload {

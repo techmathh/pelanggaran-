@@ -42,6 +42,11 @@ import {
   isReachableApiResponse,
 } from './connectionLogic';
 import { calculateTiltTransform, easeOutCubic } from './motionMath';
+import {
+  applyClockPatchToAppState,
+  normalizeStudentClass,
+  parseStudentRosterRows,
+} from './studentImportLogic';
 
 test('getScheduleStatus allows scheduled day within shift hours and blocks off-schedule', () => {
   const officer: Pick<Officer, 'scheduledDays' | 'shiftStart' | 'shiftEnd'> = {
@@ -827,7 +832,67 @@ test('motionMath computes clamped 3D tilt angles, glare coords, and cubic ease-o
   assert.ok(easeOutCubic(0.5) > 0.85 && easeOutCubic(0.5) < 0.9);
 });
 
+test('studentImportLogic parses Excel/CSV matrices with flexible headers, deduplication, and lightweight clock patching', () => {
+  assert.equal(normalizeStudentClass('Kelas 10a'), '10A');
+  assert.equal(normalizeStudentClass(' 11d '), '11D');
 
+  const matrixWithTitleAndHeaders: unknown[][] = [
+    ['SMA NEGERI 1 KEMANGKON'],
+    ['DAFTAR SISWA TAHUN AJARAN BARU'],
+    [],
+    ['No', 'NIS', 'Nama Lengkap', 'Kelas'],
+    ['1', '3201', 'Budi Santoso', '10a'],
+    ['2', '', 'Siti Aminah', 'Kelas 11B'],
+    ['3', '', 'Budi Santoso', '10A'], // duplicate without NIS should merge
+    ['4', '3204', '', '10C'], // missing name -> skipped
+    ['5', '3205', 'Andi Wijaya', ''], // missing class -> skipped
+    ['6', '3206', 'Siti Aminah', '11B'], // duplicate bringing NIS should enrich
+  ];
 
+  const parsed = parseStudentRosterRows(matrixWithTitleAndHeaders);
+  assert.equal(parsed.headerRowNumber, 4);
+  assert.equal(parsed.entries.length, 2);
+  assert.equal(parsed.duplicateCount, 2);
+  assert.equal(parsed.skipped.length, 2);
+  assert.deepEqual(parsed.entries[0], { name: 'Budi Santoso', kelas: '10A', nis: '3201' });
+  assert.deepEqual(parsed.entries[1], { name: 'Siti Aminah', kelas: '11B', nis: '3206' });
 
+  // Headerless fallback: Nama | Kelas | NIS
+  const headerless = parseStudentRosterRows([
+    ['Rina Putri', '12A', '2901'],
+    ['Dika Pratama', '12B'],
+  ]);
+  assert.equal(headerless.headerRowNumber, null);
+  assert.equal(headerless.entries.length, 2);
+  assert.deepEqual(headerless.entries[1], { name: 'Dika Pratama', kelas: '12B', nis: '-' });
 
+  // Clock patch helper keeps referential equality when clock unchanged
+  const mockState: import('./types').PublicAppState = {
+    officers: [],
+    presets: [],
+    students: [],
+    spreadsheets: [],
+    simulation: { enabled: false, simulatedTime: '07:15', simulatedDay: null, simulatedWeek: null },
+    weeklySchedule: { cycleWeeks: 2, anchorMonday: '2026-11-16' },
+    dailySession: DEFAULT_DAILY_SESSION_CONFIG,
+    serverDate: '2026-11-16',
+    serverTime: '07:15',
+    serverHari: 'Senin',
+    stateVersion: 'abc-1',
+  };
+  const sameRef = applyClockPatchToAppState(mockState, {
+    serverDate: '2026-11-16',
+    serverTime: '07:15',
+    serverHari: 'Senin',
+  });
+  assert.equal(sameRef, mockState);
+
+  const ticked = applyClockPatchToAppState(mockState, {
+    serverDate: '2026-11-16',
+    serverTime: '07:16',
+    serverHari: 'Senin',
+  });
+  assert.notEqual(ticked, mockState);
+  assert.equal(ticked?.serverTime, '07:16');
+  assert.equal(ticked?.stateVersion, 'abc-1');
+});

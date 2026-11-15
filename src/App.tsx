@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CheckCircle2, Info, XCircle } from 'lucide-react';
 import {
   SESSION_INVALIDATED_EVENT,
@@ -14,7 +14,8 @@ import {
 import { useConnectionStatus } from './hooks/useConnectionStatus';
 import { isReachableApiResponse } from './shared/connectionLogic';
 import { isManagerRole } from './shared/piketLogic';
-import type { PublicAppState, PublicMetaState, PublicOfficer } from './shared/types';
+import { applyClockPatchToAppState } from './shared/studentImportLogic';
+import type { HariPiket, PublicAppState, PublicMetaState, PublicOfficer } from './shared/types';
 import { AccountManagementView } from './components/AccountManagementView';
 import { ArchiveView } from './components/ArchiveView';
 import { ConnectionStatusBar } from './components/ConnectionStatusBar';
@@ -44,7 +45,12 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const latestStateVersionRef = useRef<string | undefined>(undefined);
   const connection = useConnectionStatus();
+
+  useEffect(() => {
+    latestStateVersionRef.current = appState?.stateVersion;
+  }, [appState?.stateVersion]);
 
   const notify = useCallback((text: string, type: 'success' | 'error' | 'info' = 'info') => {
     const id = Date.now();
@@ -179,7 +185,11 @@ export default function App() {
       const activeToken = pendingPasswordChange?.token ?? getAuthToken();
       if (!activeToken) return;
       try {
-        const res = await fetch(buildApiUrl('/api/auth/session'), {
+        const currentVer = latestStateVersionRef.current;
+        const sessionUrl = currentVer
+          ? `/api/auth/session?v=${encodeURIComponent(currentVer)}`
+          : '/api/auth/session';
+        const res = await fetch(buildApiUrl(sessionUrl), {
           headers: { Authorization: `Bearer ${activeToken}` },
         });
         const contentType = res.headers.get('content-type');
@@ -203,6 +213,11 @@ export default function App() {
           const body = (await res.json()) as {
             officer?: PublicOfficer;
             requiresPasswordChange?: boolean;
+            unchanged?: boolean;
+            stateVersion?: string;
+            serverDate?: string;
+            serverTime?: string;
+            serverHari?: HariPiket;
             state?: PublicAppState;
           };
           if (body.requiresPasswordChange && currentOfficer && !pendingPasswordChange) {
@@ -217,6 +232,14 @@ export default function App() {
           }
           if (body.state && currentOfficer) {
             setAppState(body.state);
+          } else if (body.unchanged && currentOfficer) {
+            setAppState((prev) =>
+              applyClockPatchToAppState(prev, {
+                serverDate: body.serverDate,
+                serverTime: body.serverTime,
+                serverHari: body.serverHari,
+              })
+            );
           }
         }
       } catch {

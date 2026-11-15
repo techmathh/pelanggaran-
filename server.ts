@@ -19,6 +19,8 @@ import type {
   HariPiket,
   Officer,
   RolePetugas,
+  StudentImportEntry,
+  StudentImportMode,
   SystemBackupPayload,
   ViolationPreset,
 } from './src/shared/types';
@@ -38,6 +40,8 @@ import {
   getDatabase,
   getPublicAppState,
   getPublicMeta,
+  getSessionSyncSnapshot,
+  importStudentsRosterRecord,
   recordViolationInDb,
   reopenSpreadsheetInDb,
   resetAccountTemporaryPassword,
@@ -147,9 +151,14 @@ async function startServer() {
     next();
   });
 
-  // Health check
+  // Health check (verifies SQLite readiness for Railway healthcheck)
   app.get('/api/health', (_req, res) => {
-    res.json({ ok: true });
+    try {
+      getDatabase().prepare('SELECT 1').get();
+      res.json({ ok: true, db: 'sqlite' });
+    } catch {
+      res.status(503).json({ ok: false, db: 'unavailable' });
+    }
   });
 
   // Public metadata for login screen (zero dummy or user data exposed)
@@ -250,16 +259,32 @@ async function startServer() {
     });
   });
 
-  // Session & live state sync endpoint (detects deleted account, forced password reset, and multi-device updates)
+  // Session & live state sync endpoint (lightweight stateVersion check avoids resending full state when unchanged)
   app.get('/api/auth/session', requireAnySession, (req: AuthedRequest, res) => {
     const account = req.account!;
     const mustChange = Boolean(account.mustChangePassword);
     const includeFullState = !mustChange && req.auth?.scope === 'full';
+    if (!includeFullState) {
+      res.json({
+        ok: true,
+        officer: sanitizeOfficer(account),
+        requiresPasswordChange: mustChange,
+      });
+      return;
+    }
+
+    const clientVersion = typeof req.query.v === 'string' ? req.query.v.trim() : undefined;
+    const sync = getSessionSyncSnapshot(clientVersion);
     res.json({
       ok: true,
       officer: sanitizeOfficer(account),
-      requiresPasswordChange: mustChange,
-      ...(includeFullState ? { state: getPublicAppState() } : {}),
+      requiresPasswordChange: false,
+      unchanged: sync.unchanged,
+      stateVersion: sync.stateVersion,
+      serverDate: sync.serverDate,
+      serverTime: sync.serverTime,
+      serverHari: sync.serverHari,
+      ...(sync.state ? { state: sync.state } : {}),
     });
   });
 
@@ -909,7 +934,43 @@ async function startServer() {
     }
   });
 
-  // Developer / Admin: delete custom student from school directory (official 610 roster is protected)
+  // Developer / Admin: bulk import student roster from parsed Excel/CSV entries
+  app.post('/api/students/import', requireFullAuth, (req: AuthedRequest, res) => {
+    const requester = req.account!;
+    if (!isManagerRole(requester.role)) {
+      res.status(403).json({
+        error: 'Hanya Developer atau Admin yang dapat mengimpor roster siswa.',
+      });
+      return;
+    }
+
+    const { mode, students } = (req.body ?? {}) as {
+      mode?: StudentImportMode;
+      students?: StudentImportEntry[];
+    };
+
+    if (mode !== 'append' && mode !== 'replace_all') {
+      res.status(400).json({ error: 'Mode import roster siswa tidak valid.' });
+      return;
+    }
+    if (!Array.isArray(students) || students.length === 0) {
+      res.status(400).json({ error: 'Daftar siswa yang akan diimpor tidak boleh kosong.' });
+      return;
+    }
+    if (students.length > 5000) {
+      res.status(400).json({ error: 'Maksimal 5.000 baris siswa per proses import.' });
+      return;
+    }
+
+    try {
+      const result = importStudentsRosterRecord({ mode, entries: students });
+      res.json({ ok: true, ...result });
+    } catch (err: any) {
+      res.status(400).json({ error: err?.message || 'Gagal mengimpor roster siswa.' });
+    }
+  });
+
+  // Developer / Admin: delete custom student from school directory (official 610 roster is protected unless replaced)
   app.delete('/api/students/:id', requireFullAuth, (req: AuthedRequest, res) => {
     const requester = req.account!;
     if (!isManagerRole(requester.role)) {
