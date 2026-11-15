@@ -12,6 +12,10 @@ import type { PublicAppState, PublicMetaState, PublicOfficer } from './shared/ty
 import { AccountManagementView } from './components/AccountManagementView';
 import { ArchiveView } from './components/ArchiveView';
 import { LoginView } from './components/LoginView';
+import {
+  MandatoryPasswordChangeView,
+  type PendingPasswordChange,
+} from './components/MandatoryPasswordChangeView';
 import { ScheduleSettingsView } from './components/ScheduleSettingsView';
 import { SpreadsheetWorkspace } from './components/SpreadsheetWorkspace';
 import { StudentRecapView } from './components/StudentRecapView';
@@ -27,6 +31,8 @@ export default function App() {
   const [meta, setMeta] = useState<PublicMetaState | null>(null);
   const [appState, setAppState] = useState<PublicAppState | null>(null);
   const [currentOfficer, setCurrentOfficer] = useState<PublicOfficer | null>(null);
+  const [pendingPasswordChange, setPendingPasswordChange] =
+    useState<PendingPasswordChange | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>('piket');
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -105,11 +111,29 @@ export default function App() {
     bootstrapSession();
   }, [bootstrapSession]);
 
+  useEffect(() => {
+    const onHashChange = () => {
+      if (window.location.hash !== '#/ganti-password') {
+        setPendingPasswordChange(null);
+      }
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
   function handleLoginSuccess(
     token: string,
     officer: PublicOfficer,
     nextState: PublicAppState
   ) {
+    setPendingPasswordChange(null);
+    if (window.location.hash === '#/ganti-password') {
+      window.history.replaceState(
+        null,
+        '',
+        window.location.pathname + window.location.search
+      );
+    }
     setAuthToken(token);
     setAppState(nextState);
     setCurrentOfficer(officer);
@@ -118,8 +142,50 @@ export default function App() {
     notify(`Selamat bertugas, ${officer.name}!`, 'success');
   }
 
+  function handleRequiresPasswordChange(pending: PendingPasswordChange) {
+    setPendingPasswordChange(pending);
+    if (window.location.hash !== '#/ganti-password') {
+      window.location.hash = '#/ganti-password';
+    }
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+  }
+
+  function handleMandatoryPasswordUpdated(
+    newToken: string,
+    updatedOfficer: PublicOfficer,
+    nextState: PublicAppState
+  ) {
+    setPendingPasswordChange(null);
+    if (window.location.hash === '#/ganti-password') {
+      window.history.replaceState(
+        null,
+        '',
+        window.location.pathname + window.location.search
+      );
+    }
+    setAuthToken(newToken);
+    setAppState(nextState);
+    setCurrentOfficer(updatedOfficer);
+    setActiveTab('piket');
+    void refreshPublicMeta();
+    notify(`Password baru tersimpan. Selamat bertugas, ${updatedOfficer.name}!`, 'success');
+  }
+
+  function handleCancelMandatoryChange() {
+    setPendingPasswordChange(null);
+    if (window.location.hash === '#/ganti-password') {
+      window.history.replaceState(
+        null,
+        '',
+        window.location.pathname + window.location.search
+      );
+    }
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+  }
+
   function handleLogout() {
     clearAuthToken();
+    setPendingPasswordChange(null);
     setCurrentOfficer(null);
     setAppState(null);
     setActiveTab('piket');
@@ -183,8 +249,19 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-transparent text-slate-900">
-      {!currentOfficer || !appState ? (
-        <LoginView meta={meta} onLoginSuccess={handleLoginSuccess} />
+      {pendingPasswordChange ? (
+        <MandatoryPasswordChangeView
+          meta={meta}
+          pending={pendingPasswordChange}
+          onSuccess={handleMandatoryPasswordUpdated}
+          onCancel={handleCancelMandatoryChange}
+        />
+      ) : !currentOfficer || !appState ? (
+        <LoginView
+          meta={meta}
+          onLoginSuccess={handleLoginSuccess}
+          onRequiresPasswordChange={handleRequiresPasswordChange}
+        />
       ) : (
         <>
           <TopBar
