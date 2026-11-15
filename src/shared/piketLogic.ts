@@ -374,11 +374,11 @@ export function getScheduleStatus(
       : 'Sesi piket Anda sedang berlangsung dan aktif untuk mencatat.';
 
   if (!isWeekMatch) {
-    reason = `Minggu ini adalah jadwal Minggu ke-${weekInfo.currentWeek} (${weekInfo.weekRangeText}). Giliran piket Anda ada di: ${scheduledWeeksText}.`;
+    reason = `Minggu ini bukan giliran piket Anda (saat ini Minggu ke-${weekInfo.currentWeek}, ${weekInfo.weekRangeText}).`;
   } else if (!isDayMatch) {
-    reason = `Hari ini (${hari}) bukan jadwal piket Anda. Jadwal Anda: ${scheduledDaysText}.`;
+    reason = `Hari ini (${hari}) bukan jadwal piket Anda.`;
   } else if (!isTimeMatch) {
-    reason = `Di luar jam sesi piket Anda (${shiftWindowText}). Waktu saat ini ${timeHHMM}.`;
+    reason = `Waktu saat ini (${timeHHMM} WIB) berada di luar jam tugas piket Anda.`;
   }
 
   return {

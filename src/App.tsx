@@ -129,7 +129,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F6F7FB] px-4">
+      <div className="flex min-h-screen items-center justify-center bg-transparent px-4">
         <div className="text-center">
           <p className="font-display text-lg font-bold text-slate-900">SiPiket OSIS</p>
           <p className="mt-1 text-sm text-slate-500">Memuat data sesi piket...</p>
@@ -140,7 +140,7 @@ export default function App() {
 
   if (loadError || !meta) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F6F7FB] px-4">
+      <div className="flex min-h-screen items-center justify-center bg-transparent px-4">
         <div className="max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-center">
           <p className="font-display text-lg font-bold text-slate-900">Koneksi Terputus</p>
           <p className="mt-2 text-sm text-slate-600">{loadError}</p>
@@ -162,7 +162,7 @@ export default function App() {
       : activeTab;
 
   return (
-    <div className="min-h-screen bg-[#F6F7FB] text-slate-900">
+    <div className="min-h-screen bg-transparent text-slate-900">
       {!currentOfficer || !appState ? (
         <LoginView meta={meta} onLoginSuccess={handleLoginSuccess} />
       ) : (

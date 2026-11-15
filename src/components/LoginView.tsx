@@ -3,7 +3,6 @@ import {
   AlertTriangle,
   Eye,
   EyeOff,
-  Info,
   KeyRound,
   LockKeyhole,
   ShieldCheck,
@@ -123,10 +122,10 @@ export function LoginView({ meta, onLoginSuccess }: LoginViewProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F6F7FB] px-4 py-6 sm:px-6 sm:py-8 lg:py-10">
+    <div className="min-h-screen px-4 py-6 sm:px-6 sm:py-8 lg:py-12">
       <div className="mx-auto max-w-6xl">
         {/* Minimal top context line */}
-        <header className="mb-6 flex flex-col gap-2 border-b border-slate-200 pb-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
+        <header className="mb-6 flex flex-col gap-2 border-b border-slate-200/80 pb-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <span className="font-display text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
               SiPiket OSIS
@@ -140,97 +139,68 @@ export function LoginView({ meta, onLoginSuccess }: LoginViewProps) {
           </div>
           <div className="font-mono-num text-xs text-slate-500">
             {formatIndonesianDateLabel(meta.serverDate, meta.serverHari)} · {meta.serverTime} WIB
-            {meta.simulation.enabled ? ' (Simulasi Pagi)' : ''}
+            {meta.simulation.enabled ? ' (Mode Uji Coba)' : ''}
           </div>
         </header>
 
         <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-12 lg:gap-8">
           {/* Left Hero & Interactive 3D Mascot */}
-          <section className="order-2 flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 sm:p-8 lg:order-1 lg:col-span-6">
+          <section className="order-2 flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-8 lg:order-1 lg:col-span-6">
             <div>
-              <p className="text-xs font-medium text-blue-600">
+              <p className="text-xs font-semibold tracking-wide text-blue-700">
                 Portal Piket Kedisiplinan OSIS
               </p>
-              <h1 className="mt-2 font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl text-balance">
-                Catat pelanggaran siswa lebih tertib, langsung menjadi laporan kelas & PDF visual.
+              <h1 className="mt-2 font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl lg:text-[2rem] lg:leading-tight text-balance">
+                Piket OSIS lebih mudah, rapi, dan langsung jadi laporan kelas.
               </h1>
               <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                Setiap pagi saat petugas piket yang terjadwal mulai mencatat, sistem langsung
-                membuka spreadsheet harian. Setelah selesai, seluruh petugas aktif wajib menekan
-                tombol <strong className="font-semibold text-slate-900">Selesai</strong> agar data
-                tersimpan final dan siap diekspor.
+                Cukup cari nama siswa lalu pilih kategori pelanggaran. Setelah selesai piket,
+                tekan tombol <strong className="font-semibold text-slate-900">Selesai</strong>{' '}
+                agar laporan Excel per kelas dan PDF langsung siap diunduh.
               </p>
             </div>
 
-            <div className="my-4 rounded-xl border border-slate-100 bg-slate-50 p-3 sm:p-4">
+            <div className="my-5 rounded-xl border border-sky-100/90 bg-gradient-to-b from-sky-50/75 via-white to-slate-50/60 p-3 sm:p-4">
               <CuteMascot3D mood={pendingChange ? 'recording' : 'idle'} />
             </div>
 
             <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 sm:grid-cols-3">
               <div>
-                <p className="text-xs font-semibold text-slate-900">1. Cari Nama & Otomatis Isi Kelas</p>
-                <p className="mt-0.5 text-xs text-slate-500">
-                  Cukup ketik beberapa huruf nama siswa, pilih dari daftar, dan kelas langsung terisi.
+                <p className="text-xs font-semibold text-slate-900">01. Masuk Akun Piket</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
+                  Login sesuai akun petugas OSIS yang sudah dibagikan pengurus.
                 </p>
               </div>
               <div>
-                <p className="text-xs font-semibold text-slate-900">2. Tersimpan Aman & Teratur</p>
-                <p className="mt-0.5 text-xs text-slate-500">
-                  Catatan piket harian otomatis tersimpan rapi dan dapat dibuka kembali di menu Arsip.
+                <p className="text-xs font-semibold text-slate-900">02. Catat Siswa Cepat</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
+                  Ketik beberapa huruf nama siswa — kelas dan poin AKPS terisi otomatis.
                 </p>
               </div>
               <div>
-                <p className="text-xs font-semibold text-slate-900">3. Unduh Excel & PDF Visual</p>
-                <p className="mt-0.5 text-xs text-slate-500">
-                  Setelah semua petugas klik Selesai, laporan per kelas & PDF grafik langsung siap diunduh.
+                <p className="text-xs font-semibold text-slate-900">03. Klik Selesai &amp; Unduh</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
+                  Setelah semua petugas klik Selesai, file Excel &amp; PDF siap diunduh.
                 </p>
               </div>
             </div>
           </section>
 
           {/* Right Card: Login OR Mandatory First-Login Password Change */}
-          <section className="order-1 flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 sm:p-8 lg:order-2 lg:col-span-6">
+          <section className="order-1 flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-8 lg:order-2 lg:col-span-6">
             {!pendingChange ? (
-              <div>
-                <h2 className="font-display text-xl font-bold text-slate-900">
-                  Masuk ke SiPiket OSIS
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Silakan masuk menggunakan username dan password yang diberikan pengurus OSIS.
-                </p>
+              <div className="flex flex-1 flex-col justify-center">
+                <div>
+                  <p className="text-xs font-semibold text-blue-700">Akses Petugas Piket</p>
+                  <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-900">
+                    Masuk ke SiPiket OSIS
+                  </h2>
+                  <p className="mt-1.5 text-sm text-slate-600">
+                    Masukkan username dan password akun piket Anda untuk mulai bertugas.
+                  </p>
+                </div>
 
-                {meta.developerUsesDefaultPassword && (
-                  <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="flex items-center gap-1.5 text-xs font-semibold text-slate-900">
-                          <Info className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
-                          <span>Akun Pengelola Awal (Untuk Pengaturan Pertama)</span>
-                        </p>
-                        <p className="mt-1 text-xs text-slate-600">
-                          Masuk sebagai pengelola utama untuk membuatkan akun Admin & Petugas Piket:
-                        </p>
-                        <p className="font-mono-num mt-1.5 text-xs text-slate-800">
-                          Username: <strong>developer</strong> · Password:{' '}
-                          <strong>DevOsis#2026</strong>
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setUsername('developer');
-                          setPassword('DevOsis#2026');
-                          setError(null);
-                        }}
-                        className="shrink-0 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-100"
-                      >
-                        Isi Otomatis
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <form onSubmit={handleLoginSubmit} className="mt-6 space-y-4">
+                <form onSubmit={handleLoginSubmit} className="mt-7 space-y-5">
                   <div>
                     <label
                       htmlFor="login-username"

@@ -447,7 +447,7 @@ export function SpreadsheetWorkspace({
   return (
     <div className="space-y-6">
       {/* Header Summary Strip + Cute 3D Companion */}
-      <section className="grid grid-cols-1 items-stretch gap-5 rounded-2xl border border-slate-200 bg-white p-4 sm:gap-6 sm:p-6 lg:grid-cols-12">
+      <section className="grid grid-cols-1 items-stretch gap-5 rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:gap-6 sm:p-6 lg:grid-cols-12">
         <div className="flex flex-col justify-between lg:col-span-8">
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -483,40 +483,71 @@ export function SpreadsheetWorkspace({
               </button>
             </div>
 
-            <h1 className="mt-2 font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-              {todaySheet
-                ? todaySheet.title
-                : `Spreadsheet Piket OSIS — ${formatIndonesianDateLabel(appState.serverDate, appState.serverHari)}`}
-            </h1>
+            <div className="mt-2.5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                  {todaySheet
+                    ? todaySheet.title
+                    : `Piket Harian — ${formatIndonesianDateLabel(appState.serverDate, appState.serverHari)}`}
+                </h1>
+                <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
+                  {!scheduleStatus.allowed
+                    ? `Mode Lihat Saja (${officer.name}): ${scheduleStatus.reason}`
+                    : !todaySheet
+                      ? 'Langsung isi formulir di bawah untuk mulai mencatat siswa — lembar hari ini akan terbuka otomatis.'
+                      : isSheetFinalized
+                        ? 'Semua petugas piket hari ini sudah menekan Selesai. Laporan Excel per kelas & PDF siap diunduh.'
+                        : 'Catat siswa yang melanggar di formulir kiri. Jika jam piket sudah berakhir, tekan tombol hijau Tandai Selesai.'}
+                </p>
+              </div>
 
-            <p className="mt-2 text-sm text-slate-600">
-              {!scheduleStatus.allowed
-                ? `Hanya Bisa Melihat (${officer.name}): ${scheduleStatus.reason}`
-                : !todaySheet
-                  ? 'Spreadsheet hari ini belum dibuat. Langsung catat siswa pertama di bawah, atau klik "Buat Spreadsheet Hari Ini".'
-                  : isSheetFinalized
-                    ? 'Semua petugas piket hari ini sudah menekan Selesai. Data tersimpan aman dan laporan Excel / PDF siap diunduh.'
-                    : 'Sesi pencatatan sedang berlangsung. Setelah selesai piket, klik tombol hijau "Tandai Selesai Mencatat" agar laporan bisa diunduh.'}
-            </p>
+              {!todaySheet && scheduleStatus.allowed && (
+                <button
+                  type="button"
+                  disabled={submitting}
+                  onClick={handleStartSession}
+                  className="btn-3d-primary inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700 whitespace-nowrap shrink-0 disabled:opacity-60"
+                >
+                  <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
+                  <span>Buat Spreadsheet Hari Ini</span>
+                </button>
+              )}
+            </div>
+
+            {/* Plain-language 3-step duty orientation */}
+            <div className="mt-4 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-slate-500">
+              <span className="font-semibold text-slate-700">Alur bertugas:</span>
+              <span className={!isSheetFinalized ? 'font-semibold text-blue-700' : 'text-emerald-700 font-medium'}>
+                1. Catat siswa
+              </span>
+              <span aria-hidden="true">→</span>
+              <span className={todaySheet && !isSheetFinalized ? 'font-semibold text-blue-700' : isSheetFinalized ? 'text-emerald-700 font-medium' : ''}>
+                2. Semua petugas tekan Selesai
+              </span>
+              <span aria-hidden="true">→</span>
+              <span className={consensus.exportUnlocked ? 'font-semibold text-emerald-700' : ''}>
+                3. Unduh Excel &amp; PDF
+              </span>
+            </div>
 
             {showGuide && (
-              <div className="mt-4 grid grid-cols-1 gap-3 rounded-xl border border-blue-200 bg-blue-50/50 p-3.5 text-xs text-slate-700 sm:grid-cols-3">
+              <div className="mt-4 grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 text-xs text-slate-700 sm:grid-cols-3">
                 <div>
-                  <p className="font-semibold text-slate-900">1. Cari & Pilih Siswa</p>
-                  <p className="mt-0.5 text-slate-600">
+                  <p className="font-semibold text-slate-900">1. Cari &amp; Pilih Siswa</p>
+                  <p className="mt-0.5 leading-relaxed text-slate-600">
                     Ketik beberapa huruf nama siswa lalu klik dari daftar — kelas langsung terisi otomatis.
                   </p>
                 </div>
                 <div>
                   <p className="font-semibold text-slate-900">2. Pilih Kategori &amp; Aturan</p>
-                  <p className="mt-0.5 text-slate-600">
+                  <p className="mt-0.5 leading-relaxed text-slate-600">
                     Klik tombol cepat atau pilih kategori (A–F) dulu lalu pilih aturan yang muncul, kemudian simpan.
                   </p>
                 </div>
                 <div>
-                  <p className="font-semibold text-slate-900">3. Klik Selesai & Unduh</p>
-                  <p className="mt-0.5 text-slate-600">
-                    Saat piket berakhir, semua petugas wajib menekan Selesai agar Excel per kelas & PDF terbuka.
+                  <p className="font-semibold text-slate-900">3. Klik Selesai &amp; Unduh</p>
+                  <p className="mt-0.5 leading-relaxed text-slate-600">
+                    Saat piket berakhir, semua petugas wajib menekan Selesai agar Excel per kelas &amp; PDF terbuka.
                   </p>
                 </div>
               </div>
@@ -538,7 +569,7 @@ export function SpreadsheetWorkspace({
                 {isSheetFinalized ? (
                   <>
                     <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span>Tersimpan & Final</span>
+                    <span>Tersimpan &amp; Final</span>
                   </>
                 ) : todaySheet ? (
                   <>
@@ -546,7 +577,7 @@ export function SpreadsheetWorkspace({
                     <span>Aktif Mencatat</span>
                   </>
                 ) : (
-                  <span>Belum Dibuat</span>
+                  <span>Siap Dimulai</span>
                 )}
               </p>
             </div>
@@ -575,7 +606,7 @@ export function SpreadsheetWorkspace({
         </div>
 
         {/* Cute 3D Companion Corner */}
-        <div className="flex flex-col justify-center rounded-xl border border-slate-100 bg-slate-50 p-3 lg:col-span-4">
+        <div className="flex flex-col justify-center rounded-xl border border-sky-100/90 bg-gradient-to-b from-sky-50/75 via-white to-slate-50/60 p-3 lg:col-span-4">
           <CuteMascot3D
             mood={mascotMood}
             compact
@@ -584,118 +615,10 @@ export function SpreadsheetWorkspace({
               !scheduleStatus.allowed
                 ? 'Piko sedang istirahat — di luar jadwal piket Anda.'
                 : !todaySheet
-                  ? 'Klik Piko! Siap membuat spreadsheet AKPS hari ini.'
+                  ? 'Klik Piko! Siap menemani piket pagi hari ini.'
                   : undefined
             }
           />
-        </div>
-      </section>
-
-      {/* Daily Picket Productivity Summary Card */}
-      <section
-        id="daily-productivity-card"
-        aria-label="Ringkasan Produktivitas Piket Hari Ini"
-        className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6"
-      >
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="font-display text-lg font-bold text-slate-900">
-              Ringkasan Produktivitas Piket Hari Ini
-            </h2>
-            <p className="mt-1 text-xs text-slate-600">
-              Memantau jumlah total pelanggaran yang tercatat pada sesi hari ini beserta kontribusi tiap petugas.
-            </p>
-          </div>
-          <div className="sm:text-right">
-            <p className="text-xs font-medium text-slate-500">Total Pelanggaran Sesi Ini</p>
-            <p
-              id="daily-total-violations"
-              className="font-mono-num mt-0.5 text-3xl font-bold tracking-tight text-slate-900"
-            >
-              {dailyProductivity.totalViolations}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-slate-100 pt-3.5 text-xs text-slate-600">
-          <span>
-            <strong className="font-mono-num text-slate-900">{dailyProductivity.uniqueStudents}</strong>{' '}
-            siswa tercatat
-          </span>
-          <span aria-hidden="true">·</span>
-          <span>
-            <strong className="font-mono-num text-slate-900">+{dailyProductivity.totalPoints}</strong>{' '}
-            total poin AKPS
-          </span>
-          <span aria-hidden="true">·</span>
-          <span>
-            <strong className="font-mono-num text-slate-900">
-              {dailyProductivity.recordingOfficerCount}/{dailyProductivity.activeOfficerCount}
-            </strong>{' '}
-            petugas aktif mencatat
-          </span>
-          <span aria-hidden="true">·</span>
-          <span>
-            Rata-rata{' '}
-            <strong className="font-mono-num text-slate-900">
-              {dailyProductivity.averagePerRecordingOfficer}
-            </strong>{' '}
-            catatan/petugas
-          </span>
-          {myProductivity && (
-            <>
-              <span aria-hidden="true">·</span>
-              <span className="font-medium text-blue-700">
-                Catatan Anda:{' '}
-                <strong className="font-mono-num">{myProductivity.violationCount}</strong> pelanggaran
-              </span>
-            </>
-          )}
-        </div>
-
-        <div className="mt-4 border-t border-slate-100 pt-4">
-          {dailyProductivity.officers.length === 0 ? (
-            <p className="text-xs text-slate-500">
-              Belum ada pelanggaran atau sesi aktif hari ini. Kontribusi produktivitas per petugas akan tampil otomatis begitu spreadsheet sesi dibuka atau catatan pertama masuk.
-            </p>
-          ) : (
-            <div>
-              <p className="text-xs font-semibold text-slate-700">
-                Rincian Kontribusi Petugas Hari Ini
-              </p>
-              <ul className="mt-2.5 divide-y divide-slate-100">
-                {dailyProductivity.officers.map((item) => {
-                  const isSelf = item.officerId === officer.id;
-                  return (
-                    <li key={item.officerId} className="py-2.5 first:pt-1 last:pb-0">
-                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-slate-900">
-                            {item.officerName}
-                            {isSelf ? ' (Anda)' : ''}
-                          </p>
-                          <p className="truncate text-xs text-slate-500">
-                            {item.division} · {item.isFinished ? 'Sudah selesai' : 'Sedang mencatat'}
-                          </p>
-                        </div>
-                        <p className="font-mono-num shrink-0 text-xs font-semibold text-slate-800 sm:text-right">
-                          {item.violationCount} pelanggaran · +{item.totalPoints} poin ({item.percentage}%)
-                        </p>
-                      </div>
-                      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                        <div
-                          className={`h-full transition-all duration-300 ${
-                            item.isFinished ? 'bg-emerald-600' : 'bg-blue-600'
-                          }`}
-                          style={{ width: `${item.percentage}%` }}
-                        />
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
         </div>
       </section>
 
@@ -703,7 +626,7 @@ export function SpreadsheetWorkspace({
       {!scheduleStatus.allowed && (
         <section
           role="status"
-          className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50/70 p-5 sm:flex-row sm:items-center sm:justify-between"
+          className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50/75 p-5 sm:flex-row sm:items-center sm:justify-between"
         >
           <div className="flex items-start gap-3">
             <Lock className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
@@ -712,55 +635,32 @@ export function SpreadsheetWorkspace({
                 Pencatatan Terkunci di Luar Jadwal Piket
               </h2>
               <p className="mt-0.5 text-sm text-amber-900">
-                {scheduleStatus.reason} Jadwal Anda: <strong>{scheduleStatus.scheduledWeeksText}</strong>{' '}
-                · Hari <strong>{scheduleStatus.scheduledDaysText}</strong> pukul{' '}
-                <span className="font-mono-num font-semibold">{scheduleStatus.shiftWindowText}</span>.
+                {scheduleStatus.reason}
+              </p>
+              <p className="mt-1 text-xs text-amber-800">
+                Jadwal bertugas Anda: <strong>{scheduleStatus.scheduledWeeksText}</strong> · Hari{' '}
+                <strong>{scheduleStatus.scheduledDaysText}</strong> · Pukul{' '}
+                <span className="font-mono-num font-semibold">{scheduleStatus.shiftWindowText}</span>{' '}
+                WIB.
               </p>
             </div>
-          </div>
-        </section>
-      )}
-
-      {/* Initial Start Session Banner */}
-      {!todaySheet && scheduleStatus.allowed && (
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
-          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-            <div>
-              <h2 className="font-display text-lg font-bold text-slate-900">
-                Mulai Sesi Piket Pagi Hari Ini
-              </h2>
-              <p className="mt-1 text-sm text-slate-600">
-                Belum ada petugas yang membuka spreadsheet untuk tanggal{' '}
-                <span className="font-mono-num font-medium text-slate-800">{appState.serverDate}</span>.
-                Klik tombol di samping atau langsung isi formulir AKPS di bawah untuk membuat spreadsheet baru secara otomatis.
-              </p>
-            </div>
-            <button
-              type="button"
-              disabled={submitting}
-              onClick={handleStartSession}
-              className="btn-3d-primary inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 whitespace-nowrap shrink-0 disabled:opacity-60 sm:w-auto"
-            >
-              <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
-              <span>Buat Spreadsheet Hari Ini</span>
-            </button>
           </div>
         </section>
       )}
 
       {/* Main Split Workspace */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
         {/* Form Pencatatan AKPS */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 lg:col-span-7">
+        <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-6 lg:col-span-7">
           <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
               <h2 className="font-display text-lg font-bold text-slate-900">
-                Catat Pelanggaran Siswa (AKPS)
+                Catat Pelanggaran Siswa
               </h2>
               <p className="text-xs text-slate-500">
                 {todaySheet
-                  ? 'Menggunakan standar Angka Kredit Pelanggaran Siswa SMA Negeri 1 Kemangkon.'
-                  : 'Mencatat entri pertama akan otomatis membuat spreadsheet hari ini.'}
+                  ? 'Isi nama siswa lalu pilih kategori pelanggaran sesuai buku AKPS.'
+                  : 'Mencatat siswa pertama akan otomatis membuka spreadsheet hari ini.'}
               </p>
             </div>
             {isSheetFinalized && (
@@ -1254,64 +1154,160 @@ export function SpreadsheetWorkspace({
           </form>
         </section>
 
-        {/* Panel Konsensus Selesai & Ekspor */}
-        <section className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 lg:col-span-5">
-          <div>
-            <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
+        {/* Right Column: Productivity Summary Card + Consensus & Export */}
+        <div className="space-y-6 lg:col-span-5">
+          {/* Daily Picket Productivity Summary Card */}
+          <section
+            id="daily-productivity-card"
+            aria-label="Ringkasan Produktivitas Piket Hari Ini"
+            className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-6"
+          >
+            <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="font-display text-lg font-bold text-slate-900">
-                  Konfirmasi Selesai & Ekspor
+                  Ringkasan Produktivitas Piket
                 </h2>
-                <p className="text-xs text-slate-500">
-                  Semua petugas piket aktif wajib menekan Selesai sebelum laporan Excel & PDF dapat diekspor.
+                <p className="mt-0.5 text-xs text-slate-500">
+                  Total pelanggaran dicatat pada sesi hari ini beserta kontribusi tiap petugas.
                 </p>
               </div>
-              <Users className="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
+              <div className="text-right shrink-0">
+                <p className="text-[11px] font-medium text-slate-500">Total Hari Ini</p>
+                <p
+                  id="daily-total-violations"
+                  className="font-mono-num text-3xl font-bold tracking-tight text-slate-900"
+                >
+                  {dailyProductivity.totalViolations}
+                </p>
+              </div>
             </div>
 
-            {!todaySheet ? (
-              <div className="mt-6 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-5 text-center">
-                <p className="text-sm font-medium text-slate-700">
-                  Belum ada petugas aktif hari ini
-                </p>
-                <p className="mt-1 text-xs text-slate-500">
-                  Daftar petugas aktif dan tombol Selesai akan muncul setelah spreadsheet hari ini dibuat.
-                </p>
-              </div>
-            ) : (
-              <div className="mt-5 space-y-4">
-                <div>
-                  <div className="flex items-center justify-between text-xs font-medium text-slate-600">
-                    <span>Progres Konfirmasi Selesai</span>
-                    <span className="font-mono-num font-semibold text-slate-900">
-                      {consensus.finishedCount} dari {consensus.activeCount} petugas selesai
-                    </span>
-                  </div>
-                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                    <div
-                      className={`h-full transition-all duration-300 ${
-                        consensus.allFinished ? 'bg-emerald-600' : 'bg-blue-600'
-                      }`}
-                      style={{
-                        width:
-                          consensus.activeCount > 0
-                            ? `${(consensus.finishedCount / consensus.activeCount) * 100}%`
-                            : '0%',
-                      }}
-                    />
-                  </div>
-                </div>
+            <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-slate-100 pt-3 text-xs text-slate-600">
+              <span>
+                <strong className="font-mono-num text-slate-900">{dailyProductivity.uniqueStudents}</strong>{' '}
+                siswa
+              </span>
+              <span aria-hidden="true">·</span>
+              <span>
+                <strong className="font-mono-num text-slate-900">+{dailyProductivity.totalPoints}</strong>{' '}
+                poin
+              </span>
+              <span aria-hidden="true">·</span>
+              <span>
+                <strong className="font-mono-num text-slate-900">
+                  {dailyProductivity.recordingOfficerCount}/{dailyProductivity.activeOfficerCount}
+                </strong>{' '}
+                petugas mencatat
+              </span>
+              {myProductivity && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span className="font-semibold text-blue-700">
+                    Anda: <strong className="font-mono-num">{myProductivity.violationCount}</strong>
+                  </span>
+                </>
+              )}
+            </div>
 
-                <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200">
-                  {todaySheet.activeOfficers.map((id) => {
-                    const activeOff = officerMap.get(id);
-                    const done = todaySheet.finishedOfficers.includes(id);
-                    const isSelf = id === officer.id;
+            <div className="mt-4 border-t border-slate-100 pt-3.5">
+              {dailyProductivity.officers.length === 0 ? (
+                <p className="text-xs leading-relaxed text-slate-500">
+                  Belum ada catatan masuk hari ini. Kontribusi per petugas akan muncul otomatis setelah catatan pertama disimpan.
+                </p>
+              ) : (
+                <ul className="divide-y divide-slate-100">
+                  {dailyProductivity.officers.map((item) => {
+                    const isSelf = item.officerId === officer.id;
                     return (
-                      <li
-                        key={id}
-                        className="flex items-center justify-between gap-3 px-3.5 py-3"
-                      >
+                      <li key={item.officerId} className="py-2.5 first:pt-0 last:pb-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-slate-900">
+                              {item.officerName}
+                              {isSelf ? ' (Anda)' : ''}
+                            </p>
+                            <p className="truncate text-xs text-slate-500">
+                              {item.division} · {item.isFinished ? 'Selesai' : 'Aktif'}
+                            </p>
+                          </div>
+                          <p className="font-mono-num shrink-0 text-xs font-semibold text-slate-800">
+                            {item.violationCount} pelanggaran · +{item.totalPoints} poin ({item.percentage}%)
+                          </p>
+                        </div>
+                        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                          <div
+                            className={`h-full transition-all duration-300 ${
+                              item.isFinished ? 'bg-emerald-600' : 'bg-blue-600'
+                            }`}
+                            style={{ width: `${item.percentage}%` }}
+                          />
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </section>
+
+          {/* Panel Konsensus Selesai & Ekspor */}
+          <section className="flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-6">
+            <div>
+              <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                <div>
+                  <h2 className="font-display text-lg font-bold text-slate-900">
+                    Selesaikan Tugas &amp; Unduh
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Semua petugas aktif wajib menekan Selesai sebelum Excel &amp; PDF dibuka.
+                  </p>
+                </div>
+                <Users className="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
+              </div>
+
+              {!todaySheet ? (
+                <div className="mt-4 py-4 text-center">
+                  <p className="text-sm font-medium text-slate-700">
+                    Belum ada petugas aktif hari ini
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Daftar petugas aktif dan tombol Selesai muncul otomatis saat sesi dimulai.
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between text-xs font-medium text-slate-600">
+                      <span>Progres Konfirmasi Selesai</span>
+                      <span className="font-mono-num font-semibold text-slate-900">
+                        {consensus.finishedCount} dari {consensus.activeCount} petugas selesai
+                      </span>
+                    </div>
+                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className={`h-full transition-all duration-300 ${
+                          consensus.allFinished ? 'bg-emerald-600' : 'bg-blue-600'
+                        }`}
+                        style={{
+                          width:
+                            consensus.activeCount > 0
+                              ? `${(consensus.finishedCount / consensus.activeCount) * 100}%`
+                              : '0%',
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <ul className="divide-y divide-slate-100 border-t border-slate-100">
+                    {todaySheet.activeOfficers.map((id) => {
+                      const activeOff = officerMap.get(id);
+                      const done = todaySheet.finishedOfficers.includes(id);
+                      const isSelf = id === officer.id;
+                      return (
+                        <li
+                          key={id}
+                          className="flex items-center justify-between gap-3 py-2.5"
+                        >
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-slate-900">
                             {activeOff?.name ?? id}
@@ -1391,79 +1387,80 @@ export function SpreadsheetWorkspace({
             )}
           </div>
 
-          {/* Export Section */}
-          <div className="mt-6 border-t border-slate-100 pt-5">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-700">
-                Unduh Laporan Hari Ini
-              </span>
-              <span
-                className={`text-xs font-medium ${
-                  consensus.exportUnlocked ? 'text-emerald-700' : 'text-slate-500'
-                }`}
-              >
-                {consensus.exportUnlocked ? 'Siap Diunduh' : 'Belum Selesai'}
-              </span>
-            </div>
-
-            {!consensus.exportUnlocked && (
-              <p className="mb-3 text-xs text-slate-500">
-                Tombol unduh akan aktif otomatis setelah semua petugas piket di atas menekan{' '}
-                <strong className="text-slate-700">Tandai Selesai Mencatat</strong>.
-              </p>
-            )}
-
-            <div className="space-y-2.5">
-              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                <button
-                  type="button"
-                  disabled={!consensus.exportUnlocked}
-                  onClick={handleExportExcel}
-                  className="btn-3d-soft inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+            {/* Export Section */}
+            <div className="mt-6 border-t border-slate-100 pt-5">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-700">
+                  Unduh Laporan Hari Ini
+                </span>
+                <span
+                  className={`text-xs font-medium ${
+                    consensus.exportUnlocked ? 'text-emerald-700' : 'text-slate-500'
+                  }`}
                 >
-                  <Download className="h-4 w-4" aria-hidden="true" />
-                  <span>Excel per Kelas (.xlsx)</span>
-                </button>
-
-                <button
-                  type="button"
-                  disabled={!consensus.exportUnlocked}
-                  onClick={handleExportPdfDirect}
-                  className="btn-3d-soft inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
-                >
-                  <FileText className="h-4 w-4" aria-hidden="true" />
-                  <span>Unduh PDF Visual</span>
-                </button>
+                  {consensus.exportUnlocked ? 'Siap Diunduh' : 'Belum Selesai'}
+                </span>
               </div>
 
-              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                <button
-                  type="button"
-                  disabled={!consensus.exportUnlocked}
-                  onClick={() => setShowVisualPreview(true)}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-400"
-                >
-                  <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>Pratinjau Laporan Visual</span>
-                </button>
+              {!consensus.exportUnlocked && (
+                <p className="mb-3 text-xs text-slate-500">
+                  Tombol unduh akan aktif otomatis setelah semua petugas piket di atas menekan{' '}
+                  <strong className="text-slate-700">Tandai Selesai Mencatat</strong>.
+                </p>
+              )}
 
-                <button
-                  type="button"
-                  disabled={!consensus.exportUnlocked}
-                  onClick={handleExportCsv}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-400"
-                >
-                  <FileSpreadsheet className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>Unduh CSV</span>
-                </button>
+              <div className="space-y-2.5">
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    disabled={!consensus.exportUnlocked}
+                    onClick={handleExportExcel}
+                    className="btn-3d-soft inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                  >
+                    <Download className="h-4 w-4" aria-hidden="true" />
+                    <span>Excel per Kelas (.xlsx)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={!consensus.exportUnlocked}
+                    onClick={handleExportPdfDirect}
+                    className="btn-3d-soft inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                  >
+                    <FileText className="h-4 w-4" aria-hidden="true" />
+                    <span>Unduh PDF Visual</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    disabled={!consensus.exportUnlocked}
+                    onClick={() => setShowVisualPreview(true)}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-400"
+                  >
+                    <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>Pratinjau Laporan Visual</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={!consensus.exportUnlocked}
+                    onClick={handleExportCsv}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-400"
+                  >
+                    <FileSpreadsheet className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>Unduh CSV</span>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
       </div>
 
       {/* Live Spreadsheet Table */}
-      <section className="rounded-2xl border border-slate-200 bg-white">
+      <section className="rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
         <div className="flex flex-col gap-4 border-b border-slate-200 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="font-display text-lg font-bold text-slate-900">
