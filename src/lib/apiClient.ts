@@ -1,4 +1,15 @@
 const AUTH_TOKEN_KEY = 'sipiket_osis_auth_token';
+const RAW_API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').trim().replace(/\/+$/, '');
+
+export function buildApiUrl(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path;
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return RAW_API_BASE ? `${RAW_API_BASE}${normalizedPath}` : normalizedPath;
+}
+
+export function hasExternalApiBase(): boolean {
+  return Boolean(RAW_API_BASE);
+}
 
 export function getAuthToken(): string | null {
   try {
@@ -33,7 +44,7 @@ export async function apiFetch(input: string, init: RequestInit = {}): Promise<R
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
   }
-  return fetch(input, {
+  return fetch(buildApiUrl(input), {
     ...init,
     headers,
   });

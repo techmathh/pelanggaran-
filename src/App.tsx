@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { CheckCircle2, Info, XCircle } from 'lucide-react';
-import { apiFetch, clearAuthToken, getAuthToken, setAuthToken } from './lib/apiClient';
+import {
+  apiFetch,
+  buildApiUrl,
+  clearAuthToken,
+  getAuthToken,
+  setAuthToken,
+} from './lib/apiClient';
 import { isManagerRole } from './shared/piketLogic';
 import type { PublicAppState, PublicMetaState, PublicOfficer } from './shared/types';
 import { AccountManagementView } from './components/AccountManagementView';
@@ -36,8 +42,9 @@ export default function App() {
 
   const refreshPublicMeta = useCallback(async () => {
     try {
-      const res = await fetch('/api/public-meta');
-      if (res.ok) {
+      const res = await fetch(buildApiUrl('/api/public-meta'));
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
         const metaData = (await res.json()) as PublicMetaState;
         setMeta(metaData);
       }
@@ -49,8 +56,15 @@ export default function App() {
   const bootstrapSession = useCallback(async () => {
     setLoading(true);
     try {
-      const metaRes = await fetch('/api/public-meta');
-      if (!metaRes.ok) throw new Error('Gagal memuat metadata server');
+      const metaRes = await fetch(buildApiUrl('/api/public-meta'));
+      const contentType = metaRes.headers.get('content-type') || '';
+      if (!metaRes.ok || !contentType.includes('application/json')) {
+        throw new Error(
+          metaRes.status === 404 || !contentType.includes('application/json')
+            ? 'BACKEND_UNAVAILABLE'
+            : 'Gagal memuat metadata server'
+        );
+      }
       const metaData = (await metaRes.json()) as PublicMetaState;
       setMeta(metaData);
 
@@ -74,8 +88,14 @@ export default function App() {
         setAppState(null);
       }
       setLoadError(null);
-    } catch {
-      setLoadError('Tidak dapat terhubung ke server SiPiket OSIS.');
+    } catch (err) {
+      if (err instanceof Error && err.message === 'BACKEND_UNAVAILABLE') {
+        setLoadError(
+          'Server API SiPiket OSIS (/api) tidak ditemukan di hosting ini. Vercel hanya menjalankan tampilan depan; jalankan server Node.js (server.ts) di Railway/Render/VPS lalu sambungkan melalui VITE_API_BASE_URL, atau deploy full-stack langsung di hosting Node.js.'
+        );
+      } else {
+        setLoadError('Tidak dapat terhubung ke server SiPiket OSIS.');
+      }
     } finally {
       setLoading(false);
     }

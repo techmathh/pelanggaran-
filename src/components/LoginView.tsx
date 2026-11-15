@@ -7,6 +7,7 @@ import {
   LockKeyhole,
   ShieldCheck,
 } from 'lucide-react';
+import { buildApiUrl } from '../lib/apiClient';
 import { formatIndonesianDateLabel } from '../shared/piketLogic';
 import type { PublicAppState, PublicMetaState, PublicOfficer } from '../shared/types';
 import { CuteMascot3D } from './CuteMascot3D';
@@ -45,7 +46,7 @@ export function LoginView({ meta, onLoginSuccess }: LoginViewProps) {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(buildApiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -96,7 +97,7 @@ export function LoginView({ meta, onLoginSuccess }: LoginViewProps) {
 
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/change-password', {
+      const res = await fetch(buildApiUrl('/api/auth/change-password'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

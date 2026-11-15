@@ -35,7 +35,9 @@ import type {
 import { DEVELOPER_BOOTSTRAP, OFFICIAL_AKPS_PRESETS } from './seedData';
 import { SMAN1_KEMANGKON_STUDENTS } from './studentRoster';
 
-const DATA_DIR = path.resolve(process.cwd(), 'data');
+const DATA_DIR = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.resolve(process.cwd(), 'data');
 const SQLITE_PATH = path.join(DATA_DIR, 'sipiket.db');
 
 const AVATAR_PALETTE = ['#2563EB', '#0D9488', '#D97706', '#4F46E5', '#DB2777', '#059669'];
