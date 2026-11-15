@@ -1,0 +1,8029 @@
+
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "Angkatan",
+  "Column4": "Jumlah Siswa",
+  "Column7": "Jumlah Rombel",
+  "Column12": "Keterangan"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "Kelas 10",
+  "Column5": 213,
+  "Column12": "6 Tahun Ajaran 2026/2027"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "Kelas 11",
+  "Column5": 201,
+  "Column12": "6 Tahun Ajaran 2026/2027"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "Kelas 12",
+  "Column5": 196,
+  "Column12": "6 Tahun Ajaran 2026/2027"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "Catatan\nNurlia Estiningsih dipindahkan dari kelas 11A ke kelas 11D sesuai permintaan.\nData kelas XII mencakup NIS dari file sumber; data kelas X dan XI mengikuti dokumen sumber."
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "No                                   Nama Lengkap                                       Kelas",
+  "Column13": "Angkatan"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "1       Abdi Pamungkas",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "2       Abidah Nur Khamidah",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "3       Afi Nur Hanifah",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "4       Alfian Muhammad Fadhil",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "5       Amirul Fabian",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "6       Aprilia Nur Anisah",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "7       Auliya Rizatun Khusna",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "8       Brilian Wahyu Anggoro",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "9       Diana Wardoyo",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "10      Dwi Ayu Khairunnisa Alqodri",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "11      Fahmi Andriansyah Putra",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "12      Faqih Al Irkham",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "13      Feliciana Saputri",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "14      Felisa",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "15      Fino Fernando",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "16      Isnaeni Lutfiani",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "17      Isni Nur Fauziatus Zahro",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "18      Jami Raditia",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "19      Lakeisya Maritza Ayunda",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "20      Mey Lani Putri",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "21      Mutiara Ramadhani",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "22      Nadiah Gandes",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "23      Nindi Nur Khafidhoh",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "24      Novella Dyma Evelyn",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "25      Puput Ameliana Putri",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "26      Rauf Kinan Fadhali",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "27      Rehan Mufazzal Prastiyansyah",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "28      Rizal Dwi Maretno",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "29      Rony Nur Pratama",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "30      Shofi Umniya",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "31      Syafa Allya Agustin",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "32      Tony Mahendra",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "33      Uthffi Whisnu Sefryanch",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "34      WijayaAl Fatah Fauzy Luthfi",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "35      Yusuf Budianto",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "36      Achmad Nur Aziz",
+  "Column8": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "37      Aghnia Shofwa Maulida",
+  "Column8": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "38      Ailsa Dita Novadha",
+  "Column8": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "39      Allesia Regina Putri",
+  "Column8": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "40      Amelia Evita Sari",
+  "Column8": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "41      Andrea Alisya Kayzawa",
+  "Column8": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "42      Balqis Cintani",
+  "Column8": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "43      Barokati Risyda Rufiat",
+  "Column8": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "44      Daffa Adil Saputro",
+  "Column8": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "45      Dika Febrian Pratama",
+  "Column8": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "46      Dwi Purnomo",
+  "Column8": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "47      Fahri Sofiyulhaq",
+  "Column8": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "48      Faris Putra Ardana",
+  "Column8": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "49      Feros Aditya Askhab",
+  "Column8": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "50      Fita Dwi Ariyani",
+  "Column8": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "51      Hana Maryam Zulfa",
+  "Column8": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "52      Isnaeni Nur Estyana",
+  "Column8": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "53      Janitro Haidarrell",
+  "Column8": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "54      Jovita Rahma",
+  "Column8": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "55      Mareta Rahma Lukitaputri",
+  "Column8": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 56,
+  "Column2": "Marvelyan Ringgo Ghanesy",
+  "Column9": "10B",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 57,
+  "Column2": "Muhamad Labibul Fikri",
+  "Column9": "10B",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 58,
+  "Column2": "Mulyawan Raisa Nadia Putri",
+  "Column9": "10B",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 59,
+  "Column2": "Nadhif Ramaniya Arib",
+  "Column9": "10B",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 60,
+  "Column2": "Nadine Olinda Putri",
+  "Column9": "10B",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 61,
+  "Column2": "Nur Aswaja",
+  "Column9": "10B",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 62,
+  "Column2": "Otylia Valeria Akleema",
+  "Column9": "10B",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 63,
+  "Column2": "Refiana Afif Fadhilah",
+  "Column9": "10B",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 64,
+  "Column2": "Riky Yusuf Pradika",
+  "Column9": "10B",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 65,
+  "Column2": "Royan Saputra",
+  "Column9": "10B",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 66,
+  "Column2": "Safira Dwi Oktavia",
+  "Column9": "10B",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 67,
+  "Column2": "Shofia Rahma Hafisha",
+  "Column9": "10B",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 68,
+  "Column2": "Tasa Anggun Nuraeni",
+  "Column9": "10B",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 69,
+  "Column2": "Tri Anita Nurrohmah",
+  "Column9": "10B",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 70,
+  "Column2": "Vinez Alfiana Putri",
+  "Column9": "10B",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 71,
+  "Column2": "Yusuf Syarifuddin",
+  "Column9": "10B",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 72,
+  "Column2": "Adella Putriana Rizka",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 73,
+  "Column2": "Aisyah Septiyana",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 74,
+  "Column2": "Ajrina Salsabila Alma",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 75,
+  "Column2": "Aneesa Nur Dzakiyah",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 76,
+  "Column2": "Angel Ambarwati",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 77,
+  "Column2": "Chika Dwi Juniana",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 78,
+  "Column2": "Davin Prayunda",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 79,
+  "Column2": "Dhiya Liyana Fauziah",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 80,
+  "Column2": "Dita Asmarani",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 81,
+  "Column2": "Eko Wahyu Pratama",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 82,
+  "Column2": "Faisal Hasbi",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 83,
+  "Column2": "Farrel Syarafa Azhar",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 84,
+  "Column2": "Fina Anggreani",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 85,
+  "Column2": "Gangsar Aziz Purwanto",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 86,
+  "Column2": "Hiroshi Bena Satria Perkasa",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 87,
+  "Column2": "Kaila Apriliani",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 88,
+  "Column2": "Kamilah Nur Faatin",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 89,
+  "Column2": "Khoerul Shidqi",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 90,
+  "Column2": "Kholistiani Andini Risma Melati",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 91,
+  "Column2": "Mentari Cipta Ceria",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 92,
+  "Column2": "Mirza Ziaul-Haq",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 93,
+  "Column2": "Muhammad Eka Prasetia",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 94,
+  "Column2": "Nafisa Mufida Rakhman",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 95,
+  "Column2": "Nahdah Shabuuhah",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 96,
+  "Column2": "Nur Faizah",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 97,
+  "Column2": "Prila Alif Rosidah",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 98,
+  "Column2": "Raziq Yun Wistara Widyanto",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 99,
+  "Column2": "Risky Dwi Anissa Putri",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 100,
+  "Column2": "Risti Hanifah Oktafiana",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 101,
+  "Column2": "Sabrina Witjayanti",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 102,
+  "Column2": "Safitri",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 103,
+  "Column2": "Siti Rayhana Humaira",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 104,
+  "Column2": "Tegar Zona Praditya",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 105,
+  "Column2": "Tri Nia Ningsih",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 106,
+  "Column2": "Yeni Atna Saputri",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 107,
+  "Column2": "Zafira Uli Asifah",
+  "Column9": "10C",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 108,
+  "Column2": "Aisyah Nuraini",
+  "Column9": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 109,
+  "Column2": "Akhmad Firmansah",
+  "Column9": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 110,
+  "Column2": "Alfian Dwi Nugroho",
+  "Column9": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 111,
+  "Column2": "Anggit Nur Rohman",
+  "Column9": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 112,
+  "Column2": "Aris Muhyanto",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 113,
+  "Column2": "Assirly Ayudia Ramadhani",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 114,
+  "Column2": "Davit Nurul Anwar",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 115,
+  "Column2": "Denis Silvi Alfiqoh",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 116,
+  "Column2": "Dinaya Hening Arijati",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 117,
+  "Column2": "Dwi Juliantoro",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 118,
+  "Column2": "Elvina Mya Zahida",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 119,
+  "Column2": "Fajar Ramadan",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 120,
+  "Column2": "Fathin Faishal Majid",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 121,
+  "Column2": "Ghifari Cinta Saputri Nadia",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 122,
+  "Column2": "Habli Ali Nurohman",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 123,
+  "Column2": "Hafid Aufal Marom",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 124,
+  "Column2": "Humaimah Yumna Abiyyah",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 125,
+  "Column2": "Kamila Zahra Salsabillah",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 126,
+  "Column2": "Keisya Nurul Faizza",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 127,
+  "Column2": "Levina Andera Azaria",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 128,
+  "Column2": "Mohamad Al Fajri",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 129,
+  "Column2": "Mohamad Sabriansyah Al",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 130,
+  "Column2": "Naifah Janeeta Khansa",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 131,
+  "Column2": "Najwaa Putri Widianto",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 132,
+  "Column2": "Nuri Aulia Rachman",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 133,
+  "Column2": "Raihan Septian Zuhdi",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 134,
+  "Column2": "Rezki Ramadhani",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 135,
+  "Column2": "Rizki Hendra Setiawan",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 136,
+  "Column2": "Safina Nur Fadilah",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 137,
+  "Column2": "Salsa Juni Adellia",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 138,
+  "Column2": "Syifa Hafizah",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 139,
+  "Column2": "Syurika Noviana Anggraini",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 140,
+  "Column2": "Titan Angga Dwi Ramadhan",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 141,
+  "Column2": "Vania Sari Rahmawati",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 142,
+  "Column2": "Yuana Pratidina Bhakti Yojana",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 143,
+  "Column2": "Yunita Tri Nugroho",
+  "Column8": "10D",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 144,
+  "Column2": "Al Habsy Rizal Maulana",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 145,
+  "Column2": "Alaric Stevan Ardelio",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 146,
+  "Column2": "Allesa Uswatun Faidah",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 147,
+  "Column2": "Anggita Melati",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 148,
+  "Column2": "Asyifa Nabilah Ramadhani",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 149,
+  "Column2": "Aulia Zahra",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 150,
+  "Column2": "Desi Zahrotunnisa",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 151,
+  "Column2": "Dimas Alif Wijaya",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 152,
+  "Column2": "Dzanisa Fahma Maulidia Putri",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 153,
+  "Column2": "Erwin Nur Rohman",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 154,
+  "Column2": "Esti Kurniawati",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 155,
+  "Column2": "Fatihah Zahra Nur Alimah",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 156,
+  "Column2": "Faza Ghassani Zharfan",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 157,
+  "Column2": "Hafidzah Alimah Ghossany",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 158,
+  "Column2": "Heru Setiawan",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 159,
+  "Column2": "Ika Purwanti",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 160,
+  "Column2": "Keyla Aswa Nasyfa",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 161,
+  "Column2": "Khansa Apriliyansyah",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 162,
+  "Column2": "Lukman Nur Mardiansyah",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 163,
+  "Column2": "Muhamad Khoerul Anwar",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 164,
+  "Column2": "Nabilah Azzahra",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 165,
+  "Column2": "Nanda Lutfi Oktrivia",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 166,
+  "Column2": "Naufal Hilmi Dzaky",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 167,
+  "Column2": "Pandu Dewanata",
+  "Column8": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 168,
+  "Column2": "Rafli Tri Pangestu",
+  "Column9": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 169,
+  "Column2": "Raissyanaya Haura Atsiila",
+  "Column9": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 170,
+  "Column2": "Rezky Ramadani",
+  "Column9": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 171,
+  "Column2": "Rohim Tyas Maulana",
+  "Column9": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 172,
+  "Column2": "Safira Nur Faizah",
+  "Column9": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 173,
+  "Column2": "Satrio Adi Pamungkas",
+  "Column9": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 174,
+  "Column2": "Tegar Dwi Pranowo",
+  "Column9": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 175,
+  "Column2": "Thoriq Ozzil Nur Ali",
+  "Column9": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 176,
+  "Column2": "Vian Erfiza Pratama",
+  "Column9": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 177,
+  "Column2": "Vita Setianingrum",
+  "Column9": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 178,
+  "Column2": "Zaki Tri Setiawan",
+  "Column9": "10E",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 179,
+  "Column2": "Alfatiah",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 180,
+  "Column2": "Almira Kinanti Wuryandani",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 181,
+  "Column2": "Ameysa Nur Aida",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 182,
+  "Column2": "Anjani Nur Rahayu",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 183,
+  "Column2": "Asyifa Putri Ramadhani",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 184,
+  "Column2": "Bafely Muizz Nurenda",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 185,
+  "Column2": "Desti Fania Wulandari",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 186,
+  "Column2": "Dina Istikomatun Nisa",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 187,
+  "Column2": "Elvin Aditya Pratama Atho`Illah",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 188,
+  "Column2": "Falista Kirsyah Mukti",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 189,
+  "Column2": "Fany Latifah",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 190,
+  "Column2": "Febi Yulin Saputri",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 191,
+  "Column2": "Febli Supriatin",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 192,
+  "Column2": "Hening Mauliana Arrayyani",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 193,
+  "Column2": "Ira Budiana",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 194,
+  "Column2": "Isnaena Lutfiana",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 195,
+  "Column2": "Khusna Permata Zahrotul",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 196,
+  "Column2": "Kiromi Lulu Latifah",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 197,
+  "Column2": "Maulana Adi Pangestu",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 198,
+  "Column2": "Muhammad Panji Pradana",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 199,
+  "Column2": "Nadia Ulul Alifah",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 200,
+  "Column2": "Nasywa Okta Fiyana",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 201,
+  "Column2": "Naura Alkamila Az Zahra",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 202,
+  "Column2": "Prita Maolani Pratama",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 203,
+  "Column2": "Rama Mahendra Kurniawan",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 204,
+  "Column2": "Rangga Wijaya Dharu",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 205,
+  "Column2": "Rifki Ardiansyah Putra",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 206,
+  "Column2": "Rohman Tyas Maulana",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 207,
+  "Column2": "Salsa Solikhatun",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 208,
+  "Column2": "Shahnan Azkarasya Putra",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 209,
+  "Column2": "Tofik Nurrohman",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 210,
+  "Column2": "Tsany Nafeeza",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 211,
+  "Column2": "Wahyu Subuh Febriani",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 212,
+  "Column2": "Wisnu Al Gani",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 213,
+  "Column2": "Zakiah Ainun Nisa",
+  "Column9": "10F",
+  "Column14": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 214,
+  "Column2": "Afifatul Luthfiana",
+  "Column9": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 215,
+  "Column2": "Alvianti Nurfitriana",
+  "Column9": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 216,
+  "Column2": "Arvines Abi Setya",
+  "Column9": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 217,
+  "Column2": "Asyam Atha Farras",
+  "Column9": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 218,
+  "Column2": "Aziz Faqi Wardana",
+  "Column9": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 219,
+  "Column2": "Cikita Ismayanti",
+  "Column9": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 220,
+  "Column2": "Deca Monica Afrilia",
+  "Column9": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 221,
+  "Column2": "Dimas Rifky Aditiya Yuda",
+  "Column9": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 222,
+  "Column2": "Faridathun Nurul Khasanah",
+  "Column9": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 223,
+  "Column2": "Fidela Tsaqif",
+  "Column9": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 224,
+  "Column2": "Galih Saputra",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 225,
+  "Column2": "Ida Nurjanah",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 226,
+  "Column2": "Irdina Auliana",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 227,
+  "Column2": "Isnia Putri Indahwati",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 228,
+  "Column2": "Keyza Sesi Brilliana",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 229,
+  "Column2": "Laisa Dwi Anindita",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 230,
+  "Column2": "Lituhayu Putri Rahmanti",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 231,
+  "Column2": "Mamiek Ainiyyah Nur Janah",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 232,
+  "Column2": "Muhammad Fahmi Adhana Ilham",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 233,
+  "Column2": "Nabila Dwi Kartika",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 234,
+  "Column2": "Nafizha Elya Putri Fadlullah",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 235,
+  "Column2": "Najma Saniyah",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 236,
+  "Column2": "Norriska Damaris",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 237,
+  "Column2": "Novanda Rizq Taufiqah",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 238,
+  "Column2": "Raya Tri Rahmadani",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 239,
+  "Column2": "Rhein Syafa`at Julica",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 240,
+  "Column2": "Rohana Aprilliani",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 241,
+  "Column2": "Rois Akhul Muammar",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 242,
+  "Column2": "Satriaji Pratama",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 243,
+  "Column2": "Surya Andes Subekti",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 244,
+  "Column2": "Vetha Hidhea",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 245,
+  "Column2": "Zefa Alan Pradika",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 246,
+  "Column2": "Zivana Intan Okhtara",
+  "Column10": "11A",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 247,
+  "Column2": "Aisyah Destiani Nur Risqiah",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 248,
+  "Column2": "Alifiah Nur Fadilah",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 249,
+  "Column2": "Anggraeni Putri Nuralisa",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 250,
+  "Column2": "Camilia Jasmine Qotrunnada",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 251,
+  "Column2": "Dafid Sabria Ghofur",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 252,
+  "Column2": "Elsa Rahmadani",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 253,
+  "Column2": "Falih Rizky Robbani",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 254,
+  "Column2": "Faradita Nasa",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 255,
+  "Column2": "Farhan Nuha Alfianto",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 256,
+  "Column2": "Fauzi Nur Amirudin",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 257,
+  "Column2": "Faza Zakiya Az Zahra",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 258,
+  "Column2": "Galang Aji Panuntun",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 259,
+  "Column2": "Habib Fitroazis",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 260,
+  "Column2": "Hasna Ridha`ul Jannah",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 261,
+  "Column2": "Mahesa Fian Saputra",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 262,
+  "Column2": "Mayza Aurelia Nadine",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 263,
+  "Column2": "Melia Dwi Faradisa",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 264,
+  "Column2": "Mutiara",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 265,
+  "Column2": "Mutiara Nur Sabila",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 266,
+  "Column2": "Nabila Zulaikha Fauzi",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 267,
+  "Column2": "Nalandris Nabilla",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 268,
+  "Column2": "Naura Zalfa Rahadatul Aisyah",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 269,
+  "Column2": "Risa Indriani",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 270,
+  "Column2": "Ru`ya Fitrotunnisa",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 271,
+  "Column2": "Salsabila Putri Ramadhani",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 272,
+  "Column2": "Shafa Aora",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 273,
+  "Column2": "Syaifiana Nur Izzati",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 274,
+  "Column2": "Tara Safira Putri",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 275,
+  "Column2": "Wichdah Nurochmah",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 276,
+  "Column2": "Yanuar Rizky Saputra",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 277,
+  "Column2": "Yendi Biananda Putra",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 278,
+  "Column2": "Zaidan Labib Ilham Maulana",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 279,
+  "Column2": "Zhiqko Ananda Putra",
+  "Column10": "11B",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 280,
+  "Column2": "Abdal Zaqi Abdillah",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 281,
+  "Column2": "Ai Ichi Asma Taqiyyah",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 282,
+  "Column2": "Amanda Yasmin As Zahra",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 283,
+  "Column2": "Anisa Apriliani",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 284,
+  "Column2": "Anisa Wiji Hayati Febriani",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 285,
+  "Column2": "Aya Atiyyatul Shahilda",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 286,
+  "Column2": "Azman Fatihul Amin",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 287,
+  "Column2": "Cikalita Lestari",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 288,
+  "Column2": "Della Yosiananda",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 289,
+  "Column2": "Faishal Irfan Nurwahid",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 290,
+  "Column2": "Fathia Rahma Aysha",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 291,
+  "Column2": "Ginantya Luwih Sukowati",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 292,
+  "Column2": "Herti Wardaningsih",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 293,
+  "Column2": "Indira Rahayu Wulandari",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 294,
+  "Column2": "Karunia Melya Putri",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 295,
+  "Column2": "Keysya Rifatuz Zahro",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 296,
+  "Column2": "Khanza Leonita Anggraeni",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 297,
+  "Column2": "Kurniawan Fendy Prasetyo",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 298,
+  "Column2": "Laras Fatimah",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 299,
+  "Column2": "Laras Mulia Ningrum",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 300,
+  "Column2": "Leni Prihatini",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 301,
+  "Column2": "Nathan Evan Prawara",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 302,
+  "Column2": "Nayla Asyifa",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 303,
+  "Column2": "Nazwa Hilda Amalia",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 304,
+  "Column2": "Raevano Radisha Atha Diandra",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 305,
+  "Column2": "Refaiza Asyifa Oktaviani",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 306,
+  "Column2": "Resty Qanitah",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 307,
+  "Column2": "Revira Ayu Kristanti",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 308,
+  "Column2": "Saiyi Datina Fatinjiyah",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 309,
+  "Column2": "Syintia Nur Faizah",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 310,
+  "Column2": "Taufik Armanto",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 311,
+  "Column2": "Trey Maulida Khasanah",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 312,
+  "Column2": "Yngwie Satriani Saptono",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 313,
+  "Column2": "Yusuf Hasan Tabani",
+  "Column9": "11C",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 314,
+  "Column2": "Adellya Larassati",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 315,
+  "Column2": "Amelia Nurma Gupita",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 316,
+  "Column2": "Ardian Nur Hidayat",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 317,
+  "Column2": "Ardiansyah Basthotan",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 318,
+  "Column2": "Asep Syaeful Husna",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 319,
+  "Column2": "Baihaqi Rahman As Sidiq",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 320,
+  "Column2": "Dede Sulasno",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 321,
+  "Column2": "Desta Aji Pamungkas",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 322,
+  "Column2": "Dzaky Fayis Putra Sunandar",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 323,
+  "Column2": "Essa Nurfahry",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 324,
+  "Column2": "Fajrin Samsiyatul Barokah",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 325,
+  "Column2": "Fangky Rahmawati",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 326,
+  "Column2": "Febrian Tri Prastiyo",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 327,
+  "Column2": "Galih Arjunika",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 328,
+  "Column2": "Hana Zahriatu Rifa",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 329,
+  "Column2": "Ikhwan Ma`ruf",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 330,
+  "Column2": "Intan Nur Hani",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 331,
+  "Column2": "Jovan Ardiansyah",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 332,
+  "Column2": "Lutfia Febby Awalina",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 333,
+  "Column2": "Melda Rahmadhani Islami",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 334,
+  "Column2": "Mifta Hudin",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 335,
+  "Column2": "Muhamad Fardan Assidiq",
+  "Column9": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 336,
+  "Column2": "Mutia Nur Karina Putri",
+  "Column7": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 337,
+  "Column2": "Nurlia Estiningsih",
+  "Column7": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 338,
+  "Column2": "Paskalis Pratama Putra",
+  "Column7": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 339,
+  "Column2": "Qorry Suci Amalina",
+  "Column7": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 340,
+  "Column2": "Rafi Putra Aditya",
+  "Column7": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 341,
+  "Column2": "Rafi Yogis Alviano",
+  "Column7": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 342,
+  "Column2": "Randi Setiawan",
+  "Column7": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 343,
+  "Column2": "Rezky Alfahrisi",
+  "Column7": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 344,
+  "Column2": "Salsa Nur Oktavia",
+  "Column7": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 345,
+  "Column2": "Satrio Dwi Dharmawan",
+  "Column7": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 346,
+  "Column2": "Syifa Aprilianti",
+  "Column7": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 347,
+  "Column2": "Tegar Dwi Saputra",
+  "Column7": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 348,
+  "Column2": "Vano Alfian",
+  "Column7": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 349,
+  "Column2": "Yuliana Safitri",
+  "Column7": "11D",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 350,
+  "Column2": "Ahmad Fadilah",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 351,
+  "Column2": "Amelia",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 352,
+  "Column2": "Anju Sahila",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 353,
+  "Column2": "Arba Abdul Hamid",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 354,
+  "Column2": "Arum Pramelyta Ramadhani",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 355,
+  "Column2": "Astrit Prawita Sari",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 356,
+  "Column2": "Danish Aisy Hafiy Putra",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 357,
+  "Column2": "Devia Febianti",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 358,
+  "Column2": "Dita Rahmadani",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 359,
+  "Column2": "Evan Ananta Ramadhanu",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 360,
+  "Column2": "Farasy Fibra Nurjanah",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 361,
+  "Column2": "Fikri Aditya Putra",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 362,
+  "Column2": "Fino Rizki Saputra",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 363,
+  "Column2": "Fita Nur Alea Putri",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 364,
+  "Column2": "Fredellio Satya Nugroho",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 365,
+  "Column2": "Iqram Nur Ramadhan",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 366,
+  "Column2": "Keisya Naura Pasa",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 367,
+  "Column2": "Kholifia Nur Khikmah",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 368,
+  "Column2": "Maollana",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 369,
+  "Column2": "Nathazya Nurmaylani",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 370,
+  "Column2": "Nindias Dwi Wahyuni",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 371,
+  "Column2": "Nur Rahayu",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 372,
+  "Column2": "Ovi Rachmawati",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 373,
+  "Column2": "Ra'uf Restu Safa`at",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 374,
+  "Column2": "Ratna Dwi Erlita",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 375,
+  "Column2": "Ridwan Ikhwansyah",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 376,
+  "Column2": "Ririn Septiani",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 377,
+  "Column2": "Rizky Aditya Putra",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 378,
+  "Column2": "Tri Aeni",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 379,
+  "Column2": "Tri Wahyuni",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 380,
+  "Column2": "Tri Yani",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 381,
+  "Column2": "Valen Febri Diantik",
+  "Column7": "11E",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 382,
+  "Column2": "Alfaradis Widi Santoso",
+  "Column7": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 383,
+  "Column2": "Alifia Dian Puspita",
+  "Column7": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 384,
+  "Column2": "Alvin Aldiar Nurfahri",
+  "Column7": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 385,
+  "Column2": "Anggita Dewi Larasati",
+  "Column7": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 386,
+  "Column2": "Annisa Mutiara Dewi",
+  "Column7": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 387,
+  "Column2": "Brian Dzaky Muttaqin",
+  "Column7": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 388,
+  "Column2": "Dava Aditya Pratama",
+  "Column7": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 389,
+  "Column2": "Deni Setiawan",
+  "Column7": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 390,
+  "Column2": "Dwi Anteng Lestari",
+  "Column7": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 391,
+  "Column2": "Dwi Setiani Fadilah",
+  "Column7": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 392,
+  "Column2": "Fabiano Pradipta Putra",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 393,
+  "Column2": "Faizal Rizki Ramdhani",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 394,
+  "Column2": "Falih Dinar Alifah",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 395,
+  "Column2": "Feby Tri Kurniawan",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 396,
+  "Column2": "Firlian Surya Putri",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 397,
+  "Column2": "Ibanes Cinta Quinsa",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 398,
+  "Column2": "Kaila Nur Wahyuni",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 399,
+  "Column2": "Laeli Nur Hayati",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 400,
+  "Column2": "Lyviana Aprillianti",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 401,
+  "Column2": "Mayla Dyah Ayun Nur Latifah",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 402,
+  "Column2": "Oliviana Nur Fitriyani",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 403,
+  "Column2": "Prasvita Aprilian Maharani",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 404,
+  "Column2": "Purdiyanti Wahyu Utami",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 405,
+  "Column2": "Puspita Lestari Ningsih",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 406,
+  "Column2": "Puti Anandita",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 407,
+  "Column2": "Rafi Bahtiar",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 408,
+  "Column2": "Rizal Muhamad Fahri",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 409,
+  "Column2": "Rizky Wahyu Wibowo",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 410,
+  "Column2": "Salwa Salsabil Nafi`ah",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 411,
+  "Column2": "Siti Nurjanah",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 412,
+  "Column2": "Talita Zahraeni",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 413,
+  "Column2": "Windy Oktaviani",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 414,
+  "Column2": "Zaky Endra Pratama",
+  "Column10": "11F",
+  "Column14": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 415,
+  "Column2": "Adristi Maysarah Okta Kurniawati",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 416,
+  "Column2": "Affan Maulana Akhmad",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 417,
+  "Column2": "Aflah Tria Syifa",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 418,
+  "Column2": "Alisa Safitri",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 419,
+  "Column2": "Alya Fedya Jelita",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 420,
+  "Column2": "Aulia Kharisma Dewi",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 421,
+  "Column2": "Az Zahra Raihan Nasuha",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 422,
+  "Column2": "Azifa Nur Andini",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 423,
+  "Column2": "Balqis Istiqomah",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 424,
+  "Column2": "Deswita Vevti Rizqianti",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 425,
+  "Column2": "Dyah Ayuningtyas",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 426,
+  "Column2": "Fuad Mu`afi",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 427,
+  "Column2": "Hanifa Hasna Syifa",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 428,
+  "Column2": "Hanisa Fitriyani",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 429,
+  "Column2": "Ika Nur Rahmawati",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 430,
+  "Column2": "Imelia Mustika Dewi",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 431,
+  "Column2": "Kevin Luthfi Maulana Putra",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 432,
+  "Column2": "Laysha Wahyu Pertiwi",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 433,
+  "Column2": "Maria Gipstin Dwi Meilani",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 434,
+  "Column2": "Muhamad Burhan Aziz",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 435,
+  "Column2": "Nadiya Nur Aeni",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 436,
+  "Column2": "Niki Nur Azzahwa",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 437,
+  "Column2": "Oktavia Saputri",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 438,
+  "Column2": "Okto Berliawan Wijaya",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 439,
+  "Column2": "Onata Ryan Sandita",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 440,
+  "Column2": "Pramudya Ristyan Wibowo",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 441,
+  "Column2": "Putri Kusumaning Tyas",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 442,
+  "Column2": "Rama Aditya Airlangga",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 443,
+  "Column2": "Sendhika Ayu Aulia",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 444,
+  "Column2": "Wahyu Tripurwaningsih",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 445,
+  "Column2": "Zulfaa Yumnaa Labibah",
+  "Column10": "12A",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 446,
+  "Column2": "Afra Maylani",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 447,
+  "Column2": "Allya Rosita",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 448,
+  "Column2": "Amin Nur Rouf",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 449,
+  "Column2": "Amru Pramudhita Prasojo",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 450,
+  "Column2": "Bintang Mas Pratama",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 451,
+  "Column2": "Chairunisa Afifah",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 452,
+  "Column2": "Cherlie Marchelino Lumbantoruan",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 453,
+  "Column2": "Colin Brian Delaney",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 454,
+  "Column2": "Dharma Alif Subiyarsono",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 455,
+  "Column2": "Dina Amilia Safara",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 456,
+  "Column2": "Evan Priyanto",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 457,
+  "Column2": "Ghani Rasyid Nugroho",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 458,
+  "Column2": "Guanindrast Arkaditya Kilimpares",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 459,
+  "Column2": "Innez Melisa Fika",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 460,
+  "Column2": "Kinanti Ramania",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 461,
+  "Column2": "Lovessa Azzahra Artamevia",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 462,
+  "Column2": "Magdalena Silvia Yuniarsih",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 463,
+  "Column2": "Maylita Zakkiana Firdaus",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 464,
+  "Column2": "Meszya Sefta Amanda",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 465,
+  "Column2": "Nayla Dwi Septiana",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 466,
+  "Column2": "Nica Adi Letisia Hermawati",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 467,
+  "Column2": "Okta Yusuf Al Amin",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 468,
+  "Column2": "Rafi Danu Ardiansyah",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 469,
+  "Column2": "Ramanda Tri Agustina",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 470,
+  "Column2": "Rifky Firmansyah",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 471,
+  "Column2": "Shafa Widya Mukti",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 472,
+  "Column2": "Sisi Amelia",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 473,
+  "Column2": "Wahyu Eka Purwanti",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 474,
+  "Column2": "Yeremia Tristan Desta",
+  "Column10": "12B",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 475,
+  "Column2": "Ahmad Slamet Fauzan",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 476,
+  "Column2": "Anggi Fitriana",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 477,
+  "Column2": "Anisa Dwi Nuraini",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 478,
+  "Column2": "Aolia Syifa Pratista",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 479,
+  "Column2": "Aridha Intan Puspita Ningrum",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 480,
+  "Column2": "Atiqah Alfi Pratiwi",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 481,
+  "Column2": "Aufa Nabil Juniawan",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 482,
+  "Column2": "Aura Nur Fadillah Rahmawati",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 483,
+  "Column2": "Devira Okta Priyani",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 484,
+  "Column2": "Elsa Auliya Pratiwi",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 485,
+  "Column2": "Fattah 'Abdul Halim",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 486,
+  "Column2": "Fiska Eka Prasetianingrum",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 487,
+  "Column2": "Galih Satria Pamuji",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 488,
+  "Column2": "Hanifah Azzahra",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 489,
+  "Column2": "Irmandi Ramadhan",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 490,
+  "Column2": "Isyraaq Cinta A",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 491,
+  "Column2": "Kalimatul Hikmah",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 492,
+  "Column2": "Nabila Nur Aini",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 493,
+  "Column2": "Nicola Kusuma Negara",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 494,
+  "Column2": "Noka Galang Candra Winata",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 495,
+  "Column2": "Nugraha Dwi Januarsyah",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 496,
+  "Column2": "Nurul Fadilah",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 497,
+  "Column2": "Odik Arwanda",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 498,
+  "Column2": "Okta Risanti",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 499,
+  "Column2": "Padmadewi Widyaningrum",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 500,
+  "Column2": "Rafiq Febrian Nugroho",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 501,
+  "Column2": "Rizky Kurniawan",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 502,
+  "Column2": "Sarwo Agung Pratama",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 503,
+  "Column2": "Selfa Elmalia Putri",
+  "Column10": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 504,
+  "Column2": "Shafa Dwi Antari",
+  "Column8": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 505,
+  "Column2": "Steven Mourisco Pratama",
+  "Column8": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 506,
+  "Column2": "Vera Aulia Srigita",
+  "Column8": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 507,
+  "Column2": "Zahra Rahmadani",
+  "Column8": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 508,
+  "Column2": "Zaki Bilal Ikhsani",
+  "Column8": "12C",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 509,
+  "Column2": "Afif Mubayin",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 510,
+  "Column2": "Aidah Nur Afifah",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 511,
+  "Column2": "Aldionova Prasetyo",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 512,
+  "Column2": "Alfan Al Aziz Y",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 513,
+  "Column2": "Allief Nur Bait",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 514,
+  "Column2": "Amara Khaulani Azizah",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 515,
+  "Column2": "Anggita Dwi Lestari",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 516,
+  "Column2": "Atika Nur Dianti",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 517,
+  "Column2": "Aulia Salsabilla",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 518,
+  "Column2": "Chorul Anam",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 519,
+  "Column2": "Clarista Putri Utami",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 520,
+  "Column2": "Eksa Nurul Suciani",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 521,
+  "Column2": "Elva Egalita Meylani",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 522,
+  "Column2": "Erin Susanti",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 523,
+  "Column2": "Fabiyan Dwi Farizky",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 524,
+  "Column2": "Faizah Nur Maharani",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 525,
+  "Column2": "Hani Lutfiana",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 526,
+  "Column2": "Ifa Holifah",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 527,
+  "Column2": "Irma Maulidah Putri",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 528,
+  "Column2": "Irsyadz Farhan Syahfandi",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 529,
+  "Column2": "Juwita Dwi Cahyati",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 530,
+  "Column2": "Kinan Elsa Luviana",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 531,
+  "Column2": "Mohammad Roihan Nur Yazid",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 532,
+  "Column2": "Nesya Nur Fitriani",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 533,
+  "Column2": "Nissa Sabilah Safi",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 534,
+  "Column2": "Prisyah Rahma Gustin",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 535,
+  "Column2": "Putri Lestari",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 536,
+  "Column2": "Rizqi",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 537,
+  "Column2": "Rohman Syarifudin",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 538,
+  "Column2": "Sabiq Al Basith Adiyatma",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 539,
+  "Column2": "Sakti Yulia Putra",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 540,
+  "Column2": "Sri Nurhana",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 541,
+  "Column2": "Titi Nur Hidayah",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 542,
+  "Column2": "Yoga Saputra",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 543,
+  "Column2": "Zenitha Zain",
+  "Column8": "12D",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 544,
+  "Column2": "Anastasyia Dwi Kinanti",
+  "Column8": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 545,
+  "Column2": "Angga Mahesa",
+  "Column8": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 546,
+  "Column2": "Anggun Tri Lestari",
+  "Column8": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 547,
+  "Column2": "Annisa Dwi Lestari",
+  "Column8": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 548,
+  "Column2": "Ardan Shatya Ferdinan",
+  "Column8": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 549,
+  "Column2": "Aris Nur Rohman",
+  "Column8": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 550,
+  "Column2": "Avril Nur Khasanah",
+  "Column8": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 551,
+  "Column2": "Ayu Rahmawati",
+  "Column8": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 552,
+  "Column2": "Calvina Boy Antar Asmara",
+  "Column8": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 553,
+  "Column2": "Clara Agustina Ervanya",
+  "Column8": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 554,
+  "Column2": "Dimas Bili Arafi",
+  "Column8": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 555,
+  "Column2": "Dimas Iqbal Mumpuni",
+  "Column8": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 556,
+  "Column2": "Fadilah Nur Khalifah",
+  "Column8": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 557,
+  "Column2": "Fauzan Raihan Abdillah",
+  "Column8": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 558,
+  "Column2": "Ferenika Ambar S",
+  "Column8": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 559,
+  "Column2": "Friliana Putri",
+  "Column8": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 560,
+  "Column2": "Holivia Mita Sari",
+  "Column11": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 561,
+  "Column2": "Ibnu Mukti",
+  "Column11": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 562,
+  "Column2": "Kariszal Andriyan",
+  "Column11": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 563,
+  "Column2": "Larasati",
+  "Column11": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 564,
+  "Column2": "Mohamad Azis Nur Abukhori Marvel",
+  "Column11": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 565,
+  "Column2": "Nanda Hnaung Saputra",
+  "Column11": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 566,
+  "Column2": "Nur Fadilah",
+  "Column11": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 567,
+  "Column2": "Rafi Maulana Ibrohim",
+  "Column11": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 568,
+  "Column2": "Rasya Amanda Shafitri",
+  "Column11": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 569,
+  "Column2": "Revina Nova Tiara Putri",
+  "Column11": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 570,
+  "Column2": "Sarif Hidayattuloh",
+  "Column11": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 571,
+  "Column2": "Saskiya Okviyandi",
+  "Column11": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 572,
+  "Column2": "Sesilia Ayu Agustina",
+  "Column11": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 573,
+  "Column2": "Sinta Afrilia",
+  "Column11": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 574,
+  "Column2": "Ulfatu Sa`diyah",
+  "Column11": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 575,
+  "Column2": "Yuliana Tri Widiastuti",
+  "Column11": "12E",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 576,
+  "Column2": "Anggi Tri Astuti",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 577,
+  "Column2": "Ani Ariyati",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 578,
+  "Column2": "Arif Adi Setiawan",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 579,
+  "Column2": "Aryadillah Putra Pratama",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 580,
+  "Column2": "Bayu Cahyo Mukti",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 581,
+  "Column2": "Deanira Al Humaira",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 582,
+  "Column2": "Dhimas Renu",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 583,
+  "Column2": "Dian Prassetyo",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 584,
+  "Column2": "Edi Prasetyo",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 585,
+  "Column2": "Fanny Abdul Makmur",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 586,
+  "Column2": "Hafif Okta Wijaya",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 587,
+  "Column2": "Hepy Widiarno",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 588,
+  "Column2": "Intan Dwi Pratiwi",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 589,
+  "Column2": "Irma Latifah",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 590,
+  "Column2": "Izzah Aulia Fadhillah",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 591,
+  "Column2": "Januar Fendi Setiawan",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 592,
+  "Column2": "Mirna Kurniasih",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 593,
+  "Column2": "Nanda Cahya Ningsih",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 594,
+  "Column2": "Neli Dwi Anggraeni",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 595,
+  "Column2": "Nofiana Saputri",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 596,
+  "Column2": "Ramandani Eka Saputra",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 597,
+  "Column2": "Rifki Nur Pradita",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 598,
+  "Column2": "Rilda Feby Lestari",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 599,
+  "Column2": "Rizqi Nur Arya Pradana",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 600,
+  "Column2": "Rohim Nur Asidik",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 601,
+  "Column2": "Rosvita Fajri Nur Adhani",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 602,
+  "Column2": "Sheyla Arnelita Putri",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 603,
+  "Column2": "Sifa Auziara Tazaka",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 604,
+  "Column2": "Solehati Nur Azizah",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 605,
+  "Column2": "Sri Retno Manisah",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 606,
+  "Column2": "Syafira Najwa Soraya",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 607,
+  "Column2": "Talita Dzakia Nida",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 608,
+  "Column2": "Tri Puji Cahyani",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 609,
+  "Column2": "Venka Nilamboyan",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 610,
+  "Column2": "Wahyu Fajar R.",
+  "Column11": "12F",
+  "Column14": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "NIS"
+ },
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "2512\n2513\n2515\n2521\n2524\n2546\n2551\n2552\n2553\n2565\n2573\n2589\n2596\n2598\n2603\n2604\n2618\n2623\n2628\n2636\n2641\n2649\n2660\n2661\n2662\n2664\n2666\n2672\n2693\n2716\n2724\n2516\n2523"
+ },
+ null,
+ null,
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "2526\n2527\n2555\n2558\n2559\n2563\n2567\n2572\n2579\n2591\n2593\n2605\n2620\n2624\n2626\n2629\n2630\n2644\n2647\n2659\n2669\n2673\n2679\n2696\n2701\n2714\n2717\n2942\n2529\n2535\n2537\n2539\n2544\n2545\n2548\n2566\n2576\n2584\n2587\n2590\n2597\n2610\n2612\n2616\n2640\n2648\n2652\n2654\n2656\n2657\n2658\n2663\n2671\n2681\n2690\n2692"
+ },
+ null,
+ null,
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "2695\n2705\n2713\n2720\n2722\n2514\n2517\n2519\n2520\n2522\n2525\n2532\n2543\n2547\n2560\n2562\n2575\n2577\n2578\n2580\n2582\n2595\n2602\n2609\n2611\n2615\n2619\n2635\n2646\n2650\n2665\n2667\n2682\n2685\n2687\n2688\n2703\n2709\n2718\n2723\n2940\n2528\n2533\n2536\n2538\n2541\n2549\n2550\n2556\n2561\n2570\n2571\n2581\n2585\n2586\n2588"
+ },
+ null,
+ null,
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "2600\n2601\n2617\n2622\n2634\n2643\n2655\n2670\n2675\n2676\n2689\n2691\n2694\n2700\n2711\n2719\n2530\n2534\n2540\n2542\n2554\n2564\n2568\n2569\n2574\n2583\n2594\n2599\n2606\n2608\n2613\n2614\n2633\n2642\n2645\n2651\n2674\n2678\n2680\n2683\n2684\n2686\n2698\n2699\n2702\n2704\n2707\n2708\n2710\n2712\n2715"
+ },
+ null,
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "No                                   Nama Lengkap                                       Kelas",
+  "Column13": "Angkatan"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "1       Abdi Pamungkas",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "2       Abidah Nur Khamidah",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "3       Afi Nur Hanifah",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "4       Alfian Muhammad Fadhil",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "5       Amirul Fabian",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "6       Aprilia Nur Anisah",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "7       Auliya Rizatun Khusna",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "8       Brilian Wahyu Anggoro",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "9       Diana Wardoyo",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "10      Dwi Ayu Khairunnisa Alqodri",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "11      Fahmi Andriansyah Putra",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "12      Faqih Al Irkham",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "13      Feliciana Saputri",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "14      Felisa",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "15      Fino Fernando",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "16      Isnaeni Lutfiani",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "17      Isni Nur Fauziatus Zahro",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "18      Jami Raditia",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "19      Lakeisya Maritza Ayunda",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "20      Mey Lani Putri",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "21      Mutiara Ramadhani",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "22      Nadiah Gandes",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "23      Nindi Nur Khafidhoh",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "24      Novella Dyma Evelyn",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "25      Puput Ameliana Putri",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "26      Rauf Kinan Fadhali",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "27      Rehan Mufazzal Prastiyansyah",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "28      Rizal Dwi Maretno",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "29      Rony Nur Pratama",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "30      Shofi Umniya",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "31      Syafa Allya Agustin",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "32      Tony Mahendra",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "33      Uthffi Whisnu Sefryanch",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "34      WijayaAl Fatah Fauzy Luthfi",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "35      Yusuf Budianto",
+  "Column8": "10A",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "NIS"
+ },
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "No                                   Nama Lengkap                                       Kelas",
+  "Column13": "Angkatan"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "1       Achmad Nur Aziz",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "2       Aghnia Shofwa Maulida",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "3       Ailsa Dita Novadha",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "4       Allesia Regina Putri",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "5       Amelia Evita Sari",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "6       Andrea Alisya Kayzawa",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "7       Balqis Cintani",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "8       Barokati Risyda Rufiat",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "9       Daffa Adil Saputro",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "10      Dika Febrian Pratama",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "11      Dwi Purnomo",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "12      Fahri Sofiyulhaq",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "13      Faris Putra Ardana",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "14      Feros Aditya Askhab",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "15      Fita Dwi Ariyani",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "16      Hana Maryam Zulfa",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "17      Isnaeni Nur Estyana",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "18      Janitro Haidarrell",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "19      Jovita Rahma",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "20      Mareta Rahma Lukitaputri",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "21      Marvelyan Ringgo Ghanesy",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "22      Muhamad Labibul Fikri",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "23      Mulyawan Raisa Nadia Putri",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "24      Nadhif Ramaniya Arib",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "25      Nadine Olinda Putri",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "26      Nur Aswaja",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "27      Otylia Valeria Akleema",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "28      Refiana Afif Fadhilah",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "29      Riky Yusuf Pradika",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "30      Royan Saputra",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "31      Safira Dwi Oktavia",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "32      Shofia Rahma Hafisha",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "33      Tasa Anggun Nuraeni",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "34      Tri Anita Nurrohmah",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "35      Vinez Alfiana Putri",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "36      Yusuf Syarifuddin",
+  "Column6": "10B",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "NIS"
+ },
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "No                                   Nama Lengkap                                       Kelas",
+  "Column13": "Angkatan"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "1       Adella Putriana Rizka",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "2       Aisyah Septiyana",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "3       Ajrina Salsabila Alma",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "4       Aneesa Nur Dzakiyah",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "5       Angel Ambarwati",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "6       Chika Dwi Juniana",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "7       Davin Prayunda",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "8       Dhiya Liyana Fauziah",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "9       Dita Asmarani",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "10      Eko Wahyu Pratama",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "11      Faisal Hasbi",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "12      Farrel Syarafa Azhar",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "13      Fina Anggreani",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "14      Gangsar Aziz Purwanto",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "15      Hiroshi Bena Satria Perkasa",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "16      Kaila Apriliani",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "17      Kamilah Nur Faatin",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "18      Khoerul Shidqi",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "19      Kholistiani Andini Risma Melati",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "20      Mentari Cipta Ceria",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "21      Mirza Ziaul-Haq",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "22      Muhammad Eka Prasetia",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "23      Nafisa Mufida Rakhman",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "24      Nahdah Shabuuhah",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "25      Nur Faizah",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "26      Prila Alif Rosidah",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "27      Raziq Yun Wistara Widyanto",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "28      Risky Dwi Anissa Putri",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "29      Risti Hanifah Oktafiana",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "30      Sabrina Witjayanti",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "31      Safitri",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "32      Siti Rayhana Humaira",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "33      Tegar Zona Praditya",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "34      Tri Nia Ningsih",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "35      Yeni Atna Saputri",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "36      Zafira Uli Asifah",
+  "Column8": "10C",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "NIS"
+ },
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "No                                   Nama Lengkap                                       Kelas",
+  "Column13": "Angkatan"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "1       Aisyah Nuraini",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "2       Akhmad Firmansah",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "3       Alfian Dwi Nugroho",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "4       Anggit Nur Rohman",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "5       Aris Muhyanto",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "6       Assirly Ayudia Ramadhani",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "7       Davit Nurul Anwar",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "8       Denis Silvi Alfiqoh",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "9       Dinaya Hening Arijati",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "10      Dwi Juliantoro",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "11      Elvina Mya Zahida",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "12      Fajar Ramadan",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "13      Fathin Faishal Majid",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "14      Ghifari Cinta Saputri Nadia",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "15      Habli Ali Nurohman",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "16      Hafid Aufal Marom",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "17      Humaimah Yumna Abiyyah",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "18      Kamila Zahra Salsabillah",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "19      Keisya Nurul Faizza",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "20      Levina Andera Azaria",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "21      Mohamad Al Fajri",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "22      Mohamad Sabriansyah Al",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "23      Naifah Janeeta Khansa",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "24      Najwaa Putri Widianto",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "25      Nuri Aulia Rachman",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "26      Raihan Septian Zuhdi",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "27      Rezki Ramadhani",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "28      Rizki Hendra Setiawan",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "29      Safina Nur Fadilah",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "30      Salsa Juni Adellia",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "31      Syifa Hafizah",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "32      Syurika Noviana Anggraini",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "33      Titan Angga Dwi Ramadhan",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "34      Vania Sari Rahmawati",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "35      Yuana Pratidina Bhakti Yojana",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "36      Yunita Tri Nugroho",
+  "Column8": "10D",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "NIS"
+ },
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "No",
+  "Column2": "Nama Lengkap",
+  "Column11": "Kelas",
+  "Column13": "Angkatan"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 1,
+  "Column2": "Al Habsy Rizal Maulana",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 2,
+  "Column2": "Alaric Stevan Ardelio",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 3,
+  "Column2": "Allesa Uswatun Faidah",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 4,
+  "Column2": "Anggita Melati",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 5,
+  "Column2": "Asyifa Nabilah Ramadhani",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 6,
+  "Column2": "Aulia Zahra",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 7,
+  "Column2": "Desi Zahrotunnisa",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 8,
+  "Column2": "Dimas Alif Wijaya",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 9,
+  "Column2": "Dzanisa Fahma Maulidia Putri",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 10,
+  "Column2": "Erwin Nur Rohman",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 11,
+  "Column2": "Esti Kurniawati",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 12,
+  "Column2": "Fatihah Zahra Nur Alimah",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 13,
+  "Column2": "Faza Ghassani Zharfan",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 14,
+  "Column2": "Hafidzah Alimah Ghossany",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 15,
+  "Column2": "Heru Setiawan",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 16,
+  "Column2": "Ika Purwanti",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 17,
+  "Column2": "Keyla Aswa Nasyfa",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 18,
+  "Column2": "Khansa Apriliyansyah",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 19,
+  "Column2": "Lukman Nur Mardiansyah",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 20,
+  "Column2": "Muhamad Khoerul Anwar",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 21,
+  "Column2": "Nabilah Azzahra",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 22,
+  "Column2": "Nanda Lutfi Oktrivia",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 23,
+  "Column2": "Naufal Hilmi Dzaky",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 24,
+  "Column2": "Pandu Dewanata",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 25,
+  "Column2": "Rafli Tri Pangestu",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 26,
+  "Column2": "Raissyanaya Haura Atsiila",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 27,
+  "Column2": "Rezky Ramadani",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 28,
+  "Column2": "Rohim Tyas Maulana",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 29,
+  "Column2": "Safira Nur Faizah",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 30,
+  "Column2": "Satrio Adi Pamungkas",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 31,
+  "Column2": "Tegar Dwi Pranowo",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 32,
+  "Column2": "Thoriq Ozzil Nur Ali",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 33,
+  "Column2": "Vian Erfiza Pratama",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 34,
+  "Column2": "Vita Setianingrum",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 35,
+  "Column2": "Zaki Tri Setiawan",
+  "Column11": "10E",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "NIS"
+ },
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "No                                   Nama Lengkap                                       Kelas",
+  "Column13": "Angkatan"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "1       Alfatiah",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "2       Almira Kinanti Wuryandani",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "3       Ameysa Nur Aida",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "4       Anjani Nur Rahayu",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "5       Asyifa Putri Ramadhani",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "6       Bafely Muizz Nurenda",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "7       Desti Fania Wulandari",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "8       Dina Istikomatun Nisa",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "9       Elvin Aditya Pratama Atho`Illah",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "10      Falista Kirsyah Mukti",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "11      Fany Latifah",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "12      Febi Yulin Saputri",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "13      Febli Supriatin",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "14      Hening Mauliana Arrayyani",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "15      Ira Budiana",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "16      Isnaena Lutfiana",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "17      Khusna Permata Zahrotul",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "18      Kiromi Lulu Latifah",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "19      Maulana Adi Pangestu",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "20      Muhammad Panji Pradana",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "21      Nadia Ulul Alifah",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "22      Nasywa Okta Fiyana",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "23      Naura Alkamila Az Zahra",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "24      Prita Maolani Pratama",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "25      Rama Mahendra Kurniawan",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "26      Rangga Wijaya Dharu",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "27      Rifki Ardiansyah Putra",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "28      Rohman Tyas Maulana",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "29      Salsa Solikhatun",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "30      Shahnan Azkarasya Putra",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "31      Tofik Nurrohman",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "32      Tsany Nafeeza",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "33      Wahyu Subuh Febriani",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "34      Wisnu Al Gani",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "35      Zakiah Ainun Nisa",
+  "Column8": "10F",
+  "Column13": 10
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "NIS"
+ },
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "No                                   Nama Lengkap                                       Kelas",
+  "Column13": "Angkatan"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "1       Afifatul Luthfiana",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "2       Alvianti Nurfitriana",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "3       Arvines Abi Setya",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "4       Asyam Atha Farras",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "5       Aziz Faqi Wardana",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "6       Cikita Ismayanti",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "7       Deca Monica Afrilia",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "8       Dimas Rifky Aditiya Yuda",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "9       Faridathun Nurul Khasanah",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "10      Fidela Tsaqif",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "11      Galih Saputra",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "12      Ida Nurjanah",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "13      Irdina Auliana",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "14      Isnia Putri Indahwati",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "15      Keyza Sesi Brilliana",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "16      Laisa Dwi Anindita",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "17      Lituhayu Putri Rahmanti",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "18      Mamiek Ainiyyah Nur Janah",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "19      Muhammad Fahmi Adhana Ilham",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "20      Nabila Dwi Kartika",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "21      Nafizha Elya Putri Fadlullah",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "22      Najma Saniyah",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "23      Norriska Damaris",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "24      Novanda Rizq Taufiqah",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "25      Raya Tri Rahmadani",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "26      Rhein Syafa`at Julica",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "27      Rohana Aprilliani",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "28      Rois Akhul Muammar",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "29      Satriaji Pratama",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "30      Surya Andes Subekti",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "31      Vetha Hidhea",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "32      Zefa Alan Pradika",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "33      Zivana Intan Okhtara",
+  "Column10": "11A",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "NIS"
+ },
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "No",
+  "Column2": "Nama Lengkap",
+  "Column11": "Kelas",
+  "Column13": "Angkatan"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 1,
+  "Column2": "Aisyah Destiani Nur Risqiah",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 2,
+  "Column2": "Alifiah Nur Fadilah",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 3,
+  "Column2": "Anggraeni Putri Nuralisa",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 4,
+  "Column2": "Camilia Jasmine Qotrunnada",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 5,
+  "Column2": "Dafid Sabria Ghofur",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 6,
+  "Column2": "Elsa Rahmadani",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 7,
+  "Column2": "Falih Rizky Robbani",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 8,
+  "Column2": "Faradita Nasa",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 9,
+  "Column2": "Farhan Nuha Alfianto",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 10,
+  "Column2": "Fauzi Nur Amirudin",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 11,
+  "Column2": "Faza Zakiya Az Zahra",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 12,
+  "Column2": "Galang Aji Panuntun",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 13,
+  "Column2": "Habib Fitroazis",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 14,
+  "Column2": "Hasna Ridha`ul Jannah",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 15,
+  "Column2": "Mahesa Fian Saputra",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 16,
+  "Column2": "Mayza Aurelia Nadine",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 17,
+  "Column2": "Melia Dwi Faradisa",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 18,
+  "Column2": "Mutiara",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 19,
+  "Column2": "Mutiara Nur Sabila",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 20,
+  "Column2": "Nabila Zulaikha Fauzi",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 21,
+  "Column2": "Nalandris Nabilla",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 22,
+  "Column2": "Naura Zalfa Rahadatul Aisyah",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 23,
+  "Column2": "Risa Indriani",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 24,
+  "Column2": "Ru`ya Fitrotunnisa",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 25,
+  "Column2": "Salsabila Putri Ramadhani",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 26,
+  "Column2": "Shafa Aora",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 27,
+  "Column2": "Syaifiana Nur Izzati",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 28,
+  "Column2": "Tara Safira Putri",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 29,
+  "Column2": "Wichdah Nurochmah",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 30,
+  "Column2": "Yanuar Rizky Saputra",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 31,
+  "Column2": "Yendi Biananda Putra",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 32,
+  "Column2": "Zaidan Labib Ilham Maulana",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 33,
+  "Column2": "Zhiqko Ananda Putra",
+  "Column11": "11B",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "NIS"
+ },
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "No                                   Nama Lengkap                                       Kelas",
+  "Column13": "Angkatan"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "1       Abdal Zaqi Abdillah",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "2       Ai Ichi Asma Taqiyyah",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "3       Amanda Yasmin As Zahra",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "4       Anisa Apriliani",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "5       Anisa Wiji Hayati Febriani",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "6       Aya Atiyyatul Shahilda",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "7       Azman Fatihul Amin",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "8       Cikalita Lestari",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "9       Della Yosiananda",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "10      Faishal Irfan Nurwahid",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "11      Fathia Rahma Aysha",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "12      Ginantya Luwih Sukowati",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "13      Herti Wardaningsih",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "14      Indira Rahayu Wulandari",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "15      Karunia Melya Putri",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "16      Keysya Rifatuz Zahro",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "17      Khanza Leonita Anggraeni",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "18      Kurniawan Fendy Prasetyo",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "19      Laras Fatimah",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "20      Laras Mulia Ningrum",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "21      Leni Prihatini",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "22      Nathan Evan Prawara",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "23      Nayla Asyifa",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "24      Nazwa Hilda Amalia",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "25      Raevano Radisha Atha Diandra",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "26      Refaiza Asyifa Oktaviani",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "27      Resty Qanitah",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "28      Revira Ayu Kristanti",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "29      Saiyi Datina Fatinjiyah",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "30      Syintia Nur Faizah",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "31      Taufik Armanto",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "32      Trey Maulida Khasanah",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "33      Yngwie Satriani Saptono",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "34      Yusuf Hasan Tabani",
+  "Column8": "11C",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "NIS"
+ },
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "No                                   Nama Lengkap                                       Kelas",
+  "Column13": "Angkatan"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "1       Adellya Larassati",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "2       Amelia Nurma Gupita",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "3       Ardian Nur Hidayat",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "4       Ardiansyah Basthotan",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "5       Asep Syaeful Husna",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "6       Baihaqi Rahman As Sidiq",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "7       Dede Sulasno",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "8       Desta Aji Pamungkas",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "9       Dzaky Fayis Putra Sunandar",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "10      Essa Nurfahry",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "11      Fajrin Samsiyatul Barokah",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "12      Fangky Rahmawati",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "13      Febrian Tri Prastiyo",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "14      Galih Arjunika",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "15      Hana Zahriatu Rifa",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "16      Ikhwan Ma`ruf",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "17      Intan Nur Hani",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "18      Jovan Ardiansyah",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "19      Lutfia Febby Awalina",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "20      Melda Rahmadhani Islami",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "21      Mifta Hudin",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "22      Muhamad Fardan Assidiq",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "23      Mutia Nur Karina Putri",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "24      Nurlia Estiningsih",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "25      Paskalis Pratama Putra",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "26      Qorry Suci Amalina",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "27      Rafi Putra Aditya",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "28      Rafi Yogis Alviano",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "29      Randi Setiawan",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "30      Rezky Alfahrisi",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "31      Salsa Nur Oktavia",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "32      Satrio Dwi Dharmawan",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "33      Syifa Aprilianti",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "34      Tegar Dwi Saputra",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "35      Vano Alfian",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "36      Yuliana Safitri",
+  "Column6": "11D",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "NIS"
+ },
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "No",
+  "Column2": "Nama Lengkap",
+  "Column11": "Kelas",
+  "Column13": "Angkatan"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 1,
+  "Column2": "Ahmad Fadilah",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 2,
+  "Column2": "Amelia",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 3,
+  "Column2": "Anju Sahila",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 4,
+  "Column2": "Arba Abdul Hamid",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 5,
+  "Column2": "Arum Pramelyta Ramadhani",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 6,
+  "Column2": "Astrit Prawita Sari",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 7,
+  "Column2": "Danish Aisy Hafiy Putra",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 8,
+  "Column2": "Devia Febianti",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 9,
+  "Column2": "Dita Rahmadani",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 10,
+  "Column2": "Evan Ananta Ramadhanu",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 11,
+  "Column2": "Farasy Fibra Nurjanah",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 12,
+  "Column2": "Fikri Aditya Putra",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 13,
+  "Column2": "Fino Rizki Saputra",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 14,
+  "Column2": "Fita Nur Alea Putri",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 15,
+  "Column2": "Fredellio Satya Nugroho",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 16,
+  "Column2": "Iqram Nur Ramadhan",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 17,
+  "Column2": "Keisya Naura Pasa",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 18,
+  "Column2": "Kholifia Nur Khikmah",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 19,
+  "Column2": "Maollana",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 20,
+  "Column2": "Nathazya Nurmaylani",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 21,
+  "Column2": "Nindias Dwi Wahyuni",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 22,
+  "Column2": "Nur Rahayu",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 23,
+  "Column2": "Ovi Rachmawati",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 24,
+  "Column2": "Ra'uf Restu Safa`at",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 25,
+  "Column2": "Ratna Dwi Erlita",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 26,
+  "Column2": "Ridwan Ikhwansyah",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 27,
+  "Column2": "Ririn Septiani",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 28,
+  "Column2": "Rizky Aditya Putra",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 29,
+  "Column2": "Tri Aeni",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 30,
+  "Column2": "Tri Wahyuni",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 31,
+  "Column2": "Tri Yani",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 32,
+  "Column2": "Valen Febri Diantik",
+  "Column11": "11E",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "NIS"
+ },
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "No",
+  "Column2": "Nama Lengkap",
+  "Column11": "Kelas",
+  "Column13": "Angkatan"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 1,
+  "Column2": "Alfaradis Widi Santoso",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 2,
+  "Column2": "Alifia Dian Puspita",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 3,
+  "Column2": "Alvin Aldiar Nurfahri",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 4,
+  "Column2": "Anggita Dewi Larasati",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 5,
+  "Column2": "Annisa Mutiara Dewi",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 6,
+  "Column2": "Brian Dzaky Muttaqin",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 7,
+  "Column2": "Dava Aditya Pratama",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 8,
+  "Column2": "Deni Setiawan",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 9,
+  "Column2": "Dwi Anteng Lestari",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 10,
+  "Column2": "Dwi Setiani Fadilah",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 11,
+  "Column2": "Fabiano Pradipta Putra",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 12,
+  "Column2": "Faizal Rizki Ramdhani",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 13,
+  "Column2": "Falih Dinar Alifah",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 14,
+  "Column2": "Feby Tri Kurniawan",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 15,
+  "Column2": "Firlian Surya Putri",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 16,
+  "Column2": "Ibanes Cinta Quinsa",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 17,
+  "Column2": "Kaila Nur Wahyuni",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 18,
+  "Column2": "Laeli Nur Hayati",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 19,
+  "Column2": "Lyviana Aprillianti",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 20,
+  "Column2": "Mayla Dyah Ayun Nur Latifah",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 21,
+  "Column2": "Oliviana Nur Fitriyani",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 22,
+  "Column2": "Prasvita Aprilian Maharani",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 23,
+  "Column2": "Purdiyanti Wahyu Utami",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 24,
+  "Column2": "Puspita Lestari Ningsih",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 25,
+  "Column2": "Puti Anandita",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 26,
+  "Column2": "Rafi Bahtiar",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 27,
+  "Column2": "Rizal Muhamad Fahri",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 28,
+  "Column2": "Rizky Wahyu Wibowo",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 29,
+  "Column2": "Salwa Salsabil Nafi`ah",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 30,
+  "Column2": "Siti Nurjanah",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 31,
+  "Column2": "Talita Zahraeni",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 32,
+  "Column2": "Windy Oktaviani",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 33,
+  "Column2": "Zaky Endra Pratama",
+  "Column11": "11F",
+  "Column13": 11
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "NIS"
+ },
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "No",
+  "Column2": "Nama Lengkap",
+  "Column11": "Kelas",
+  "Column13": "Angkatan"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 1,
+  "Column2": "Adristi Maysarah Okta Kurniawati",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 2,
+  "Column2": "Affan Maulana Akhmad",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 3,
+  "Column2": "Aflah Tria Syifa",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 4,
+  "Column2": "Alisa Safitri",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 5,
+  "Column2": "Alya Fedya Jelita",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 6,
+  "Column2": "Aulia Kharisma Dewi",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 7,
+  "Column2": "Az Zahra Raihan Nasuha",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 8,
+  "Column2": "Azifa Nur Andini",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 9,
+  "Column2": "Balqis Istiqomah",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 10,
+  "Column2": "Deswita Vevti Rizqianti",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 11,
+  "Column2": "Dyah Ayuningtyas",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 12,
+  "Column2": "Fuad Mu`afi",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 13,
+  "Column2": "Hanifa Hasna Syifa",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 14,
+  "Column2": "Hanisa Fitriyani",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 15,
+  "Column2": "Ika Nur Rahmawati",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 16,
+  "Column2": "Imelia Mustika Dewi",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 17,
+  "Column2": "Kevin Luthfi Maulana Putra",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 18,
+  "Column2": "Laysha Wahyu Pertiwi",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 19,
+  "Column2": "Maria Gipstin Dwi Meilani",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 20,
+  "Column2": "Muhamad Burhan Aziz",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 21,
+  "Column2": "Nadiya Nur Aeni",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 22,
+  "Column2": "Niki Nur Azzahwa",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 23,
+  "Column2": "Oktavia Saputri",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 24,
+  "Column2": "Okto Berliawan Wijaya",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 25,
+  "Column2": "Onata Ryan Sandita",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 26,
+  "Column2": "Pramudya Ristyan Wibowo",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 27,
+  "Column2": "Putri Kusumaning Tyas",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 28,
+  "Column2": "Rama Aditya Airlangga",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 29,
+  "Column2": "Sendhika Ayu Aulia",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 30,
+  "Column2": "Wahyu Tripurwaningsih",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 31,
+  "Column2": "Zulfaa Yumnaa Labibah",
+  "Column11": "12A",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "NIS"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "2512\n2513\n2515\n2521\n2524\n2546\n2551\n2552\n2553\n2565\n2573\n2589\n2596\n2598\n2603\n2604\n2618\n2623\n2628\n2636\n2641\n2649\n2660\n2661\n2662\n2664\n2666\n2672\n2693\n2716\n2724"
+ },
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "No                                   Nama Lengkap                                       Kelas",
+  "Column13": "Angkatan"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "1       Afra Maylani",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "2       Allya Rosita",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "3       Amin Nur Rouf",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "4       Amru Pramudhita Prasojo",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "5       Bintang Mas Pratama",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "6       Chairunisa Afifah",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "7       Cherlie Marchelino Lumbantoruan",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "8       Colin Brian Delaney",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "9       Dharma Alif Subiyarsono",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "10      Dina Amilia Safara",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "11      Evan Priyanto",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "12      Ghani Rasyid Nugroho",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "13      Guanindrast Arkaditya Kilimpares",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "14      Innez Melisa Fika",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "15      Kinanti Ramania",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "16      Lovessa Azzahra Artamevia",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "17      Magdalena Silvia Yuniarsih",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "18      Maylita Zakkiana Firdaus",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "19      Meszya Sefta Amanda",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "20      Nayla Dwi Septiana",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "21      Nica Adi Letisia Hermawati",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "22      Okta Yusuf Al Amin",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "23      Rafi Danu Ardiansyah",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "24      Ramanda Tri Agustina",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "25      Rifky Firmansyah",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "26      Shafa Widya Mukti",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "27      Sisi Amelia",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "28      Wahyu Eka Purwanti",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "29      Yeremia Tristan Desta",
+  "Column10": "12B",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "NIS"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "2516\n2523\n2526\n2527\n2555\n2558\n2559\n2563\n2567\n2572\n2579\n2591\n2593\n2605\n2620\n2624\n2626\n2629\n2630\n2644\n2647\n2659\n2669\n2673\n2679\n2696\n2701\n2714\n2717"
+ },
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "No",
+  "Column2": "Nama Lengkap",
+  "Column11": "Kelas",
+  "Column13": "Angkatan"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 1,
+  "Column2": "Ahmad Slamet Fauzan",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 2,
+  "Column2": "Anggi Fitriana",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 3,
+  "Column2": "Anisa Dwi Nuraini",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 4,
+  "Column2": "Aolia Syifa Pratista",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 5,
+  "Column2": "Aridha Intan Puspita Ningrum",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 6,
+  "Column2": "Atiqah Alfi Pratiwi",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 7,
+  "Column2": "Aufa Nabil Juniawan",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 8,
+  "Column2": "Aura Nur Fadillah Rahmawati",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 9,
+  "Column2": "Devira Okta Priyani",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 10,
+  "Column2": "Elsa Auliya Pratiwi",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 11,
+  "Column2": "Fattah 'Abdul Halim",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 12,
+  "Column2": "Fiska Eka Prasetianingrum",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 13,
+  "Column2": "Galih Satria Pamuji",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 14,
+  "Column2": "Hanifah Azzahra",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 15,
+  "Column2": "Irmandi Ramadhan",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 16,
+  "Column2": "Isyraaq Cinta A",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 17,
+  "Column2": "Kalimatul Hikmah",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 18,
+  "Column2": "Nabila Nur Aini",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 19,
+  "Column2": "Nicola Kusuma Negara",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 20,
+  "Column2": "Noka Galang Candra Winata",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 21,
+  "Column2": "Nugraha Dwi Januarsyah",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 22,
+  "Column2": "Nurul Fadilah",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 23,
+  "Column2": "Odik Arwanda",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 24,
+  "Column2": "Okta Risanti",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 25,
+  "Column2": "Padmadewi Widyaningrum",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 26,
+  "Column2": "Rafiq Febrian Nugroho",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 27,
+  "Column2": "Rizky Kurniawan",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 28,
+  "Column2": "Sarwo Agung Pratama",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 29,
+  "Column2": "Selfa Elmalia Putri",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 30,
+  "Column2": "Shafa Dwi Antari",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 31,
+  "Column2": "Steven Mourisco Pratama",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 32,
+  "Column2": "Vera Aulia Srigita",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 33,
+  "Column2": "Zahra Rahmadani",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 34,
+  "Column2": "Zaki Bilal Ikhsani",
+  "Column11": "12C",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "NIS"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "2942\n2529\n2535\n2537\n2539\n2544\n2545\n2548\n2566\n2576\n2584\n2587\n2590\n2597\n2610\n2612\n2616\n2640\n2648\n2652\n2654\n2656\n2657\n2658\n2663\n2671\n2681\n2690\n2692\n2695\n2705\n2713\n2720\n2722"
+ },
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "No",
+  "Column2": "Nama Lengkap",
+  "Column5": "Kelas",
+  "Column13": 2595
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 1,
+  "Column2": 2609,
+  "Column5": "Irsyadz Farhan Sya",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 12,
+  "Column2": "Aidah Nur Afifah",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 3,
+  "Column2": "Aldionova Prasetyo",
+  "Column5": 2619,
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 4,
+  "Column2": "12D",
+  "Column5": 26,
+  "Column13": 2667
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "12D",
+  "Column4": 12,
+  "Column5": "12D",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "12DAmara Khaulani Azizah",
+  "Column5": "Sabiq Al Basith Adi",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 2687,
+  "Column2": "Anggita Dwi Lestari",
+  "Column5": "12D",
+  "Column13": 2709
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "Yoga Sapu",
+  "Column2": "12D",
+  "Column5": 2718,
+  "Column13": 35
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 2723,
+  "Column2": "Aulia Salsabilla",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 10,
+  "Column2": "Chorul Anam",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 11,
+  "Column2": "Clarista Putri Utami",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 12,
+  "Column2": "Eksa Nurul Suciani",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 13,
+  "Column2": "Elva Egalita Meylani",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 14,
+  "Column2": "Erin Susanti",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 15,
+  "Column2": "Fabiyan Dwi Farizky",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 16,
+  "Column2": "Faizah Nur Maharani",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 17,
+  "Column2": "Hani Lutfiana",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 18,
+  "Column2": "Ifa Holifah",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 19,
+  "Column2": "Irma Maulidah Putri",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 20,
+  "Column2": "Irsyadz Farhan Syahfandi",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 21,
+  "Column2": "Juwita Dwi Cahyati",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 22,
+  "Column2": "Kinan Elsa Luviana",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 23,
+  "Column2": "Mohammad Roihan Nur Yazid",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 24,
+  "Column2": "Nesya Nur Fitriani",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 25,
+  "Column2": "Nissa Sabilah Safi",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 26,
+  "Column2": "Prisyah Rahma Gustin",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 27,
+  "Column2": "Putri Lestari",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 28,
+  "Column2": "Rizqi",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 29,
+  "Column2": "Rohman Syarifudin",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 30,
+  "Column2": "Sabiq Al Basith Adiyatma",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 31,
+  "Column2": "Sakti Yulia Putra",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 32,
+  "Column2": "Sri Nurhana",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 33,
+  "Column2": "Titi Nur Hidayah",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 34,
+  "Column2": "Yoga Saputra",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 35,
+  "Column2": "Zenitha Zain",
+  "Column5": "12D",
+  "Column15": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "NIS"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "2514\n2517\n2519\n2520\n2522\n2525\n2532\n2543\n2547\n2560\n2562\n2575\n2577\n2578\n2580\n2582\n2595\n2602\n2609\n2611\n2615\n2619\n2635\n2646\n2650\n2665\n2667\n2682\n2685\n2687\n2688\n2703\n2709\n2718\n2723"
+ },
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "No",
+  "Column2": "Nama Lengkap",
+  "Column11": "Kelas",
+  "Column13": "Angkatan"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 1,
+  "Column2": "Anastasyia Dwi Kinanti",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 2,
+  "Column2": "Angga Mahesa",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 3,
+  "Column2": "Anggun Tri Lestari",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 4,
+  "Column2": "Annisa Dwi Lestari",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 5,
+  "Column2": "Ardan Shatya Ferdinan",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 6,
+  "Column2": "Aris Nur Rohman",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 7,
+  "Column2": "Avril Nur Khasanah",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 8,
+  "Column2": "Ayu Rahmawati",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 9,
+  "Column2": "Calvina Boy Antar Asmara",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 10,
+  "Column2": "Clara Agustina Ervanya",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 11,
+  "Column2": "Dimas Bili Arafi",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 12,
+  "Column2": "Dimas Iqbal Mumpuni",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 13,
+  "Column2": "Fadilah Nur Khalifah",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 14,
+  "Column2": "Fauzan Raihan Abdillah",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 15,
+  "Column2": "Ferenika Ambar S",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 16,
+  "Column2": "Friliana Putri",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 17,
+  "Column2": "Holivia Mita Sari",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 18,
+  "Column2": "Ibnu Mukti",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 19,
+  "Column2": "Kariszal Andriyan",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 20,
+  "Column2": "Larasati",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 21,
+  "Column2": "Mohamad Azis Nur Abukhori Marvel",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 22,
+  "Column2": "Nanda Hnaung Saputra",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 23,
+  "Column2": "Nur Fadilah",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 24,
+  "Column2": "Rafi Maulana Ibrohim",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 25,
+  "Column2": "Rasya Amanda Shafitri",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 26,
+  "Column2": "Revina Nova Tiara Putri",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 27,
+  "Column2": "Sarif Hidayattuloh",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 28,
+  "Column2": "Saskiya Okviyandi",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 29,
+  "Column2": "Sesilia Ayu Agustina",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 30,
+  "Column2": "Sinta Afrilia",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 31,
+  "Column2": "Ulfatu Sa`diyah",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 32,
+  "Column2": "Yuliana Tri Widiastuti",
+  "Column11": "12E",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "NIS"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "2940\n2528\n2533\n2536\n2538\n2541\n2549\n2550\n2556\n2561\n2570\n2571\n2581\n2585\n2586\n2588\n2600\n2601\n2617\n2622\n2634\n2643\n2655\n2670\n2675\n2676\n2689\n2691\n2694\n2700\n2711\n2719"
+ },
+ null,
+ null,
+ null,
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "No",
+  "Column2": "Nama Lengkap",
+  "Column11": "Kelas",
+  "Column13": "Angkatan"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 1,
+  "Column2": "Anggi Tri Astuti",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 2,
+  "Column2": "Ani Ariyati",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 3,
+  "Column2": "Arif Adi Setiawan",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 4,
+  "Column2": "Aryadillah Putra Pratama",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 5,
+  "Column2": "Bayu Cahyo Mukti",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 6,
+  "Column2": "Deanira Al Humaira",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 7,
+  "Column2": "Dhimas Renu",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 8,
+  "Column2": "Dian Prassetyo",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 9,
+  "Column2": "Edi Prasetyo",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 10,
+  "Column2": "Fanny Abdul Makmur",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 11,
+  "Column2": "Hafif Okta Wijaya",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 12,
+  "Column2": "Hepy Widiarno",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 13,
+  "Column2": "Intan Dwi Pratiwi",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 14,
+  "Column2": "Irma Latifah",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 15,
+  "Column2": "Izzah Aulia Fadhillah",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 16,
+  "Column2": "Januar Fendi Setiawan",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 17,
+  "Column2": "Mirna Kurniasih",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 18,
+  "Column2": "Nanda Cahya Ningsih",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 19,
+  "Column2": "Neli Dwi Anggraeni",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 20,
+  "Column2": "Nofiana Saputri",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 21,
+  "Column2": "Ramandani Eka Saputra",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 22,
+  "Column2": "Rifki Nur Pradita",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 23,
+  "Column2": "Rilda Feby Lestari",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 24,
+  "Column2": "Rizqi Nur Arya Pradana",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 25,
+  "Column2": "Rohim Nur Asidik",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 26,
+  "Column2": "Rosvita Fajri Nur Adhani",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 27,
+  "Column2": "Sheyla Arnelita Putri",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 28,
+  "Column2": "Sifa Auziara Tazaka",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 29,
+  "Column2": "Solehati Nur Azizah",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 30,
+  "Column2": "Sri Retno Manisah",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 31,
+  "Column2": "Syafira Najwa Soraya",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 32,
+  "Column2": "Talita Dzakia Nida",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 33,
+  "Column2": "Tri Puji Cahyani",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 34,
+  "Column2": "Venka Nilamboyan",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": 35,
+  "Column2": "Wahyu Fajar R.",
+  "Column11": "12F",
+  "Column13": 12
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "NIS"
+ },
+ {
+  "REKAPITULASI DATA SISWA SMA NEGERI 1 KEMANGKON": "2530\n2534\n2540\n2542\n2554\n2564\n2568\n2569\n2574\n2583\n2594\n2599\n2606\n2608\n2613\n2614\n2633\n2642\n2645\n2651\n2674\n2678\n2680\n2683\n2684\n2686\n2698\n2699\n2702\n2704\n2707\n2708\n2710\n2712\n2715"
+ }

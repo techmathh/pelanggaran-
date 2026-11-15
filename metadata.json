@@ -1,0 +1,8 @@
+{
+  "name": "SiPiket OSIS",
+  "description": "Sistem pencatatan pelanggaran siswa harian untuk petugas piket OSIS dengan pembuatan spreadsheet otomatis per sesi, verifikasi jadwal piket, dan konsensus selesai multi-petugas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

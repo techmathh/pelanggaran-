@@ -1,0 +1,115 @@
+{
+  "entities": {
+    "ConnectionProbe": {
+      "title": "ConnectionProbe",
+      "description": "Lightweight probe document used to verify Firestore server connectivity.",
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "Connectivity status marker."
+        }
+      },
+      "required": ["status"]
+    },
+    "UserCloudProfile": {
+      "title": "UserCloudProfile",
+      "description": "Private authenticated cloud sync profile metadata for an authorized OSIS coordinator/developer.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Display name of the synced operator."
+        },
+        "appRole": {
+          "type": "string",
+          "enum": ["developer", "admin"],
+          "description": "Operator role in SiPiket OSIS."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of profile update."
+        }
+      },
+      "required": ["uid", "displayName", "appRole", "updatedAt"]
+    },
+    "CloudSnapshot": {
+      "title": "CloudSnapshot",
+      "description": "Encrypted/structured AKPS daily report and student summary snapshot synced by an authenticated owner.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "schoolName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "description": "School name metadata."
+        },
+        "spreadsheetCount": {
+          "type": "number",
+          "description": "Total spreadsheets included in snapshot."
+        },
+        "violationCount": {
+          "type": "number",
+          "description": "Total violations recorded in snapshot."
+        },
+        "summaryDigest": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000,
+          "description": "Compact readable snapshot summary."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Immutable creation server timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last sync server timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "schoolName",
+        "spreadsheetCount",
+        "violationCount",
+        "summaryDigest",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/test/{probeId}": {
+      "schema": { "$ref": "#/entities/ConnectionProbe" },
+      "description": "Connection health probe path."
+    },
+    "/cloud_profiles/{userId}": {
+      "schema": { "$ref": "#/entities/UserCloudProfile" },
+      "description": "Private cloud sync profile owned strictly by userId."
+    },
+    "/cloud_snapshots/{userId}/backups/{backupId}": {
+      "schema": { "$ref": "#/entities/CloudSnapshot" },
+      "description": "Per-owner cloud backup snapshots of AKPS records."
+    }
+  }
+}
