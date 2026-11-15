@@ -5,6 +5,7 @@ import { DatabaseSync } from 'node:sqlite';
 import {
   ALL_ROTATION_WEEKS,
   DEFAULT_DAILY_SESSION_CONFIG,
+  DEFAULT_WEEKLY_ROTATION_CONFIG,
   HARI_LIST,
   addViolationToSpreadsheet,
   assignWeeklyRotationDistribution,
@@ -366,19 +367,40 @@ function createSchemaAndSeed(db: DatabaseSync): void {
     );
   }
 
-  // Ensure default weekly rotation setting exists (2-week alternating cycle starting current week's Monday)
+  // Ensure default weekly rotation setting exists (4-week monthly cycle where Mon 2026-11-16 is Minggu 3)
   const weeklyRow = db
     .prepare('SELECT value_json FROM app_settings WHERE key = ?')
     .get('weekly_schedule') as { value_json: string } | undefined;
   if (!weeklyRow) {
-    const defaultWeekly: WeeklyRotationConfig = {
-      cycleWeeks: 2,
-      anchorMonday: getMondayDateKey(formatDateKey(new Date())),
-    };
     db.prepare('INSERT INTO app_settings (key, value_json) VALUES (?, ?)').run(
       'weekly_schedule',
-      JSON.stringify(defaultWeekly)
+      JSON.stringify(DEFAULT_WEEKLY_ROTATION_CONFIG)
     );
+    db.prepare('INSERT OR REPLACE INTO app_settings (key, value_json) VALUES (?, ?)').run(
+      'weekly_schedule_v2_migrated',
+      JSON.stringify(true)
+    );
+  } else {
+    const migratedRow = db
+      .prepare('SELECT value_json FROM app_settings WHERE key = ?')
+      .get('weekly_schedule_v2_migrated') as { value_json: string } | undefined;
+    if (!migratedRow) {
+      try {
+        const parsedWeekly = JSON.parse(weeklyRow.value_json) as Partial<WeeklyRotationConfig>;
+        if (parsedWeekly.cycleWeeks === 2 && parsedWeekly.anchorMonday === '2026-11-09') {
+          db.prepare('INSERT OR REPLACE INTO app_settings (key, value_json) VALUES (?, ?)').run(
+            'weekly_schedule',
+            JSON.stringify(DEFAULT_WEEKLY_ROTATION_CONFIG)
+          );
+        }
+      } catch {
+        // ignore parse errors
+      }
+      db.prepare('INSERT OR REPLACE INTO app_settings (key, value_json) VALUES (?, ?)').run(
+        'weekly_schedule_v2_migrated',
+        JSON.stringify(true)
+      );
+    }
   }
 
   // Ensure default automatic daily session schedule exists (06:30–08:30 Senin–Sabtu)
@@ -551,15 +573,12 @@ export function getWeeklyRotationConfig(): WeeklyRotationConfig {
     .prepare('SELECT value_json FROM app_settings WHERE key = ?')
     .get('weekly_schedule') as { value_json: string } | undefined;
   if (!row) {
-    return {
-      cycleWeeks: 2,
-      anchorMonday: getMondayDateKey(formatDateKey(new Date())),
-    };
+    return { ...DEFAULT_WEEKLY_ROTATION_CONFIG };
   }
   const parsed = JSON.parse(row.value_json) as Partial<WeeklyRotationConfig>;
   return {
     cycleWeeks: clampCycleWeeks(parsed.cycleWeeks),
-    anchorMonday: parsed.anchorMonday || getMondayDateKey(formatDateKey(new Date())),
+    anchorMonday: parsed.anchorMonday || DEFAULT_WEEKLY_ROTATION_CONFIG.anchorMonday,
   };
 }
 
@@ -1689,8 +1708,7 @@ export function resetAllDataExceptSelf(developerAccountId: string): {
     simulatedWeek: null,
   };
   const defaultRotation: WeeklyRotationConfig = {
-    cycleWeeks: 2,
-    anchorMonday: getMondayDateKey(formatDateKey(new Date())),
+    ...DEFAULT_WEEKLY_ROTATION_CONFIG,
   };
 
   db.exec('BEGIN');

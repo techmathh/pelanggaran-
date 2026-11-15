@@ -677,22 +677,45 @@ export function ScheduleSettingsView({
 
         {canManage && (
           <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-            <div className="w-full sm:w-72">
-              <label htmlFor="weekly-cycle-select" className="block text-xs font-medium text-slate-700">
-                Panjang Siklus Pergantian
-              </label>
-              <select
-                id="weekly-cycle-select"
-                disabled={saving}
-                value={cycleWeeks}
-                onChange={(e) => handleUpdateWeeklyCycle(Number(e.target.value))}
-                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-blue-600 focus:outline-none"
-              >
-                <option value={2}>2 Minggu (Bergantian Minggu 1 & 2)</option>
-                <option value={3}>3 Minggu (Minggu 1, 2, 3)</option>
-                <option value={4}>4 Minggu (Minggu 1, 2, 3, 4)</option>
-                <option value={1}>1 Minggu (Jadwal Tetap Tiap Minggu)</option>
-              </select>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="w-full sm:w-64">
+                <label htmlFor="weekly-cycle-select" className="block text-xs font-medium text-slate-700">
+                  Panjang Siklus Pergantian
+                </label>
+                <select
+                  id="weekly-cycle-select"
+                  disabled={saving}
+                  value={cycleWeeks}
+                  onChange={(e) => handleUpdateWeeklyCycle(Number(e.target.value))}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-blue-600 focus:outline-none"
+                >
+                  <option value={4}>4 Minggu (Minggu 1, 2, 3, 4)</option>
+                  <option value={3}>3 Minggu (Minggu 1, 2, 3)</option>
+                  <option value={2}>2 Minggu (Bergantian Minggu 1 & 2)</option>
+                  <option value={1}>1 Minggu (Jadwal Tetap Tiap Minggu)</option>
+                </select>
+              </div>
+
+              {cycleWeeks > 1 && (
+                <div className="w-full sm:w-52">
+                  <label htmlFor="weekly-active-select" className="block text-xs font-medium text-slate-700">
+                    Set Minggu Aktif ({weekInfo.weekRangeText})
+                  </label>
+                  <select
+                    id="weekly-active-select"
+                    disabled={saving}
+                    value={weekInfo.currentWeek}
+                    onChange={(e) => handleUpdateWeeklyCycle(cycleWeeks, Number(e.target.value))}
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-blue-800 focus:border-blue-600 focus:outline-none"
+                  >
+                    {Array.from({ length: cycleWeeks }, (_, i) => i + 1).map((w) => (
+                      <option key={w} value={w}>
+                        Minggu ke-{w}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             {cycleWeeks > 1 && (

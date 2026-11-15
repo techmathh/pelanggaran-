@@ -24,6 +24,11 @@ export const DEFAULT_DAILY_SESSION_CONFIG: DailySessionConfig = {
   endTime: '08:30',
 };
 
+export const DEFAULT_WEEKLY_ROTATION_CONFIG: WeeklyRotationConfig = {
+  cycleWeeks: 4,
+  anchorMonday: '2026-11-02',
+};
+
 export const ALL_ROTATION_WEEKS = [1, 2, 3, 4];
 
 export const HARI_LIST: HariPiket[] = [

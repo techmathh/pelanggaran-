@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   DEFAULT_DAILY_SESSION_CONFIG,
+  DEFAULT_WEEKLY_ROTATION_CONFIG,
   addViolationToSpreadsheet,
   assignWeeklyRotationDistribution,
   calculateDailyOfficerProductivity,
@@ -896,3 +897,22 @@ test('studentImportLogic parses Excel/CSV matrices with flexible headers, dedupl
   assert.equal(ticked?.serverTime, '07:16');
   assert.equal(ticked?.stateVersion, 'abc-1');
 });
+
+test('DEFAULT_WEEKLY_ROTATION_CONFIG places Sunday 2026-11-15 in Minggu 2 and Monday 2026-11-16 in Minggu 3', () => {
+  const sundayNov15 = getActiveRotationWeek('2026-11-15', DEFAULT_WEEKLY_ROTATION_CONFIG);
+  assert.equal(sundayNov15.cycleWeeks, 4);
+  assert.equal(sundayNov15.currentWeek, 2);
+  assert.equal(sundayNov15.nextWeek, 3);
+
+  const mondayNov16 = getActiveRotationWeek('2026-11-16', DEFAULT_WEEKLY_ROTATION_CONFIG);
+  assert.equal(mondayNov16.currentWeek, 3);
+  assert.equal(mondayNov16.nextWeek, 4);
+
+  const mondayNov23 = getActiveRotationWeek('2026-11-23', DEFAULT_WEEKLY_ROTATION_CONFIG);
+  assert.equal(mondayNov23.currentWeek, 4);
+  assert.equal(mondayNov23.nextWeek, 1);
+
+  const mondayNov30 = getActiveRotationWeek('2026-11-30', DEFAULT_WEEKLY_ROTATION_CONFIG);
+  assert.equal(mondayNov30.currentWeek, 1);
+});
+
