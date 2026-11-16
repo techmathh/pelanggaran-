@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -39,6 +39,11 @@ import {
   isManagerRole,
   searchSimilarStudents,
 } from '../shared/piketLogic';
+import {
+  buildBatchViolationInputs,
+  getQuickPickPresetsWithRecent,
+  type BatchRuleItem,
+} from '../shared/batchViolationLogic';
 import type {
   DailySpreadsheet,
   KategoriPelanggaran,
@@ -50,6 +55,7 @@ import type {
 import { downloadSpreadsheetCsv, downloadSpreadsheetXlsx } from '../utils/exportSpreadsheet';
 import { downloadVisualPdfReport } from '../utils/exportVisualPdf';
 import { AnimatedNumber } from './AnimatedNumber';
+import { BatchViolationForm } from './BatchViolationForm';
 import { CuteMascot3D, type MascotMood } from './CuteMascot3D';
 import { Tilt3DCard } from './Tilt3DCard';
 import { VisualReportModal } from './VisualReportModal';
@@ -153,6 +159,11 @@ export function SpreadsheetWorkspace({
   const [submitting, setSubmitting] = useState(false);
   const [mascotPulse, setMascotPulse] = useState(0);
   const [showVisualPreview, setShowVisualPreview] = useState(false);
+  const [entryMode, setEntryMode] = useState<'single' | 'batch'>('single');
+  const [lockViolationAfterSave, setLockViolationAfterSave] = useState(false);
+  const [recentPresetIds, setRecentPresetIds] = useState<string[]>([]);
+  const [extraRules, setExtraRules] = useState<BatchRuleItem[]>([]);
+  const studentInputRef = useRef<HTMLInputElement | null>(null);
   const [showGuide, setShowGuide] = useState(false);
   const [showManualDetails, setShowManualDetails] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -223,17 +234,73 @@ export function SpreadsheetWorkspace({
         ? 'recording'
         : 'idle';
 
-  const quickPickPresets = useMemo(() => {
-    const preferredCodes = ['A1', 'E1', 'E2', 'E5', 'E4'];
-    return preferredCodes
-      .map((code) => appState.presets.find((p) => p.code === code))
-      .filter((p): p is NonNullable<typeof p> => Boolean(p));
-  }, [appState.presets]);
+  const quickPickItems = useMemo(
+    () =>
+      getQuickPickPresetsWithRecent(
+        appState.presets,
+        todaySheet?.rows ?? [],
+        recentPresetIds,
+        6
+      ),
+    [appState.presets, todaySheet?.rows, recentPresetIds]
+  );
+
+  function recordPresetUsed(presetId: string) {
+    if (!presetId || presetId === 'custom') return;
+    setRecentPresetIds((prev) => [presetId, ...prev.filter((id) => id !== presetId)].slice(0, 6));
+  }
 
   const presetsForSelectedCategory = useMemo(() => {
     if (!selectedCategory || selectedCategory === 'CUSTOM') return [];
     return appState.presets.filter((p) => p.category === selectedCategory);
   }, [appState.presets, selectedCategory]);
+
+  const currentDraftRule: BatchRuleItem | null = useMemo(() => {
+    if (!selectedCategory) return null;
+    if (selectedCategory === 'CUSTOM') {
+      if (!violationLabel.trim()) return null;
+      return {
+        key: 'draft:custom',
+        violationCode: 'CUSTOM',
+        violationLabel: violationLabel.trim(),
+        category,
+        points: Math.max(1, Math.min(100, Math.round(Number(points || 5)))),
+        actionTaken: actionTaken.trim() || 'Teguran Lisan & Catat',
+      };
+    }
+    if (!selectedPresetId || !violationLabel.trim()) return null;
+    return {
+      key: `preset:${selectedPresetId}`,
+      presetId: selectedPresetId,
+      violationCode: violationCode || 'CUSTOM',
+      violationLabel: violationLabel.trim(),
+      category,
+      points: Math.max(1, Math.min(100, Math.round(Number(points || 5)))),
+      actionTaken: actionTaken.trim() || 'Teguran Lisan & Catat',
+    };
+  }, [
+    selectedCategory,
+    selectedPresetId,
+    violationCode,
+    violationLabel,
+    category,
+    points,
+    actionTaken,
+  ]);
+
+  const combinedSingleStudentRules: BatchRuleItem[] = useMemo(() => {
+    if (!currentDraftRule) return extraRules;
+    const isDuplicatePreset =
+      currentDraftRule.presetId &&
+      extraRules.some((r) => r.presetId === currentDraftRule.presetId);
+    if (isDuplicatePreset) return extraRules;
+    return [...extraRules, currentDraftRule];
+  }, [extraRules, currentDraftRule]);
+
+  const combinedSinglePointsTotal = useMemo(
+    () => combinedSingleStudentRules.reduce((sum, r) => sum + r.points, 0),
+    [combinedSingleStudentRules]
+  );
 
   function handleCategoryChange(nextVal: string) {
     if (!nextVal) {
@@ -290,6 +357,7 @@ export function SpreadsheetWorkspace({
     }
     const preset = appState.presets.find((p) => p.id === presetId);
     if (preset) {
+      recordPresetUsed(preset.id);
       setSelectedCategory(preset.category);
       setViolationCode(preset.code);
       setViolationLabel(preset.label);
@@ -299,38 +367,98 @@ export function SpreadsheetWorkspace({
     }
   }
 
+  function handleStackCurrentRule() {
+    if (!currentDraftRule) {
+      onNotify('Pilih aturan pelanggaran terlebih dahulu sebelum menambah aturan lain.', 'error');
+      return;
+    }
+    setExtraRules((prev) => {
+      if (currentDraftRule.presetId && prev.some((r) => r.presetId === currentDraftRule.presetId)) {
+        return prev;
+      }
+      const nextKey =
+        currentDraftRule.key === 'draft:custom'
+          ? `custom:${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+          : currentDraftRule.key;
+      return [...prev, { ...currentDraftRule, key: nextKey }];
+    });
+    setSelectedCategory('');
+    setSelectedPresetId('');
+    setViolationCode('');
+    setViolationLabel('');
+    setPoints(5);
+    setActionTaken('');
+    setShowManualDetails(false);
+  }
 
   async function handleAddViolation(e: FormEvent) {
     e.preventDefault();
     if (!canRecordNow) return;
-    if (!selectedCategory || (selectedCategory !== 'CUSTOM' && !selectedPresetId)) {
+
+    const rulesToSave = combinedSingleStudentRules;
+    if (rulesToSave.length === 0) {
       onNotify('Silakan pilih kategori dan aturan pelanggaran terlebih dahulu.', 'error');
       return;
     }
+
     setSubmitting(true);
     try {
-      const res = await apiFetch('/api/violations', {
-        method: 'POST',
-        body: JSON.stringify({
-          studentName,
-          studentNis,
-          kelas,
-          violationCode,
-          violationLabel,
-          category,
-          points,
-          actionTaken,
-          notes,
-          saveToStudentDirectory: isNewManualStudent && saveToStudentDirectory,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        onNotify(data.error || 'Gagal mencatat pelanggaran.', 'error');
-        return;
+      let data: any;
+      if (rulesToSave.length === 1) {
+        const single = rulesToSave[0];
+        const res = await apiFetch('/api/violations', {
+          method: 'POST',
+          body: JSON.stringify({
+            studentName,
+            studentNis,
+            kelas,
+            violationCode: single.violationCode,
+            violationLabel: single.violationLabel,
+            category: single.category,
+            points: single.points,
+            actionTaken: single.actionTaken,
+            notes,
+            saveToStudentDirectory: isNewManualStudent && saveToStudentDirectory,
+          }),
+        });
+        data = await res.json();
+        if (!res.ok) {
+          onNotify(data.error || 'Gagal mencatat pelanggaran.', 'error');
+          return;
+        }
+      } else {
+        const built = buildBatchViolationInputs(
+          [
+            {
+              key: selectedStudentId || `${studentName}-${kelas}`,
+              id: selectedStudentId ?? undefined,
+              name: studentName,
+              kelas,
+              nis: studentNis,
+              saveToStudentDirectory: isNewManualStudent && saveToStudentDirectory,
+            },
+          ],
+          rulesToSave,
+          notes
+        );
+        if (built.error) {
+          onNotify(built.error, 'error');
+          return;
+        }
+        const res = await apiFetch('/api/violations/bulk', {
+          method: 'POST',
+          body: JSON.stringify({ entries: built.entries }),
+        });
+        data = await res.json();
+        if (!res.ok) {
+          onNotify(data.error || 'Gagal mencatat multi-pelanggaran.', 'error');
+          return;
+        }
       }
+
       onStateUpdate(data.state);
-      const addedId: string | undefined = data.violation?.id ?? data.spreadsheet?.rows?.[0]?.id;
+      const addedId: string | undefined =
+        data.createdIds?.[0] ?? data.violation?.id ?? data.spreadsheet?.rows?.[0]?.id;
       if (addedId) {
         setLastAddedRowId(addedId);
         window.setTimeout(() => {
@@ -343,20 +471,40 @@ export function SpreadsheetWorkspace({
       setKelas('');
       setSelectedStudentId(null);
       setSaveToStudentDirectory(false);
-      setSelectedCategory('');
-      setSelectedPresetId('');
-      setViolationCode('');
-      setViolationLabel('');
-      setPoints(5);
-      setActionTaken('');
-      setShowManualDetails(false);
       setNotes('');
-      onNotify(
-        data.createdSpreadsheet
-          ? 'Spreadsheet hari ini dibuat otomatis & pelanggaran pertama tercatat!'
-          : 'Pelanggaran AKPS berhasil dicatat ke spreadsheet.',
-        'success'
-      );
+
+      if (!lockViolationAfterSave) {
+        setExtraRules([]);
+        setSelectedCategory('');
+        setSelectedPresetId('');
+        setViolationCode('');
+        setViolationLabel('');
+        setPoints(5);
+        setActionTaken('');
+        setShowManualDetails(false);
+      } else {
+        window.requestAnimationFrame(() => {
+          studentInputRef.current?.focus();
+        });
+      }
+
+      if (rulesToSave.length > 1) {
+        onNotify(
+          `${rulesToSave.length} pelanggaran untuk 1 siswa berhasil dicatat${
+            lockViolationAfterSave ? ' (pilihan pelanggaran tetap dikunci)' : ''
+          }.`,
+          'success'
+        );
+      } else {
+        onNotify(
+          data.createdSpreadsheet
+            ? 'Spreadsheet hari ini dibuat otomatis & pelanggaran pertama tercatat!'
+            : lockViolationAfterSave
+              ? 'Pelanggaran tercatat! Silakan langsung ketik nama siswa berikutnya.'
+              : 'Pelanggaran AKPS berhasil dicatat ke spreadsheet.',
+          'success'
+        );
+      }
     } catch {
       onNotify('Tidak dapat menyimpan catatan ke server.', 'error');
     } finally {
@@ -789,14 +937,16 @@ export function SpreadsheetWorkspace({
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
         {/* Form Pencatatan AKPS */}
         <section className="surface-3d animate-stagger-2 rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-6 lg:col-span-7">
-          <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
             <div>
               <h2 className="font-display text-lg font-bold text-slate-900">
                 Catat Pelanggaran Siswa
               </h2>
               <p className="text-xs text-slate-500">
                 {isSheetActive
-                  ? 'Isi nama siswa lalu pilih kategori pelanggaran sesuai buku AKPS.'
+                  ? entryMode === 'batch'
+                    ? 'Pilih pelanggaran lalu centang atau cari banyak siswa sekaligus dalam 1 klik simpan.'
+                    : 'Isi nama siswa lalu pilih kategori pelanggaran sesuai buku AKPS.'
                   : isSheetFinalized
                     ? `Spreadsheet sudah ditutup otomatis pada pukul ${autoWindow.endTime} WIB.`
                     : autoWindow.phase === 'BEFORE_START'
@@ -804,38 +954,107 @@ export function SpreadsheetWorkspace({
                       : 'Spreadsheet otomatis sedang tidak aktif hari ini.'}
               </p>
             </div>
-            {isSheetFinalized && (
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
-                <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                <span>Sesi Final</span>
-              </span>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {isSheetFinalized && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                  <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                  <span>Sesi Final</span>
+                </span>
+              )}
+              <div
+                role="tablist"
+                aria-label="Mode pencatatan pelanggaran"
+                className="inline-flex items-center gap-1 rounded-xl bg-slate-100 p-1"
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={entryMode === 'single'}
+                  onClick={() => setEntryMode('single')}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
+                    entryMode === 'single'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Catat 1 Siswa
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={entryMode === 'batch'}
+                  onClick={() => setEntryMode('batch')}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
+                    entryMode === 'batch'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Catat Banyak Siswa
+                </button>
+              </div>
+            </div>
           </div>
 
-          <form onSubmit={handleAddViolation} className="mt-5 space-y-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
-              <div className="relative sm:col-span-6">
-                <div className="flex items-center justify-between gap-2">
-                  <label
-                    htmlFor="student-name"
-                    className="block text-sm font-medium text-slate-700"
-                  >
-                    Nama Siswa
-                  </label>
-                  <span className="text-[11px] text-slate-400">
-                    Cari dari {appState.students.length} siswa
-                  </span>
-                </div>
-                <div className="relative mt-1.5">
-                  <Search
-                    className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400"
-                    aria-hidden="true"
-                  />
-                  <input
-                    id="student-name"
-                    type="text"
-                    required
-                    autoComplete="off"
+          {entryMode === 'batch' ? (
+            <BatchViolationForm
+              appState={appState}
+              quickPickItems={quickPickItems}
+              canRecordNow={canRecordNow}
+              connectionOffline={connectionOffline}
+              lockedNoticeText={
+                !scheduleStatus.allowed
+                  ? 'Terkunci (Di Luar Jadwal Piket)'
+                  : isSheetFinalized
+                    ? 'Spreadsheet Sudah Ditutup Final'
+                    : !todaySheet && autoWindow.phase === 'BEFORE_START'
+                      ? `Menunggu Jam Buka (${autoWindow.startTime} WIB)`
+                      : 'Spreadsheet Tidak Aktif Hari Ini'
+              }
+              onRecordPresetUsed={recordPresetUsed}
+              onSuccessSubmit={(nextState, createdCount, createdIds) => {
+                onStateUpdate(nextState);
+                setMascotPulse((c) => c + 1);
+                const firstId = createdIds[0];
+                if (firstId) {
+                  setLastAddedRowId(firstId);
+                  window.setTimeout(() => {
+                    setLastAddedRowId((curr) => (curr === firstId ? null : curr));
+                  }, 2500);
+                }
+                onNotify(
+                  `Berhasil mencatat ${createdCount} pelanggaran sekaligus ke spreadsheet hari ini.`,
+                  'success'
+                );
+              }}
+              onNotify={onNotify}
+            />
+          ) : (
+            <form onSubmit={handleAddViolation} className="mt-5 space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
+                <div className="relative sm:col-span-6">
+                  <div className="flex items-center justify-between gap-2">
+                    <label
+                      htmlFor="student-name"
+                      className="block text-sm font-medium text-slate-700"
+                    >
+                      Nama Siswa
+                    </label>
+                    <span className="text-[11px] text-slate-400">
+                      Cari dari {appState.students.length} siswa
+                    </span>
+                  </div>
+                  <div className="relative mt-1.5">
+                    <Search
+                      className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400"
+                      aria-hidden="true"
+                    />
+                    <input
+                      ref={studentInputRef}
+                      id="student-name"
+                      type="text"
+                      required
+                      autoComplete="off"
                     role="combobox"
                     aria-expanded={showStudentDropdown && canRecordNow}
                     aria-autocomplete="list"
@@ -1019,7 +1238,9 @@ export function SpreadsheetWorkspace({
             {matchedStudentSummary && (
               <div
                 className={`flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-xs ${
-                  matchedStudentSummary.totalPoints + Number(points || 0) >= 26
+                  matchedStudentSummary.totalPoints +
+                    (combinedSinglePointsTotal || Number(points || 0)) >=
+                  26
                     ? 'border-red-200 bg-red-50 text-red-900'
                     : 'border-amber-200 bg-amber-50 text-amber-900'
                 }`}
@@ -1030,32 +1251,33 @@ export function SpreadsheetWorkspace({
                   <strong className="font-mono-num">{matchedStudentSummary.totalPoints} poin</strong>{' '}
                   (setelah input menjadi{' '}
                   <strong className="font-mono-num">
-                    {matchedStudentSummary.totalPoints + Number(points || 0)} poin
+                    {matchedStudentSummary.totalPoints +
+                      (combinedSinglePointsTotal || Number(points || 0))}{' '}
+                    poin
                   </strong>{' '}
-                  → {getTingkatPembinaan(matchedStudentSummary.totalPoints + Number(points || 0))}).
+                  →{' '}
+                  {getTingkatPembinaan(
+                    matchedStudentSummary.totalPoints +
+                      (combinedSinglePointsTotal || Number(points || 0))
+                  )}
+                  ).
                 </span>
               </div>
             )}
 
-            {/* Quick-pick common morning violations */}
-            {quickPickPresets.length > 0 && (
+            {/* Quick-pick common + recent/today frequent violations */}
+            {quickPickItems.length > 0 && (
               <div>
                 <p className="text-xs font-medium text-slate-600">
-                  Pilih Cepat Pelanggaran Pagi yang Sering Terjadi:
+                  Pilihan Cepat (Terakhir &amp; Sering Dipakai Hari Ini):
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {quickPickPresets.map((qp) => {
-                    const isPicked = selectedPresetId === qp.id;
+                  {quickPickItems.map(({ preset: qp, todayCount }) => {
+                    const isPicked =
+                      selectedPresetId === qp.id ||
+                      extraRules.some((r) => r.presetId === qp.id);
                     const shortTitle =
-                      qp.code === 'A1'
-                        ? 'Terlambat'
-                        : qp.code === 'E1'
-                          ? 'Atribut / Seragam'
-                          : qp.code === 'E2'
-                            ? 'Rambut Gondrong'
-                            : qp.code === 'E5'
-                              ? 'Tidak Pakai Ciput'
-                              : 'Riasan / Kerudung';
+                      qp.label.length > 32 ? `${qp.label.slice(0, 30)}…` : qp.label;
                     return (
                       <button
                         key={qp.id}
@@ -1069,10 +1291,55 @@ export function SpreadsheetWorkspace({
                         }`}
                       >
                         {qp.code} · {shortTitle} (+{qp.points})
+                        {todayCount > 0 ? ` · ${todayCount}×` : ''}
                       </button>
                     );
                   })}
                 </div>
+              </div>
+            )}
+
+            {/* Stacked multi-violation list for the same student */}
+            {extraRules.length > 0 && (
+              <div className="rounded-xl border border-blue-200 bg-blue-50/45 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <span className="font-semibold text-blue-950">
+                    Pelanggaran sudah dipilih untuk siswa ini ({extraRules.length}):
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setExtraRules([])}
+                    className="font-medium text-slate-500 underline hover:text-slate-800"
+                  >
+                    Hapus semua
+                  </button>
+                </div>
+                <ul className="mt-1.5 divide-y divide-blue-100">
+                  {extraRules.map((rule) => (
+                    <li
+                      key={rule.key}
+                      className="flex items-center justify-between gap-2 py-1.5 text-xs text-slate-800"
+                    >
+                      <span className="min-w-0 truncate">
+                        <strong className="font-mono-num text-blue-800">
+                          [{rule.violationCode}]
+                        </strong>{' '}
+                        {rule.violationLabel}{' '}
+                        <span className="text-slate-500">· +{rule.points} poin</span>
+                      </span>
+                      <button
+                        type="button"
+                        aria-label={`Hapus ${rule.violationLabel}`}
+                        onClick={() =>
+                          setExtraRules((prev) => prev.filter((item) => item.key !== rule.key))
+                        }
+                        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-blue-100 hover:text-red-700"
+                      >
+                        <X className="h-3.5 w-3.5" aria-hidden="true" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
 
@@ -1164,7 +1431,7 @@ export function SpreadsheetWorkspace({
 
                 <select
                   id="category-select"
-                  required
+                  required={extraRules.length === 0}
                   disabled={!canRecordNow || submitting}
                   value={selectedCategory}
                   onChange={(e) => handleCategoryChange(e.target.value)}
@@ -1199,7 +1466,7 @@ export function SpreadsheetWorkspace({
                     </label>
                     <select
                       id="preset-select"
-                      required
+                      required={extraRules.length === 0}
                       disabled={!canRecordNow || submitting}
                       value={selectedPresetId}
                       onChange={(e) => handlePresetChange(e.target.value)}
@@ -1244,19 +1511,30 @@ export function SpreadsheetWorkspace({
                     Tindak lanjut otomatis:{' '}
                     <strong className="text-slate-800">{actionTaken || 'Catat & pembinaan'}</strong>
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => setShowManualDetails((prev) => !prev)}
-                    className="inline-flex items-center gap-1 font-semibold text-blue-700 hover:text-blue-800 whitespace-nowrap shrink-0"
-                  >
-                    <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
-                    <span>{showManualDetails ? 'Sembunyikan Detail' : 'Ubah Detail / Sanksi'}</span>
-                    {showManualDetails ? (
-                      <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
-                    ) : (
-                      <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
-                    )}
-                  </button>
+                  <div className="flex flex-wrap items-center gap-3 shrink-0">
+                    <button
+                      type="button"
+                      disabled={!canRecordNow || submitting}
+                      onClick={handleStackCurrentRule}
+                      className="inline-flex items-center gap-1 font-semibold text-emerald-700 hover:text-emerald-800 whitespace-nowrap disabled:opacity-50"
+                    >
+                      <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>Tambah Pelanggaran Lain</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowManualDetails((prev) => !prev)}
+                      className="inline-flex items-center gap-1 font-semibold text-blue-700 hover:text-blue-800 whitespace-nowrap shrink-0"
+                    >
+                      <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>{showManualDetails ? 'Sembunyikan Detail' : 'Ubah Detail / Sanksi'}</span>
+                      {showManualDetails ? (
+                        <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+                      ) : (
+                        <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -1273,7 +1551,7 @@ export function SpreadsheetWorkspace({
                       <input
                         id="violation-label"
                         type="text"
-                        required
+                        required={extraRules.length === 0}
                         disabled={!canRecordNow || submitting}
                         value={violationLabel}
                         onChange={(e) => setViolationLabel(e.target.value)}
@@ -1317,7 +1595,7 @@ export function SpreadsheetWorkspace({
                           type="number"
                           min={1}
                           max={100}
-                          required
+                          required={extraRules.length === 0}
                           disabled={!canRecordNow || submitting}
                           value={points}
                           onChange={(e) => setPoints(Number(e.target.value))}
@@ -1344,6 +1622,20 @@ export function SpreadsheetWorkspace({
                       className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
                     />
                   </div>
+
+                  {selectedCategory === 'CUSTOM' && violationLabel.trim() && (
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        disabled={!canRecordNow || submitting}
+                        onClick={handleStackCurrentRule}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800 whitespace-nowrap disabled:opacity-50"
+                      >
+                        <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span>Tambah Pelanggaran Lain</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1365,6 +1657,19 @@ export function SpreadsheetWorkspace({
                 className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
               />
             </div>
+
+            <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-xs text-slate-700">
+              <input
+                type="checkbox"
+                checked={lockViolationAfterSave}
+                onChange={(e) => setLockViolationAfterSave(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600"
+              />
+              <span>
+                <strong className="text-slate-900">Kunci jenis pelanggaran ini untuk siswa berikutnya</strong>{' '}
+                (setelah simpan, aturan tetap terpilih &amp; kursor otomatis siap ketik nama siswa berikutnya).
+              </span>
+            </label>
 
             {connectionOffline && canRecordNow && (
               <div
@@ -1402,11 +1707,14 @@ export function SpreadsheetWorkspace({
                             ? `Menunggu Jam Buka (${autoWindow.startTime} WIB)`
                             : !todaySheet
                               ? 'Spreadsheet Tidak Aktif Hari Ini'
-                              : 'Simpan ke Spreadsheet Hari Ini'}
+                              : combinedSingleStudentRules.length > 1
+                                ? `Simpan ${combinedSingleStudentRules.length} Pelanggaran (+${combinedSinglePointsTotal} Poin)`
+                                : 'Simpan ke Spreadsheet Hari Ini'}
                 </span>
               </button>
             </div>
           </form>
+          )}
         </section>
 
         {/* Right Column: Productivity Summary Card + Consensus & Export */}

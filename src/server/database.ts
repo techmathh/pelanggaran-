@@ -21,6 +21,7 @@ import {
   toggleOfficerFinished,
   type AddViolationInput,
 } from '../shared/piketLogic';
+import { MAX_BATCH_VIOLATION_ROWS } from '../shared/batchViolationLogic';
 import type {
   DailySessionConfig,
   DailySpreadsheet,
@@ -1895,6 +1896,142 @@ export function recordViolationInDb(
 
   bumpStateVersion();
   return {
+    createdSpreadsheet: joined.created,
+    spreadsheet: updatedSheet,
+    state: getPublicAppState(),
+  };
+}
+
+export function recordViolationsBulkInDb(
+  officer: Officer,
+  entries: Array<AddViolationInput & { saveToStudentDirectory?: boolean }>,
+  now: Date
+): {
+  createdCount: number;
+  createdIds: string[];
+  createdSpreadsheet: boolean;
+  spreadsheet: DailySpreadsheet;
+  state: PublicAppState;
+} {
+  if (!Array.isArray(entries) || entries.length === 0) {
+    throw new Error('Minimal satu catatan pelanggaran harus disertakan.');
+  }
+  if (entries.length > MAX_BATCH_VIOLATION_ROWS) {
+    throw new Error(`Maksimal ${MAX_BATCH_VIOLATION_ROWS} catatan dalam satu kali simpan massal.`);
+  }
+
+  const db = getDatabase();
+  syncAutoDailySpreadsheets(now);
+  const sim = getSimulationConfig();
+  const dailySession = getDailySessionConfig();
+  const clock = getEffectiveClock(now, sim);
+  const spreadsheets = getAllSpreadsheets();
+  const existingToday = spreadsheets.find((s) => s.date === clock.dateKey);
+
+  if (!existingToday) {
+    throw new Error(
+      `Spreadsheet hari ini belum dibuka. Sesi akan dibuat otomatis pada pukul ${dailySession.startTime} WIB.`
+    );
+  }
+
+  const joined = createOrJoinDailySpreadsheet(
+    spreadsheets,
+    clock.dateKey,
+    clock.hari,
+    officer,
+    now.toISOString()
+  );
+
+  if (joined.spreadsheet.status === 'FINALIZED') {
+    throw new Error(
+      `Spreadsheet hari ini sudah ditutup otomatis sesuai jam selesai (${dailySession.endTime} WIB).`
+    );
+  }
+
+  const baseMs = now.getTime();
+  let updatedSheet = joined.spreadsheet;
+  const createdEntries: ViolationEntry[] = [];
+  const createdIds: string[] = [];
+
+  for (let idx = 0; idx < entries.length; idx++) {
+    const item = entries[idx];
+    const entryId = `viol-${baseMs}-${idx}-${crypto.randomBytes(2).toString('hex')}`;
+    const entryTimestamp = new Date(baseMs + idx).toISOString();
+    updatedSheet = addViolationToSpreadsheet(
+      updatedSheet,
+      officer,
+      item,
+      entryTimestamp,
+      clock.timeHHMM,
+      entryId
+    );
+    createdEntries.push(updatedSheet.rows[0]);
+    createdIds.push(entryId);
+  }
+
+  const insertViolationStmt = db.prepare(
+    `INSERT INTO violations (
+      id, spreadsheet_id, timestamp, time_label, student_name, student_nis, kelas,
+      violation_code, violation_label, category, points, action_taken, notes,
+      recorded_by_id, recorded_by_name
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  );
+  const checkStudentStmt = db.prepare(
+    'SELECT id FROM students WHERE LOWER(name) = LOWER(?) AND UPPER(kelas) = UPPER(?)'
+  );
+  const insertStudentStmt = db.prepare(
+    'INSERT INTO students (id, nis, name, kelas) VALUES (?, ?, ?, ?)'
+  );
+
+  db.exec('BEGIN');
+  try {
+    persistSpreadsheet(db, updatedSheet);
+
+    for (let idx = 0; idx < createdEntries.length; idx++) {
+      const entry = createdEntries[idx];
+      insertViolationStmt.run(
+        entry.id,
+        updatedSheet.id,
+        entry.timestamp,
+        entry.timeLabel,
+        entry.studentName,
+        entry.studentNis,
+        entry.kelas,
+        entry.violationCode,
+        entry.violationLabel,
+        entry.category,
+        entry.points,
+        entry.actionTaken,
+        entry.notes,
+        entry.recordedById,
+        entry.recordedByName
+      );
+
+      if (entries[idx]?.saveToStudentDirectory) {
+        const existingStudent = checkStudentStmt.get(entry.studentName, entry.kelas) as
+          | { id: string }
+          | undefined;
+        if (!existingStudent) {
+          insertStudentStmt.run(
+            `stu-${baseMs}-${idx}-${crypto.randomBytes(2).toString('hex')}`,
+            entry.studentNis,
+            entry.studentName,
+            entry.kelas
+          );
+        }
+      }
+    }
+
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+
+  bumpStateVersion();
+  return {
+    createdCount: createdEntries.length,
+    createdIds,
     createdSpreadsheet: joined.created,
     spreadsheet: updatedSheet,
     state: getPublicAppState(),

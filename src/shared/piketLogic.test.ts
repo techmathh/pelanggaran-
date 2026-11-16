@@ -916,3 +916,100 @@ test('DEFAULT_WEEKLY_ROTATION_CONFIG places Sunday 2026-11-15 in Minggu 2 and Mo
   assert.equal(mondayNov30.currentWeek, 1);
 });
 
+import {
+  MAX_BATCH_VIOLATION_ROWS,
+  buildBatchViolationInputs,
+  filterStudentsByClassAndQuery,
+  getQuickPickPresetsWithRecent,
+  getSortedStudentClasses,
+} from './batchViolationLogic';
+import type { ViolationEntry, ViolationPreset } from './types';
+
+test('batchViolationLogic builds Cartesian batch entries, enforces max cap, sorts classes, and prioritizes recent/today presets', () => {
+  const students = [
+    { key: '1', id: 's1', name: 'Abdi Pamungkas', kelas: '10A', nis: '', saveToStudentDirectory: false },
+    { key: '2', id: 's2', name: 'Nurlia Estiningsih', kelas: '11D', nis: '', saveToStudentDirectory: false },
+  ];
+  const rules = [
+    {
+      key: 'r1',
+      presetId: 'p-a1',
+      violationCode: 'A1',
+      violationLabel: 'Terlambat masuk sekolah',
+      category: 'A. Kedisiplinan & Kehadiran' as const,
+      points: 5,
+      actionTaken: 'Pembinaan pagi',
+    },
+    {
+      key: 'r2',
+      presetId: 'p-e1',
+      violationCode: 'E1',
+      violationLabel: 'Atribut tidak lengkap',
+      category: 'E. Kerapian' as const,
+      points: 5,
+      actionTaken: 'Lengkapi atribut',
+    },
+  ];
+
+  const built = buildBatchViolationInputs(students, rules, 'Razia gerbang pagi');
+  assert.equal(built.error, null);
+  assert.equal(built.entries.length, 4);
+  assert.equal(built.entries[0].studentName, 'Abdi Pamungkas');
+  assert.equal(built.entries[0].violationCode, 'A1');
+  assert.equal(built.entries[1].studentName, 'Abdi Pamungkas');
+  assert.equal(built.entries[1].violationCode, 'E1');
+  assert.equal(built.entries[2].studentName, 'Nurlia Estiningsih');
+  assert.equal(built.entries[3].notes, 'Razia gerbang pagi');
+
+  // Empty & over-limit validation
+  assert.ok(buildBatchViolationInputs([], rules, '').error);
+  assert.ok(buildBatchViolationInputs(students, [], '').error);
+  const tooManyStudents = Array.from({ length: MAX_BATCH_VIOLATION_ROWS }, (_, i) => ({
+    key: `k-${i}`,
+    name: `Siswa ${i}`,
+    kelas: '10A',
+    nis: '',
+  }));
+  assert.ok(buildBatchViolationInputs(tooManyStudents, rules, '').error);
+
+  // Class sorting & filtering
+  const sortedClasses = getSortedStudentClasses([
+    { id: '1', nis: '-', name: 'Zaki', kelas: '12B' },
+    { id: '2', nis: '-', name: 'Abdi', kelas: '10A' },
+    { id: '3', nis: '-', name: 'Budi', kelas: '10B' },
+    { id: '4', nis: '-', name: 'Cici', kelas: '11A' },
+  ]);
+  assert.deepEqual(sortedClasses, ['10A', '10B', '11A', '12B']);
+
+  const filtered10A = filterStudentsByClassAndQuery(SMAN1_KEMANGKON_STUDENTS, '10A', 'abdi');
+  assert.equal(filtered10A.length >= 1, true);
+  assert.equal(filtered10A[0].name, 'Abdi Pamungkas');
+
+  // Quick-pick prioritizes session recents and today's frequent codes, then defaults
+  const samplePresets: ViolationPreset[] = [
+    { id: 'p-a1', code: 'A1', label: 'Terlambat', category: 'A. Kedisiplinan & Kehadiran', points: 5, defaultAction: 'Catat' },
+    { id: 'p-c2', code: 'C2', label: 'Knalpot Brong', category: 'C. Penggunaan Sepeda Motor', points: 15, defaultAction: 'Sita' },
+    { id: 'p-e1', code: 'E1', label: 'Atribut', category: 'E. Kerapian', points: 5, defaultAction: 'Lengkapi' },
+    { id: 'p-d1', code: 'D1', label: 'Main HP', category: 'D. Penggunaan Teknologi', points: 10, defaultAction: 'Sita HP' },
+  ];
+  const todayRows: ViolationEntry[] = [
+    {
+      id: 'v1', timestamp: '2026-11-16T07:05:00Z', timeLabel: '07:05', studentName: 'A', studentNis: '-',
+      kelas: '10A', violationCode: 'D1', violationLabel: 'Main HP', category: 'D. Penggunaan Teknologi',
+      points: 10, actionTaken: 'Sita HP', notes: '', recordedById: 'o1', recordedByName: 'O1',
+    },
+    {
+      id: 'v2', timestamp: '2026-11-16T07:06:00Z', timeLabel: '07:06', studentName: 'B', studentNis: '-',
+      kelas: '10A', violationCode: 'D1', violationLabel: 'Main HP', category: 'D. Penggunaan Teknologi',
+      points: 10, actionTaken: 'Sita HP', notes: '', recordedById: 'o1', recordedByName: 'O1',
+    },
+  ];
+
+  const quickPicks = getQuickPickPresetsWithRecent(samplePresets, todayRows, ['p-c2'], 4);
+  assert.equal(quickPicks[0].preset.code, 'C2'); // Recent session pick comes first
+  assert.equal(quickPicks[1].preset.code, 'D1'); // Today's most frequent comes next
+  assert.equal(quickPicks[1].todayCount, 2);
+  assert.equal(quickPicks[2].preset.code, 'A1'); // Morning default fills remaining
+});
+
+

@@ -15,6 +15,7 @@ import {
   validatePresetInput,
   validateViolationInput,
 } from './src/shared/piketLogic';
+import { MAX_BATCH_VIOLATION_ROWS } from './src/shared/batchViolationLogic';
 import type {
   HariPiket,
   Officer,
@@ -43,6 +44,7 @@ import {
   getSessionSyncSnapshot,
   importStudentsRosterRecord,
   recordViolationInDb,
+  recordViolationsBulkInDb,
   reopenSpreadsheetInDb,
   resetAccountTemporaryPassword,
   resetAllDataExceptSelf,
@@ -368,6 +370,87 @@ async function startServer() {
     } catch (err: any) {
       res.status(409).json({
         error: err?.message || 'Spreadsheet hari ini sudah final.',
+      });
+    }
+  });
+
+  // Record multiple student violations at once (batch mode or multi-violation per student)
+  app.post('/api/violations/bulk', requireFullAuth, (req: AuthedRequest, res) => {
+    const officer = req.account!;
+    const now = new Date();
+    const stateBefore = getPublicAppState();
+    const scheduleStatus = getScheduleStatus(
+      officer,
+      now,
+      stateBefore.simulation,
+      stateBefore.weeklySchedule
+    );
+
+    if (!scheduleStatus.allowed) {
+      res.status(403).json({
+        error: `Anda hanya dapat mencatat saat jadwal piket Anda. ${scheduleStatus.reason}`,
+      });
+      return;
+    }
+
+    const rawEntries = (req.body as { entries?: unknown })?.entries;
+    if (!Array.isArray(rawEntries) || rawEntries.length === 0) {
+      res.status(400).json({ error: 'Pilih minimal 1 siswa dan 1 pelanggaran untuk disimpan.' });
+      return;
+    }
+    if (rawEntries.length > MAX_BATCH_VIOLATION_ROWS) {
+      res.status(400).json({
+        error: `Maksimal ${MAX_BATCH_VIOLATION_ROWS} catatan dalam satu kali simpan massal.`,
+      });
+      return;
+    }
+
+    const normalizedEntries: Array<{
+      studentName: string;
+      studentNis: string;
+      kelas: string;
+      violationCode: string;
+      violationLabel: string;
+      category: any;
+      points: number;
+      actionTaken: string;
+      notes: string;
+      saveToStudentDirectory: boolean;
+    }> = [];
+
+    for (let i = 0; i < rawEntries.length; i++) {
+      const item = (rawEntries[i] ?? {}) as Record<string, unknown>;
+      const input = {
+        studentName: typeof item.studentName === 'string' ? item.studentName : '',
+        studentNis: typeof item.studentNis === 'string' ? item.studentNis : '',
+        kelas: typeof item.kelas === 'string' ? item.kelas : '',
+        violationCode: typeof item.violationCode === 'string' ? item.violationCode : 'CUSTOM',
+        violationLabel: typeof item.violationLabel === 'string' ? item.violationLabel : '',
+        category: (typeof item.category === 'string'
+          ? item.category
+          : 'A. Kedisiplinan & Kehadiran') as any,
+        points: Number(item.points ?? 0),
+        actionTaken: typeof item.actionTaken === 'string' ? item.actionTaken : '',
+        notes: typeof item.notes === 'string' ? item.notes : '',
+        saveToStudentDirectory: Boolean(item.saveToStudentDirectory),
+      };
+
+      const validationError = validateViolationInput(input);
+      if (validationError) {
+        res.status(400).json({
+          error: `Catatan ke-${i + 1} (${input.studentName || 'Siswa'}): ${validationError}`,
+        });
+        return;
+      }
+      normalizedEntries.push(input);
+    }
+
+    try {
+      const result = recordViolationsBulkInDb(officer, normalizedEntries, now);
+      res.json(result);
+    } catch (err: any) {
+      res.status(409).json({
+        error: err?.message || 'Gagal mencatat pelanggaran massal ke spreadsheet.',
       });
     }
   });
