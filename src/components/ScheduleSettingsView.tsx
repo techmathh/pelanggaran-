@@ -27,7 +27,10 @@ import {
   getRoleLabel,
   getScheduleStatus,
   isManagerRole,
+  isUnrestrictedTrialMode,
+  paginateItems,
 } from '../shared/piketLogic';
+import { PaginationBar } from './PaginationBar';
 import type {
   HariPiket,
   KategoriPelanggaran,
@@ -100,8 +103,13 @@ export function ScheduleSettingsView({
     appState.simulation
   );
 
+  const isTrialUnrestricted = isUnrestrictedTrialMode(appState.simulation);
+
   // Simulation form
   const [simEnabled, setSimEnabled] = useState(appState.simulation.enabled);
+  const [simUnrestricted, setSimUnrestricted] = useState(
+    appState.simulation.unrestricted !== false
+  );
   const [simTime, setSimTime] = useState(appState.simulation.simulatedTime || '07:15');
   const [simDay, setSimDay] = useState<string>(appState.simulation.simulatedDay ?? '');
   const [simWeek, setSimWeek] = useState<string>(
@@ -110,11 +118,13 @@ export function ScheduleSettingsView({
 
   useEffect(() => {
     setSimEnabled(Boolean(appState.simulation.enabled));
+    setSimUnrestricted(appState.simulation.unrestricted !== false);
     setSimTime(appState.simulation.simulatedTime || '07:15');
     setSimDay(appState.simulation.simulatedDay ?? '');
     setSimWeek(appState.simulation.simulatedWeek ? String(appState.simulation.simulatedWeek) : '');
   }, [
     appState.simulation.enabled,
+    appState.simulation.unrestricted,
     appState.simulation.simulatedTime,
     appState.simulation.simulatedDay,
     appState.simulation.simulatedWeek,
@@ -133,8 +143,11 @@ export function ScheduleSettingsView({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showSelfPasswords, setShowSelfPasswords] = useState(false);
 
-  // Interactive week filter in schedule list
+  // Interactive week filter, search & pagination in schedule list
   const [selectedWeekFilter, setSelectedWeekFilter] = useState<number | null>(null);
+  const [officerSearch, setOfficerSearch] = useState('');
+  const [officerPage, setOfficerPage] = useState(1);
+  const [officerPageSize, setOfficerPageSize] = useState<number | 'ALL'>(10);
 
   // New preset form
   const [presetCode, setPresetCode] = useState('');
@@ -145,8 +158,10 @@ export function ScheduleSettingsView({
   const [presetPoints, setPresetPoints] = useState(10);
   const [presetAction, setPresetAction] = useState('');
 
-  // Rule search filter & inline edit/delete state
+  // Rule search filter, pagination & inline edit/delete state
   const [ruleSearch, setRuleSearch] = useState('');
+  const [rulePage, setRulePage] = useState(1);
+  const [rulePageSize, setRulePageSize] = useState<number | 'ALL'>(10);
   const [editingPresetId, setEditingPresetId] = useState<string | null>(null);
   const [editPresetCode, setEditPresetCode] = useState('');
   const [editPresetLabel, setEditPresetLabel] = useState('');
@@ -160,11 +175,27 @@ export function ScheduleSettingsView({
   const [saving, setSaving] = useState(false);
 
   const visibleOfficers = useMemo(() => {
-    if (!selectedWeekFilter || cycleWeeks <= 1) return appState.officers;
-    return appState.officers.filter(
-      (o) => !o.scheduledWeeks || o.scheduledWeeks.includes(selectedWeekFilter)
+    const byWeek =
+      !selectedWeekFilter || cycleWeeks <= 1
+        ? appState.officers
+        : appState.officers.filter(
+            (o) => !o.scheduledWeeks || o.scheduledWeeks.includes(selectedWeekFilter)
+          );
+    const q = officerSearch.trim().toLowerCase();
+    if (!q) return byWeek;
+    return byWeek.filter(
+      (o) =>
+        o.name.toLowerCase().includes(q) ||
+        o.username.toLowerCase().includes(q) ||
+        o.kelas.toLowerCase().includes(q) ||
+        o.division.toLowerCase().includes(q)
     );
-  }, [appState.officers, selectedWeekFilter, cycleWeeks]);
+  }, [appState.officers, selectedWeekFilter, cycleWeeks, officerSearch]);
+
+  const paginatedOfficers = useMemo(
+    () => paginateItems(visibleOfficers, officerPage, officerPageSize),
+    [visibleOfficers, officerPage, officerPageSize]
+  );
 
   const filteredPresets = useMemo(() => {
     const q = ruleSearch.trim().toLowerCase();
@@ -178,6 +209,11 @@ export function ScheduleSettingsView({
         String(p.points).includes(q)
     );
   }, [appState.presets, ruleSearch]);
+
+  const paginatedPresets = useMemo(
+    () => paginateItems(filteredPresets, rulePage, rulePageSize),
+    [filteredPresets, rulePage, rulePageSize]
+  );
 
   function startEditPreset(preset: ViolationPreset) {
     setConfirmDeletePresetId(null);
@@ -381,29 +417,31 @@ export function ScheduleSettingsView({
     }
   }
 
-  async function handleSaveSimulation(e: FormEvent) {
-    e.preventDefault();
+  async function saveSimulationPayload(payload: {
+    enabled: boolean;
+    unrestricted: boolean;
+    simulatedTime: string;
+    simulatedDay: HariPiket | null;
+    simulatedWeek: number | null;
+  }) {
     setSaving(true);
     try {
       const res = await apiFetch('/api/settings/simulation', {
         method: 'POST',
-        body: JSON.stringify({
-          enabled: simEnabled,
-          simulatedTime: simTime,
-          simulatedDay: simDay ? (simDay as HariPiket) : null,
-          simulatedWeek: simWeek ? Number(simWeek) : null,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) {
-        onNotify(data.error || 'Gagal memperbarui simulasi waktu.', 'error');
+        onNotify(data.error || 'Gagal memperbarui mode uji coba.', 'error');
         return;
       }
       onStateUpdate(data.state);
       onNotify(
-        simEnabled
-          ? `Mode uji coba waktu diaktifkan (${simWeek ? `Minggu ${simWeek} · ` : ''}${simDay || 'Hari ini'} · ${simTime}).`
-          : 'Mode uji coba waktu dimatikan (kembali ke jam normal).',
+        !payload.enabled
+          ? 'Mode uji coba dimatikan (sistem kembali mengikuti jadwal dan jam piket normal).'
+          : payload.unrestricted
+            ? 'Mode Uji Coba Bebas AKTIF — tidak ada batasan jam, hari, atau minggu sampai Anda mematikannya.'
+            : `Simulasi waktu aktif (${payload.simulatedWeek ? `Minggu ${payload.simulatedWeek} · ` : ''}${payload.simulatedDay || 'Hari ini'} · ${payload.simulatedTime}).`,
         'success'
       );
     } catch {
@@ -411,6 +449,29 @@ export function ScheduleSettingsView({
     } finally {
       setSaving(false);
     }
+  }
+
+  async function handleSaveSimulation(e: FormEvent) {
+    e.preventDefault();
+    await saveSimulationPayload({
+      enabled: simEnabled,
+      unrestricted: simUnrestricted,
+      simulatedTime: simTime,
+      simulatedDay: simDay ? (simDay as HariPiket) : null,
+      simulatedWeek: simWeek ? Number(simWeek) : null,
+    });
+  }
+
+  async function handleQuickToggleUnrestrictedTrial(nextEnabled: boolean) {
+    setSimEnabled(nextEnabled);
+    setSimUnrestricted(true);
+    await saveSimulationPayload({
+      enabled: nextEnabled,
+      unrestricted: true,
+      simulatedTime: simTime,
+      simulatedDay: simDay ? (simDay as HariPiket) : null,
+      simulatedWeek: simWeek ? Number(simWeek) : null,
+    });
   }
 
   async function handleChangeOwnPassword(e: FormEvent) {
@@ -512,22 +573,26 @@ export function ScheduleSettingsView({
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span
               className={`rounded-xl border px-3 py-1.5 font-semibold ${
-                autoWindow.phase === 'OPEN'
-                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                  : autoWindow.phase === 'BEFORE_START'
-                    ? 'border-blue-200 bg-blue-50 text-blue-700'
-                    : autoWindow.phase === 'CLOSED'
-                      ? 'border-slate-200 bg-slate-100 text-slate-700'
-                      : 'border-amber-200 bg-amber-50 text-amber-800'
+                isTrialUnrestricted
+                  ? 'border-blue-200 bg-blue-50 text-blue-700'
+                  : autoWindow.phase === 'OPEN'
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    : autoWindow.phase === 'BEFORE_START'
+                      ? 'border-blue-200 bg-blue-50 text-blue-700'
+                      : autoWindow.phase === 'CLOSED'
+                        ? 'border-slate-200 bg-slate-100 text-slate-700'
+                        : 'border-amber-200 bg-amber-50 text-amber-800'
               }`}
             >
-              {autoWindow.phase === 'OPEN'
-                ? `Sedang Terbuka Otomatis (${autoWindow.startTime}–${autoWindow.endTime} WIB)`
-                : autoWindow.phase === 'BEFORE_START'
-                  ? `Menunggu Jam Mulai (${autoWindow.startTime} WIB)`
-                  : autoWindow.phase === 'CLOSED'
-                    ? `Sudah Ditutup Otomatis (${autoWindow.endTime} WIB)`
-                    : `Hari ${autoWindow.hari} Tidak Aktif`}
+              {isTrialUnrestricted
+                ? 'Mode Uji Coba Aktif (Terbuka Tanpa Batas Waktu)'
+                : autoWindow.phase === 'OPEN'
+                  ? `Sedang Terbuka Otomatis (${autoWindow.startTime}–${autoWindow.endTime} WIB)`
+                  : autoWindow.phase === 'BEFORE_START'
+                    ? `Menunggu Jam Mulai (${autoWindow.startTime} WIB)`
+                    : autoWindow.phase === 'CLOSED'
+                      ? `Sudah Ditutup Otomatis (${autoWindow.endTime} WIB)`
+                      : `Hari ${autoWindow.hari} Tidak Aktif`}
             </span>
           </div>
         </div>
@@ -765,9 +830,10 @@ export function ScheduleSettingsView({
                 <button
                   key={weekNum}
                   type="button"
-                  onClick={() =>
-                    setSelectedWeekFilter((prev) => (prev === weekNum ? null : weekNum))
-                  }
+                  onClick={() => {
+                    setSelectedWeekFilter((prev) => (prev === weekNum ? null : weekNum));
+                    setOfficerPage(1);
+                  }}
                   className={`card-3d-interactive rounded-xl border p-3.5 text-left ${
                     isFiltered
                       ? 'border-blue-600 bg-blue-50/75 ring-2 ring-blue-600/15'
@@ -798,7 +864,7 @@ export function ScheduleSettingsView({
 
       {/* Officer Schedule Table */}
       <section className="surface-3d animate-stagger-4 rounded-2xl border border-slate-200/90 bg-white">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-4 sm:p-5">
+        <div className="flex flex-col gap-3 border-b border-slate-200 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-center gap-2.5">
             <CalendarDays className="h-5 w-5 text-blue-600" aria-hidden="true" />
             <h2 className="font-display text-lg font-bold text-slate-900">
@@ -807,7 +873,10 @@ export function ScheduleSettingsView({
             {selectedWeekFilter && (
               <button
                 type="button"
-                onClick={() => setSelectedWeekFilter(null)}
+                onClick={() => {
+                  setSelectedWeekFilter(null);
+                  setOfficerPage(1);
+                }}
                 className="rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100"
               >
                 Minggu ke-{selectedWeekFilter} · Tampilkan Semua
@@ -815,20 +884,45 @@ export function ScheduleSettingsView({
             )}
           </div>
 
-          {canManage && (
-            <button
-              type="button"
-              onClick={onOpenAccounts}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100"
-            >
-              <Users className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
-              <span>Tambah / Kelola Akun di Menu Kelola Akun</span>
-            </button>
-          )}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="relative w-full sm:w-56">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
+                aria-hidden="true"
+              />
+              <input
+                type="search"
+                aria-label="Cari jadwal petugas atau pengurus"
+                value={officerSearch}
+                onChange={(e) => {
+                  setOfficerSearch(e.target.value);
+                  setOfficerPage(1);
+                }}
+                placeholder="Cari nama, kelas, atau username..."
+                className="w-full rounded-lg border border-slate-200 bg-white py-1.5 pl-8 pr-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none"
+              />
+            </div>
+
+            {canManage && (
+              <button
+                type="button"
+                onClick={onOpenAccounts}
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 whitespace-nowrap shrink-0"
+              >
+                <Users className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
+                <span>Kelola Akun</span>
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="divide-y divide-slate-100">
-          {visibleOfficers.map((off) => {
+          {paginatedOfficers.items.length === 0 ? (
+            <div className="px-4 py-8 text-center text-xs text-slate-500">
+              Tidak ada akun yang cocok dengan filter pencarian jadwal.
+            </div>
+          ) : (
+            paginatedOfficers.items.map((off) => {
             const status = getScheduleStatus(
               off,
               now,
@@ -842,7 +936,7 @@ export function ScheduleSettingsView({
             const weeksLabel = formatScheduledWeeksLabel(off.scheduledWeeks, cycleWeeks);
 
             return (
-              <div key={off.id} className="p-4 sm:p-5">
+              <div key={off.id} className="px-4 py-3 sm:px-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -1014,8 +1108,25 @@ export function ScheduleSettingsView({
                 )}
               </div>
             );
-          })}
+          })
+          )}
         </div>
+
+        <PaginationBar
+          page={paginatedOfficers.page}
+          totalPages={paginatedOfficers.totalPages}
+          totalItems={paginatedOfficers.totalItems}
+          startIndex={paginatedOfficers.startIndex}
+          endIndex={paginatedOfficers.endIndex}
+          pageSize={officerPageSize}
+          pageSizeOptions={[10, 20, 50]}
+          itemLabel="petugas"
+          onPageChange={setOfficerPage}
+          onPageSizeChange={(size) => {
+            setOfficerPageSize(size);
+            setOfficerPage(1);
+          }}
+        />
       </section>
 
       {/* Account Password Change (All Users) + Simulation Controls (Managers) */}
@@ -1111,91 +1222,145 @@ export function ScheduleSettingsView({
           </form>
         </section>
 
-        {/* Morning Session Simulation (Developer / Admin) */}
+        {/* Trial Mode Controls (Developer / Admin) */}
         {canManage && (
           <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-6">
-            <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-blue-600" aria-hidden="true" />
-              <h2 className="font-display text-lg font-bold text-slate-900">
-                Buka Akses Uji Coba di Luar Jam Piket
-              </h2>
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-blue-600" aria-hidden="true" />
+                  <h2 className="font-display text-lg font-bold text-slate-900">
+                    Mode Uji Coba Sistem
+                  </h2>
+                </div>
+                <p className="mt-1 text-xs text-slate-500">
+                  Saat Mode Uji Coba aktif, sistem membuka akses penuh tanpa batasan jam, hari, atau minggu hingga Anda mematikannya kembali.
+                </p>
+              </div>
+              <span
+                className={`text-xs font-semibold whitespace-nowrap ${
+                  appState.simulation.enabled ? 'text-blue-700' : 'text-slate-500'
+                }`}
+              >
+                {appState.simulation.enabled ? 'Sedang Aktif' : 'Nonaktif'}
+              </span>
             </div>
-            <p className="mt-1 text-xs text-slate-500">
-              Aktifkan jika ingin mencoba membuka, mencatat, atau menguji penutupan otomatis di luar jam piket ({autoWindow.startTime}–{autoWindow.endTime} WIB).
-            </p>
 
-            <form onSubmit={handleSaveSimulation} className="mt-4 space-y-4">
-              <label className="flex items-center gap-2.5 text-sm font-medium text-slate-800">
-                <input
-                  type="checkbox"
-                  checked={simEnabled}
-                  onChange={(e) => setSimEnabled(e.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-blue-600"
-                />
-                <span>Aktifkan Mode Uji Coba Waktu</span>
-              </label>
+            <div className="mt-4 flex flex-wrap items-center gap-2.5">
+              {isTrialUnrestricted ? (
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => handleQuickToggleUnrestrictedTrial(false)}
+                  className="btn-3d-danger inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                >
+                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                  <span>Matikan Mode Uji Coba (Kembali Normal)</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => handleQuickToggleUnrestrictedTrial(true)}
+                  className="btn-3d-primary inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                >
+                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                  <span>Aktifkan Mode Uji Coba Bebas (Tanpa Batas Waktu)</span>
+                </button>
+              )}
+            </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div>
-                  <label htmlFor="sim-week" className="block text-xs font-medium text-slate-700">
-                    Pilih Minggu Uji Coba
-                  </label>
-                  <select
-                    id="sim-week"
-                    value={simWeek}
-                    onChange={(e) => setSimWeek(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs"
-                  >
-                    <option value="">Ikuti Minggu Asli</option>
-                    {Array.from({ length: cycleWeeks }, (_, i) => i + 1).map((w) => (
-                      <option key={w} value={String(w)}>
-                        Minggu ke-{w}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            {isTrialUnrestricted && (
+              <p className="mt-3 rounded-xl border border-blue-200 bg-blue-50/75 px-3.5 py-2.5 text-xs leading-relaxed text-blue-950">
+                Mode Uji Coba Bebas sedang <strong>AKTIF</strong>. Seluruh petugas &amp; admin dapat membuka spreadsheet hari ini dan mencatat pelanggaran kapan pun tanpa batasan shift atau hari sampai tombol <strong>Matikan Mode Uji Coba</strong> ditekan.
+              </p>
+            )}
 
-                <div>
-                  <label htmlFor="sim-day" className="block text-xs font-medium text-slate-700">
-                    Pilih Hari Uji Coba
-                  </label>
-                  <select
-                    id="sim-day"
-                    value={simDay}
-                    onChange={(e) => setSimDay(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs"
-                  >
-                    <option value="">Ikuti Hari Ini ({appState.serverHari})</option>
-                    {SEKOLAH_DAYS.map((d) => (
-                      <option key={d} value={d}>
-                        {d}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="sim-time" className="block text-xs font-medium text-slate-700">
-                    Pilih Jam Uji Coba
-                  </label>
+            <form onSubmit={handleSaveSimulation} className="mt-4 space-y-3 border-t border-slate-100 pt-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700">
                   <input
-                    id="sim-time"
-                    type="time"
-                    value={simTime}
-                    onChange={(e) => setSimTime(e.target.value)}
-                    className="font-mono-num mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs"
+                    type="checkbox"
+                    checked={simEnabled && !simUnrestricted}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSimEnabled(true);
+                        setSimUnrestricted(false);
+                      } else {
+                        setSimUnrestricted(true);
+                      }
+                    }}
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600"
                   />
-                </div>
+                  <span>Opsi Lanjutan: Uji Coba dengan Jam / Hari / Minggu Tertentu</span>
+                </label>
               </div>
 
-              <button
-                type="submit"
-                disabled={saving}
-                className="btn-3d-primary inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700"
-              >
-                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                <span>Simpan Pengaturan Waktu</span>
-              </button>
+              {simEnabled && !simUnrestricted && (
+                <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3.5">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div>
+                      <label htmlFor="sim-week" className="block text-xs font-medium text-slate-700">
+                        Pilih Minggu Uji Coba
+                      </label>
+                      <select
+                        id="sim-week"
+                        value={simWeek}
+                        onChange={(e) => setSimWeek(e.target.value)}
+                        className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs"
+                      >
+                        <option value="">Ikuti Minggu Asli</option>
+                        {Array.from({ length: cycleWeeks }, (_, i) => i + 1).map((w) => (
+                          <option key={w} value={String(w)}>
+                            Minggu ke-{w}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label htmlFor="sim-day" className="block text-xs font-medium text-slate-700">
+                        Pilih Hari Uji Coba
+                      </label>
+                      <select
+                        id="sim-day"
+                        value={simDay}
+                        onChange={(e) => setSimDay(e.target.value)}
+                        className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs"
+                      >
+                        <option value="">Ikuti Hari Ini ({appState.serverHari})</option>
+                        {SEKOLAH_DAYS.map((d) => (
+                          <option key={d} value={d}>
+                            {d}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label htmlFor="sim-time" className="block text-xs font-medium text-slate-700">
+                        Pilih Jam Uji Coba
+                      </label>
+                      <input
+                        id="sim-time"
+                        type="time"
+                        value={simTime}
+                        onChange={(e) => setSimTime(e.target.value)}
+                        className="font-mono-num mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="btn-3d-soft inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50"
+                  >
+                    <Save className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>Terapkan Simulasi Jam Tertentu</span>
+                  </button>
+                </div>
+              )}
             </form>
           </section>
         )}
@@ -1223,7 +1388,10 @@ export function ScheduleSettingsView({
                 id="search-akps-rules"
                 type="text"
                 value={ruleSearch}
-                onChange={(e) => setRuleSearch(e.target.value)}
+                onChange={(e) => {
+                  setRuleSearch(e.target.value);
+                  setRulePage(1);
+                }}
                 placeholder="Cari pelanggaran, kode, atau poin..."
                 className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-8 pr-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15"
               />
@@ -1231,7 +1399,10 @@ export function ScheduleSettingsView({
             {ruleSearch && (
               <button
                 type="button"
-                onClick={() => setRuleSearch('')}
+                onClick={() => {
+                  setRuleSearch('');
+                  setRulePage(1);
+                }}
                 className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100"
               >
                 Reset
@@ -1258,7 +1429,7 @@ export function ScheduleSettingsView({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredPresets.length === 0 ? (
+              {paginatedPresets.items.length === 0 ? (
                 <tr>
                   <td
                     colSpan={canManage ? 6 : 5}
@@ -1268,7 +1439,7 @@ export function ScheduleSettingsView({
                   </td>
                 </tr>
               ) : (
-                filteredPresets.map((p) => {
+                paginatedPresets.items.map((p) => {
                   const isEditingThis = editingPresetId === p.id;
                   return (
                     <tr key={p.id} className="hover:bg-slate-50/60">
@@ -1410,6 +1581,22 @@ export function ScheduleSettingsView({
             </tbody>
           </table>
         </div>
+
+        <PaginationBar
+          page={paginatedPresets.page}
+          totalPages={paginatedPresets.totalPages}
+          totalItems={paginatedPresets.totalItems}
+          startIndex={paginatedPresets.startIndex}
+          endIndex={paginatedPresets.endIndex}
+          pageSize={rulePageSize}
+          pageSizeOptions={[10, 20, 40]}
+          itemLabel="aturan"
+          onPageChange={setRulePage}
+          onPageSizeChange={(size) => {
+            setRulePageSize(size);
+            setRulePage(1);
+          }}
+        />
 
         {canManage && (
           <form

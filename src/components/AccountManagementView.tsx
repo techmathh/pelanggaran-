@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent 
 import {
   AlertTriangle,
   BookOpen,
+  ChevronDown,
+  ChevronUp,
   Cloud,
   Copy,
   Download,
@@ -17,6 +19,7 @@ import {
   Trash2,
   Upload,
   UserPlus,
+  Wrench,
 } from 'lucide-react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { apiFetch } from '../lib/apiClient';
@@ -39,8 +42,10 @@ import {
   canEditAccountProfile,
   formatScheduledWeeksLabel,
   getRoleLabel,
+  paginateItems,
   parseBulkAccountEntries,
 } from '../shared/piketLogic';
+import { PaginationBar } from './PaginationBar';
 import type {
   GeneratedAccountCredential,
   HariPiket,
@@ -118,8 +123,15 @@ export function AccountManagementView({
   const [editAccDivision, setEditAccDivision] = useState('');
   const [editAccRole, setEditAccRole] = useState<'admin' | 'petugas'>('petugas');
 
-  // Account directory search filter
+  // Collapsible secondary sections to keep directory accessible without excessive scrolling
+  const [showBulkForm, setShowBulkForm] = useState(appState.officers.length <= 4);
+  const [showDevTools, setShowDevTools] = useState(false);
+
+  // Account directory search, role filter & pagination
   const [accountSearch, setAccountSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState<'ALL' | RolePetugas>('ALL');
+  const [accountPage, setAccountPage] = useState(1);
+  const [accountPageSize, setAccountPageSize] = useState<number | 'ALL'>(10);
 
   // Developer system reset state
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -155,16 +167,23 @@ export function AccountManagementView({
 
   const filteredOfficers = useMemo(() => {
     const q = accountSearch.trim().toLowerCase();
-    if (!q) return appState.officers;
-    return appState.officers.filter(
-      (acc) =>
+    return appState.officers.filter((acc) => {
+      if (roleFilter !== 'ALL' && acc.role !== roleFilter) return false;
+      if (!q) return true;
+      return (
         acc.name.toLowerCase().includes(q) ||
         acc.username.toLowerCase().includes(q) ||
         acc.kelas.toLowerCase().includes(q) ||
         acc.division.toLowerCase().includes(q) ||
         getRoleLabel(acc.role).toLowerCase().includes(q)
-    );
-  }, [appState.officers, accountSearch]);
+      );
+    });
+  }, [appState.officers, accountSearch, roleFilter]);
+
+  const paginatedOfficers = useMemo(
+    () => paginateItems(filteredOfficers, accountPage, accountPageSize),
+    [filteredOfficers, accountPage, accountPageSize]
+  );
 
   function toggleDay(day: HariPiket) {
     setScheduledDays((prev) =>
@@ -539,36 +558,66 @@ export function AccountManagementView({
 
   return (
     <div className="space-y-6">
-      {/* Header Summary */}
-      <section className="surface-3d animate-stagger-1 rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      {/* Header Summary & Compact Tool Toggles */}
+      <section className="surface-3d animate-stagger-1 rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h1 className="font-display text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
               Kelola Akun Pengurus & Petugas
             </h1>
-            <p className="mt-1 text-sm text-slate-600">
-              {isDeveloper
-                ? 'Buat akun Admin OSIS maupun Petugas Piket sekaligus, unduh panduan website, serta kelola reset data sistem.'
-                : 'Anda bisa membuat akun Petugas Piket sekaligus, mengunduh daftar login, dan mengatur jadwal petugas.'}
+            <p className="mt-0.5 text-xs text-slate-600 sm:text-sm">
+              Total{' '}
+              <strong className="font-mono-num text-slate-900">
+                <AnimatedNumber value={appState.officers.length} />
+              </strong>{' '}
+              akun terdaftar · Jabatan Anda:{' '}
+              <strong className="text-blue-700">{getRoleLabel(officer.role)}</strong>
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 shrink-0">
-            <span>
-              Total Akun: <strong className="text-slate-900"><AnimatedNumber value={appState.officers.length} /></strong>
-            </span>
-            <span aria-hidden="true">·</span>
-            <span>
-              Jabatan Anda: <strong className="text-blue-700">{getRoleLabel(officer.role)}</strong>
-            </span>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <button
+              type="button"
+              aria-expanded={showBulkForm}
+              onClick={() => setShowBulkForm((prev) => !prev)}
+              className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-colors whitespace-nowrap ${
+                showBulkForm
+                  ? 'border-blue-600 bg-blue-600 text-white'
+                  : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
+              }`}
+            >
+              <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{showBulkForm ? 'Tutup Form Buat Akun' : 'Buat Banyak Akun'}</span>
+              {showBulkForm ? (
+                <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+            </button>
+
+            {isDeveloper && (
+              <button
+                type="button"
+                aria-expanded={showDevTools}
+                onClick={() => setShowDevTools((prev) => !prev)}
+                className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-colors whitespace-nowrap ${
+                  showDevTools
+                    ? 'border-slate-900 bg-slate-900 text-white'
+                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <Wrench className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>{showDevTools ? 'Tutup Alat Developer' : 'Alat & Cadangan Developer'}</span>
+              </button>
+            )}
           </div>
         </div>
       </section>
 
-      {/* Developer Control Panel (Strictly visible to Developer role) */}
-      {isDeveloper && (
+      {/* Developer Control Panel (Collapsible for Developer role) */}
+      {isDeveloper && showDevTools && (
         <section
           aria-label="Panel Khusus Developer"
-          className="surface-3d animate-stagger-2 rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6"
+          className="surface-3d animate-panel-reveal rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6"
         >
           <div className="flex flex-col gap-1 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -700,8 +749,9 @@ export function AccountManagementView({
         </section>
       )}
 
-      {/* Bulk Account Creation Form */}
-      <section className="surface-3d animate-stagger-3 rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6">
+      {/* Bulk Account Creation Form (Collapsible) */}
+      {showBulkForm && (
+      <section className="surface-3d animate-panel-reveal rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6">
         <div className="flex items-start gap-2.5 border-b border-slate-100 pb-4">
           <UserPlus className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" aria-hidden="true" />
           <div>
@@ -922,6 +972,7 @@ export function AccountManagementView({
           </div>
         </form>
       </section>
+      )}
 
       {/* Newly Generated Credentials Export Panel */}
       {generatedBatch.length > 0 && (
@@ -1008,18 +1059,47 @@ export function AccountManagementView({
 
       {/* Registered Accounts Directory */}
       <section className="surface-3d animate-stagger-4 rounded-2xl border border-slate-200/90 bg-white">
-        <div className="flex flex-col gap-3 border-b border-slate-200 p-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 border-b border-slate-200 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="font-display text-lg font-bold text-slate-900">
               Daftar Akun Terdaftar
             </h2>
             <p className="text-xs text-slate-500">
-              Menampilkan {filteredOfficers.length} dari {appState.officers.length} akun · Akun
+              Menampilkan <strong className="font-mono-num text-slate-700">{filteredOfficers.length}</strong> dari{' '}
+              <strong className="font-mono-num text-slate-700">{appState.officers.length}</strong> akun · Akun
               Developer utama dilindungi sistem.
             </p>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="relative w-full sm:w-56">
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+            <div className="flex items-center gap-1 self-start rounded-lg bg-slate-100 p-1">
+              {(
+                [
+                  { id: 'ALL', label: 'Semua' },
+                  { id: 'petugas', label: 'Petugas' },
+                  { id: 'admin', label: 'Admin' },
+                  { id: 'developer', label: 'Dev' },
+                ] as const
+              ).map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    setRoleFilter(item.id);
+                    setAccountPage(1);
+                  }}
+                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
+                    roleFilter === item.id
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative w-full sm:w-52">
               <Search
                 className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
                 aria-hidden="true"
@@ -1028,8 +1108,11 @@ export function AccountManagementView({
                 type="search"
                 aria-label="Cari akun pengurus atau petugas"
                 value={accountSearch}
-                onChange={(e) => setAccountSearch(e.target.value)}
-                placeholder="Cari nama atau username..."
+                onChange={(e) => {
+                  setAccountSearch(e.target.value);
+                  setAccountPage(1);
+                }}
+                placeholder="Cari nama / username..."
                 className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-8 pr-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15"
               />
             </div>
@@ -1038,10 +1121,10 @@ export function AccountManagementView({
               onClick={() =>
                 downloadRegisteredAccountsDirectoryXlsx(appState.officers, appState.serverDate)
               }
-              className="btn-3d-soft inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50 shrink-0"
+              className="btn-3d-soft inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50 whitespace-nowrap shrink-0"
             >
               <Download className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Unduh Daftar Akun (.xlsx)</span>
+              <span>Unduh (.xlsx)</span>
             </button>
           </div>
         </div>
@@ -1051,22 +1134,22 @@ export function AccountManagementView({
           <table className="w-full border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
-                <th className="px-4 py-3">Nama & Kelas</th>
-                <th className="px-4 py-3">Username</th>
-                <th className="px-4 py-3">Jabatan</th>
-                <th className="px-4 py-3">Status Password</th>
-                <th className="px-4 py-3 text-right">Aksi</th>
+                <th className="px-4 py-2.5">Nama & Kelas</th>
+                <th className="px-4 py-2.5">Username</th>
+                <th className="px-4 py-2.5">Jabatan</th>
+                <th className="px-4 py-2.5">Status Password</th>
+                <th className="px-4 py-2.5 text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredOfficers.length === 0 ? (
+              {paginatedOfficers.items.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-xs text-slate-500">
-                    Tidak ada akun yang cocok dengan pencarian &ldquo;{accountSearch}&rdquo;.
+                    Tidak ada akun yang cocok dengan filter atau pencarian tersebut.
                   </td>
                 </tr>
               ) : (
-                filteredOfficers.map((acc) => {
+                paginatedOfficers.items.map((acc) => {
                   const deletable = canDeleteAccount(officer.role, acc);
                   const editable = canEditAccountProfile(officer.role, officer.id, acc);
                   const resettable =
@@ -1078,7 +1161,7 @@ export function AccountManagementView({
 
                   return (
                     <tr key={acc.id} className="transition-colors hover:bg-slate-50/80">
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-2.5">
                         {isEditingThis ? (
                           <div className="space-y-1.5">
                             <input
@@ -1126,10 +1209,10 @@ export function AccountManagementView({
                           </div>
                         )}
                       </td>
-                      <td className="font-mono-num px-4 py-3 text-xs font-semibold text-slate-700">
+                      <td className="font-mono-num px-4 py-2.5 text-xs font-semibold text-slate-700">
                         @{acc.username}
                       </td>
-                      <td className="px-4 py-3 text-xs font-semibold">
+                      <td className="px-4 py-2.5 text-xs font-semibold">
                         {isEditingThis && isDeveloper && !acc.isProtected && acc.role !== 'developer' ? (
                           <select
                             value={editAccRole}
@@ -1155,17 +1238,17 @@ export function AccountManagementView({
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-xs">
+                      <td className="px-4 py-2.5 text-xs">
                         {acc.mustChangePassword ? (
                           <span className="inline-flex items-center gap-1 font-medium text-amber-700">
                             <KeyRound className="h-3.5 w-3.5" aria-hidden="true" />
-                            <span>Wajib Ganti Saat Masuk</span>
+                            <span>Wajib Ganti</span>
                           </span>
                         ) : (
-                          <span className="text-emerald-700 font-medium">Aktif & Aman</span>
+                          <span className="text-emerald-700 font-medium">Aktif</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-2.5 text-right whitespace-nowrap">
                         {isEditingThis ? (
                           <div className="inline-flex items-center gap-1.5">
                             <button
@@ -1229,10 +1312,11 @@ export function AccountManagementView({
                                     type="button"
                                     disabled={submitting}
                                     onClick={() => handleResetPassword(acc)}
-                                    className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                                    aria-label={`Reset password ${acc.name}`}
+                                    className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 whitespace-nowrap"
                                   >
                                     <RefreshCw className="h-3 w-3" aria-hidden="true" />
-                                    <span>Buat Ulang Password</span>
+                                    <span>Reset PW</span>
                                   </button>
                                 )}
                                 {deletable && (
@@ -1262,7 +1346,12 @@ export function AccountManagementView({
 
         {/* Mobile Card List (< md) */}
         <div className="divide-y divide-slate-100 md:hidden">
-          {filteredOfficers.map((acc) => {
+          {paginatedOfficers.items.length === 0 ? (
+            <div className="px-4 py-8 text-center text-xs text-slate-500">
+              Tidak ada akun yang cocok dengan filter atau pencarian tersebut.
+            </div>
+          ) : (
+          paginatedOfficers.items.map((acc) => {
             const deletable = canDeleteAccount(officer.role, acc);
             const editable = canEditAccountProfile(officer.role, officer.id, acc);
             const resettable =
@@ -1273,7 +1362,7 @@ export function AccountManagementView({
             const isEditingThis = editingAccountId === acc.id;
 
             return (
-              <div key={acc.id} className="space-y-2.5 p-4">
+              <div key={acc.id} className="space-y-2 p-3.5">
                 {isEditingThis ? (
                   <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
                     <input
@@ -1394,7 +1483,7 @@ export function AccountManagementView({
                                   onClick={() => handleResetPassword(acc)}
                                   className="rounded-lg border border-slate-200 px-2.5 py-1 font-medium text-slate-700"
                                 >
-                                  Buat Ulang Password
+                                  Reset PW
                                 </button>
                               )}
                               {deletable && (
@@ -1416,13 +1505,30 @@ export function AccountManagementView({
                 )}
               </div>
             );
-          })}
+          })
+          )}
         </div>
+
+        <PaginationBar
+          page={paginatedOfficers.page}
+          totalPages={paginatedOfficers.totalPages}
+          totalItems={paginatedOfficers.totalItems}
+          startIndex={paginatedOfficers.startIndex}
+          endIndex={paginatedOfficers.endIndex}
+          pageSize={accountPageSize}
+          pageSizeOptions={[10, 20, 50]}
+          itemLabel="akun"
+          onPageChange={setAccountPage}
+          onPageSizeChange={(size) => {
+            setAccountPageSize(size);
+            setAccountPage(1);
+          }}
+        />
       </section>
 
-      {/* Full Backup & Restore (Developer-only: Local JSON + Cloud Firestore Snapshot) */}
-      {isDeveloper && (
-        <section className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-6">
+      {/* Full Backup & Restore (Developer-only: Local JSON + Cloud Firestore Snapshot, shown with Alat Developer) */}
+      {isDeveloper && showDevTools && (
+        <section className="animate-panel-reveal rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="flex items-center gap-2 font-display text-base font-bold text-slate-900">

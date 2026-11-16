@@ -159,6 +159,10 @@ export function parseMinutes(hhmm: string): number {
   return h * 60 + m;
 }
 
+export function isUnrestrictedTrialMode(simulation?: SimulationConfig): boolean {
+  return Boolean(simulation?.enabled && simulation.unrestricted !== false);
+}
+
 export function getEffectiveClock(
   now: Date,
   simulation?: SimulationConfig
@@ -167,7 +171,7 @@ export function getEffectiveClock(
   const realHari = getHariFromDate(now);
   const realTime = formatTimeHHMM(now);
 
-  if (simulation?.enabled) {
+  if (simulation?.enabled && simulation.unrestricted === false) {
     return {
       dateKey,
       timeHHMM: simulation.simulatedTime || '07:15',
@@ -271,7 +275,12 @@ export function getActiveRotationWeek(
   let currentWeek = (((weeksElapsed % cycleWeeks) + cycleWeeks) % cycleWeeks) + 1;
   let isSimulatedWeek = false;
 
-  if (simulation?.enabled && simulation.simulatedWeek && simulation.simulatedWeek >= 1) {
+  if (
+    simulation?.enabled &&
+    simulation.unrestricted === false &&
+    simulation.simulatedWeek &&
+    simulation.simulatedWeek >= 1
+  ) {
     currentWeek = ((Math.round(simulation.simulatedWeek) - 1) % cycleWeeks) + 1;
     isSimulatedWeek = true;
   }
@@ -379,6 +388,24 @@ export function getScheduleStatus(
       ? officer.scheduledDays.join(', ')
       : 'Belum dijadwalkan';
   const shiftWindowText = `${officer.shiftStart} – ${officer.shiftEnd}`;
+
+  if (isUnrestrictedTrialMode(simulation)) {
+    return {
+      allowed: true,
+      reason:
+        'Mode Uji Coba Bebas aktif — semua petugas dapat mencatat kapan saja tanpa batasan jam, hari, atau minggu hingga Mode Uji Coba dimatikan.',
+      currentHari: hari,
+      currentTime: timeHHMM,
+      currentWeek: weekInfo.currentWeek,
+      weekRangeText: weekInfo.weekRangeText,
+      scheduledWeeksText,
+      scheduledDaysText,
+      shiftWindowText,
+      isWeekMatch: true,
+      isDayMatch: true,
+      isTimeMatch: true,
+    };
+  }
 
   let reason =
     weekInfo.cycleWeeks > 1
@@ -639,6 +666,20 @@ export function getAutoSessionWindowStatus(
       ? dailySession.activeDays
       : DEFAULT_DAILY_SESSION_CONFIG.activeDays;
 
+  if (isUnrestrictedTrialMode(simulation)) {
+    return {
+      isActiveDay: true,
+      phase: 'OPEN',
+      startTime,
+      endTime,
+      currentTime: timeHHMM,
+      hari,
+      dateKey,
+      minutesUntilStart: 0,
+      minutesUntilClose: 0,
+    };
+  }
+
   const isActiveDay = activeDays.includes(hari);
   const currentMin = parseMinutes(timeHHMM);
   const startMin = parseMinutes(startTime);
@@ -743,8 +784,11 @@ export function evaluateAutoSpreadsheetLifecycle(
         reopenedManually: false,
         rows: [],
       });
-    } else if (todaySheet.status === 'FINALIZED' && !todaySheet.reopenedManually) {
-      // If Jam Selesai was extended while today is back inside OPEN hours, reopen automatically
+    } else if (
+      todaySheet.status === 'FINALIZED' &&
+      (!todaySheet.reopenedManually || isUnrestrictedTrialMode(simulation))
+    ) {
+      // Reopen automatically when back inside OPEN hours or unrestricted Trial Mode is active
       changedSheets.push({
         ...todaySheet,
         status: 'ACTIVE',
@@ -1579,5 +1623,62 @@ export function calculateDailyOfficerProductivity(
     recordingOfficerCount,
     averagePerRecordingOfficer,
     officers: items,
+  };
+}
+
+export interface PaginatedResult<T> {
+  items: T[];
+  page: number;
+  pageSize: number | 'ALL';
+  totalItems: number;
+  totalPages: number;
+  startIndex: number;
+  endIndex: number;
+}
+
+export function paginateItems<T>(
+  allItems: readonly T[],
+  requestedPage: number,
+  pageSize: number | 'ALL'
+): PaginatedResult<T> {
+  const totalItems = allItems.length;
+  if (totalItems === 0) {
+    return {
+      items: [],
+      page: 1,
+      pageSize,
+      totalItems: 0,
+      totalPages: 1,
+      startIndex: 0,
+      endIndex: 0,
+    };
+  }
+
+  if (pageSize === 'ALL') {
+    return {
+      items: [...allItems],
+      page: 1,
+      pageSize: 'ALL',
+      totalItems,
+      totalPages: 1,
+      startIndex: 1,
+      endIndex: totalItems,
+    };
+  }
+
+  const safeSize = Math.max(1, Math.round(pageSize));
+  const totalPages = Math.max(1, Math.ceil(totalItems / safeSize));
+  const safePage = Math.min(totalPages, Math.max(1, Math.round(requestedPage || 1)));
+  const zeroStart = (safePage - 1) * safeSize;
+  const sliced = allItems.slice(zeroStart, zeroStart + safeSize);
+
+  return {
+    items: sliced,
+    page: safePage,
+    pageSize: safeSize,
+    totalItems,
+    totalPages,
+    startIndex: zeroStart + 1,
+    endIndex: zeroStart + sliced.length,
   };
 }

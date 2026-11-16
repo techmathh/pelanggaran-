@@ -177,6 +177,7 @@ export interface DailySessionProductivitySummary {
 
 export interface SimulationConfig {
   enabled: boolean;
+  unrestricted?: boolean;
   simulatedTime: string;
   simulatedDay: HariPiket | null;
   simulatedWeek?: number | null;

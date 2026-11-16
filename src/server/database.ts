@@ -41,13 +41,27 @@ import type {
   ViolationPreset,
   WeeklyRotationConfig,
 } from '../shared/types';
+import {
+  resolveDataDirectoryConfig,
+  type DataDirectoryConfig,
+} from './storageConfig';
 import { DEVELOPER_BOOTSTRAP, OFFICIAL_AKPS_PRESETS } from './seedData';
 import { SMAN1_KEMANGKON_STUDENTS } from './studentRoster';
 
-const DATA_DIR = process.env.DATA_DIR
-  ? path.resolve(process.env.DATA_DIR)
-  : path.resolve(process.cwd(), 'data');
-const SQLITE_PATH = path.join(DATA_DIR, 'sipiket.db');
+const DB_PATH_CONFIG: DataDirectoryConfig = resolveDataDirectoryConfig(
+  process.env,
+  process.cwd()
+);
+const DATA_DIR = DB_PATH_CONFIG.dataDir;
+const SQLITE_PATH = DB_PATH_CONFIG.sqlitePath;
+
+export function getDatabasePersistenceInfo(): Omit<DataDirectoryConfig, 'dataDir' | 'sqlitePath'> {
+  return {
+    persistenceMode: DB_PATH_CONFIG.persistenceMode,
+    isPersistent: DB_PATH_CONFIG.isPersistent,
+    warning: DB_PATH_CONFIG.warning,
+  };
+}
 
 const BOOT_NONCE = crypto.randomBytes(4).toString('hex');
 let stateRevision = 1;
@@ -424,7 +438,30 @@ export function getDatabase(): DatabaseSync {
   const db = new DatabaseSync(SQLITE_PATH);
   createSchemaAndSeed(db);
   dbInstance = db;
+
+  if (DB_PATH_CONFIG.warning) {
+    console.warn(`[SiPiket DB] ${DB_PATH_CONFIG.warning}`);
+  } else {
+    console.log(
+      `[SiPiket DB] SQLite siap (${DB_PATH_CONFIG.persistenceMode}): ${SQLITE_PATH}`
+    );
+  }
   return db;
+}
+
+export function checkpointAndCloseDatabase(): void {
+  if (!dbInstance) return;
+  try {
+    dbInstance.exec('PRAGMA wal_checkpoint(TRUNCATE);');
+  } catch (err) {
+    console.error('[SiPiket DB] Gagal melakukan WAL checkpoint saat shutdown:', err);
+  }
+  try {
+    dbInstance.close();
+  } catch (err) {
+    console.error('[SiPiket DB] Gagal menutup SQLite saat shutdown:', err);
+  }
+  dbInstance = null;
 }
 
 interface AccountRow {
@@ -491,11 +528,18 @@ export function getSimulationConfig(): SimulationConfig {
     .prepare('SELECT value_json FROM app_settings WHERE key = ?')
     .get('simulation') as { value_json: string } | undefined;
   if (!row) {
-    return { enabled: false, simulatedTime: '07:15', simulatedDay: null, simulatedWeek: null };
+    return {
+      enabled: false,
+      unrestricted: true,
+      simulatedTime: '07:15',
+      simulatedDay: null,
+      simulatedWeek: null,
+    };
   }
   const parsed = JSON.parse(row.value_json) as SimulationConfig;
   return {
     enabled: Boolean(parsed.enabled),
+    unrestricted: parsed.unrestricted !== undefined ? Boolean(parsed.unrestricted) : true,
     simulatedTime: parsed.simulatedTime || '07:15',
     simulatedDay: parsed.simulatedDay ?? null,
     simulatedWeek: parsed.simulatedWeek ?? null,
@@ -1642,6 +1686,10 @@ export function restoreSystemBackupPayload(
         'simulation',
         JSON.stringify({
           enabled: Boolean(payload.simulation.enabled),
+          unrestricted:
+            payload.simulation.unrestricted !== undefined
+              ? Boolean(payload.simulation.unrestricted)
+              : true,
           simulatedTime: payload.simulation.simulatedTime || '07:15',
           simulatedDay: payload.simulation.simulatedDay ?? null,
           simulatedWeek: payload.simulation.simulatedWeek ?? null,
@@ -1704,6 +1752,7 @@ export function resetAllDataExceptSelf(developerAccountId: string): {
 
   const defaultSim: SimulationConfig = {
     enabled: false,
+    unrestricted: true,
     simulatedTime: '07:15',
     simulatedDay: null,
     simulatedWeek: null,

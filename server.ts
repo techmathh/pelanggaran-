@@ -1,6 +1,6 @@
 import express, { type NextFunction, type Request, type Response } from 'express';
+import fs from 'node:fs';
 import path from 'node:path';
-import { createServer as createViteServer } from 'vite';
 import {
   canCreateRole,
   canDeleteAccount,
@@ -16,6 +16,12 @@ import {
   validateViolationInput,
 } from './src/shared/piketLogic';
 import { MAX_BATCH_VIOLATION_ROWS } from './src/shared/batchViolationLogic';
+import {
+  isOriginAllowed,
+  normalizeOrigin,
+  parseAllowedOrigins,
+  resolveServerExecutionMode,
+} from './src/shared/runtimeConfig';
 import type {
   HariPiket,
   Officer,
@@ -29,6 +35,7 @@ import {
   addCustomStudentRecord,
   addPresetRecord,
   autoDistributePetugasWeeksRecord,
+  checkpointAndCloseDatabase,
   closeSpreadsheetManuallyInDb,
   createAccountsBulk,
   deleteAccountRecord,
@@ -39,6 +46,7 @@ import {
   findAccountById,
   findAccountByUsername,
   getDatabase,
+  getDatabasePersistenceInfo,
   getPublicAppState,
   getPublicMeta,
   getSessionSyncSnapshot,
@@ -129,23 +137,31 @@ async function startServer() {
   autoLifecycleTimer.unref?.();
 
   const app = express();
+  app.disable('x-powered-by');
   app.use(express.json({ limit: '5mb' }));
 
-  const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
-    .split(',')
-    .map((o) => o.trim())
-    .filter(Boolean);
+  const distDir = path.resolve(process.cwd(), 'dist');
+  const distIndexPath = path.join(distDir, 'index.html');
+  const executionMode = resolveServerExecutionMode(
+    process.env,
+    process.argv,
+    fs.existsSync(distIndexPath)
+  );
+  const persistenceInfo = getDatabasePersistenceInfo();
+  const allowedOrigins = parseAllowedOrigins(process.env.ALLOWED_ORIGINS);
 
   app.use('/api', (req, res, next) => {
     const origin = req.headers.origin;
     if (allowedOrigins.length === 0) {
-      res.setHeader('Access-Control-Allow-Origin', origin || '*');
-    } else if (origin && allowedOrigins.includes(origin)) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Origin', origin ? normalizeOrigin(origin) : '*');
+      if (origin) res.setHeader('Vary', 'Origin');
+    } else if (isOriginAllowed(origin, allowedOrigins)) {
+      res.setHeader('Access-Control-Allow-Origin', normalizeOrigin(origin!));
       res.setHeader('Vary', 'Origin');
     }
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+    res.setHeader('Access-Control-Max-Age', '86400');
     if (req.method === 'OPTIONS') {
       res.status(204).end();
       return;
@@ -153,13 +169,19 @@ async function startServer() {
     next();
   });
 
-  // Health check (verifies SQLite readiness for Railway healthcheck)
+  // Health check (verifies SQLite readiness & persistence mode for Railway healthcheck)
   app.get('/api/health', (_req, res) => {
     try {
       getDatabase().prepare('SELECT 1').get();
-      res.json({ ok: true, db: 'sqlite' });
+      res.json({
+        ok: true,
+        db: 'sqlite',
+        mode: executionMode,
+        persistence: persistenceInfo.persistenceMode,
+        volumeMounted: persistenceInfo.isPersistent,
+      });
     } catch {
-      res.status(503).json({ ok: false, db: 'unavailable' });
+      res.status(503).json({ ok: false, db: 'unavailable', mode: executionMode });
     }
   });
 
@@ -1123,8 +1145,9 @@ async function startServer() {
       return;
     }
 
-    const { enabled, simulatedTime, simulatedDay, simulatedWeek } = req.body as {
+    const { enabled, unrestricted, simulatedTime, simulatedDay, simulatedWeek } = req.body as {
       enabled?: boolean;
+      unrestricted?: boolean;
       simulatedTime?: string;
       simulatedDay?: HariPiket | null;
       simulatedWeek?: number | null;
@@ -1132,6 +1155,7 @@ async function startServer() {
 
     const state = setSimulationConfig({
       enabled: Boolean(enabled),
+      unrestricted: unrestricted !== false,
       simulatedTime: simulatedTime || '07:15',
       simulatedDay: simulatedDay || null,
       simulatedWeek: simulatedWeek && simulatedWeek >= 1 ? Number(simulatedWeek) : null,
@@ -1230,27 +1254,87 @@ async function startServer() {
     res.json({ ok: true, ...result });
   });
 
-  // Mount Vite middleware in dev, or serve dist in production
-  if (process.env.NODE_ENV !== 'production') {
+  // Mount frontend only in full-stack modes; keep Backend-Only mode completely isolated from Vite/dist
+  if (executionMode === 'fullstack-dev') {
+    app.get('/env-config.js', (_req, res) => {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.send('window.__SIPIKET_CONFIG__ = { apiBaseUrl: "" };\n');
+    });
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
-  } else {
-    const distDir = path.resolve(process.cwd(), 'dist');
-    app.use(express.static(distDir));
+  } else if (executionMode === 'fullstack-prod') {
+    app.get('/env-config.js', (_req, res) => {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.send('window.__SIPIKET_CONFIG__ = { apiBaseUrl: "" };\n');
+    });
+    app.use(
+      '/assets',
+      express.static(path.join(distDir, 'assets'), {
+        maxAge: '30d',
+        immutable: true,
+      })
+    );
+    app.use(express.static(distDir, { index: false }));
     app.get('*', (_req, res) => {
-      res.sendFile(path.join(distDir, 'index.html'));
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.sendFile(distIndexPath);
+    });
+  } else {
+    // Dedicated Backend API-Only mode (separated from Frontend hosting)
+    app.get('/', (_req, res) => {
+      res.json({
+        ok: true,
+        service: 'sipiket-osis-backend',
+        mode: 'backend-only',
+        persistence: persistenceInfo.persistenceMode,
+        volumeMounted: persistenceInfo.isPersistent,
+        health: '/api/health',
+      });
+    });
+    app.use((_req, res) => {
+      res.status(404).json({
+        ok: false,
+        error: 'Endpoint tidak ditemukan. Ini adalah server API Backend SiPiket OSIS.',
+      });
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`SiPiket OSIS server running on http://localhost:${PORT}`);
+  const httpServer = app.listen(PORT, '0.0.0.0', () => {
+    console.log(
+      `SiPiket OSIS server running on http://localhost:${PORT} [mode: ${executionMode}, storage: ${persistenceInfo.persistenceMode}]`
+    );
   });
+
+  let shuttingDown = false;
+  const gracefulShutdown = (signal: string) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.log(`[SiPiket] Menerima ${signal}, menyimpan transaksi SQLite (WAL checkpoint) sebelum berhenti...`);
+    clearInterval(autoLifecycleTimer);
+    httpServer.close(() => {
+      checkpointAndCloseDatabase();
+      process.exit(0);
+    });
+    // Force exit safety timeout after 4s so Railway redeploy never hangs
+    const forceTimer = setTimeout(() => {
+      checkpointAndCloseDatabase();
+      process.exit(0);
+    }, 4000);
+    forceTimer.unref?.();
+  };
+
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 }
 
 startServer().catch((err) => {
   console.error('Failed to start server:', err);
+  checkpointAndCloseDatabase();
   process.exit(1);
 });

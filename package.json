@@ -9,11 +9,15 @@
   "scripts": {
     "dev": "tsx server.ts",
     "build": "vite build",
+    "build:frontend": "vite build",
+    "build:backend": "node -e \"console.log('Backend SiPiket OSIS siap dijalankan')\"",
     "start": "tsx server.ts",
+    "start:backend": "tsx server.ts --backend-only",
+    "start:frontend": "tsx frontend-server.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "tsx --test src/shared/piketLogic.test.ts"
+    "test": "tsx --test src/shared/piketLogic.test.ts src/shared/runtimeConfig.test.ts"
   },
   "dependencies": {
     "@firebase/eslint-plugin-security-rules": "^0.0.2",

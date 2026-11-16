@@ -942,11 +942,11 @@ export function BatchViolationForm({
               Belum ada siswa ditambahkan. Cari nama di atas atau centang dari tab &ldquo;Centang per Kelas&rdquo;.
             </p>
           ) : (
-            <div className="mt-2 max-h-40 overflow-y-auto divide-y divide-slate-200/80 rounded-lg border border-slate-200 bg-white">
+            <div className="mt-2 max-h-40 overflow-y-auto grid grid-cols-1 gap-1.5 rounded-lg border border-slate-200 bg-white p-1.5 sm:grid-cols-2">
               {selectedStudents.map((stu, idx) => (
                 <div
                   key={stu.key}
-                  className="flex items-center justify-between gap-2 px-3 py-1.5 text-xs"
+                  className="flex items-center justify-between gap-2 rounded-md border border-slate-100 bg-slate-50/60 px-2.5 py-1 text-xs"
                 >
                   <span className="min-w-0 truncate text-slate-800">
                     <span className="font-mono-num text-slate-400">{idx + 1}.</span>{' '}
@@ -959,7 +959,7 @@ export function BatchViolationForm({
                     onClick={() =>
                       setSelectedStudents((prev) => prev.filter((item) => item.key !== stu.key))
                     }
-                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-700"
+                    className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-red-50 hover:text-red-700"
                   >
                     <X className="h-3.5 w-3.5" aria-hidden="true" />
                   </button>

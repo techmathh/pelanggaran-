@@ -1,7 +1,21 @@
 import { isReachableApiResponse } from '../shared/connectionLogic';
+import { resolveFrontendApiBaseUrl } from '../shared/runtimeConfig';
+
+declare global {
+  interface Window {
+    __SIPIKET_CONFIG__?: {
+      apiBaseUrl?: string;
+    };
+  }
+}
 
 const AUTH_TOKEN_KEY = 'sipiket_osis_auth_token';
-const RAW_API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').trim().replace(/\/+$/, '');
+
+export function getResolvedApiBase(): string {
+  const runtimeBase =
+    typeof window !== 'undefined' ? window.__SIPIKET_CONFIG__?.apiBaseUrl : undefined;
+  return resolveFrontendApiBaseUrl(import.meta.env.VITE_API_BASE_URL, runtimeBase);
+}
 
 export const SESSION_INVALIDATED_EVENT = 'sipiket:session-invalidated';
 export const NETWORK_STATUS_EVENT = 'sipiket:network-status';
@@ -26,11 +40,12 @@ export function reportNetworkStatus(detail: NetworkStatusDetail): void {
 export function buildApiUrl(path: string): string {
   if (/^https?:\/\//i.test(path)) return path;
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return RAW_API_BASE ? `${RAW_API_BASE}${normalizedPath}` : normalizedPath;
+  const apiBase = getResolvedApiBase();
+  return apiBase ? `${apiBase}${normalizedPath}` : normalizedPath;
 }
 
 export function hasExternalApiBase(): boolean {
-  return Boolean(RAW_API_BASE);
+  return Boolean(getResolvedApiBase());
 }
 
 export function getAuthToken(): string | null {

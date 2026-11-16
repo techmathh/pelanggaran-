@@ -111,10 +111,10 @@ export default function App() {
     } catch (err) {
       if (err instanceof Error && err.message === 'BACKEND_UNAVAILABLE') {
         setLoadError(
-          'Server API SiPiket OSIS (/api) tidak ditemukan di hosting ini. Vercel hanya menjalankan tampilan depan; jalankan server Node.js (server.ts) di Railway/Render/VPS lalu sambungkan melalui VITE_API_BASE_URL, atau deploy full-stack langsung di hosting Node.js.'
+          'Server API Backend (/api) tidak ditemukan dari layanan Frontend ini. Pastikan layanan Backend sudah aktif dan variabel API_BASE_URL / VITE_API_BASE_URL pada Frontend mengarah ke URL Backend (serta ALLOWED_ORIGINS pada Backend mengizinkan domain Frontend ini).'
         );
       } else {
-        setLoadError('Tidak dapat terhubung ke server SiPiket OSIS.');
+        setLoadError('Tidak dapat terhubung ke server Backend SiPiket OSIS.');
       }
     } finally {
       setLoading(false);

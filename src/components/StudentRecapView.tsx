@@ -13,7 +13,11 @@ import {
   UserPlus,
 } from 'lucide-react';
 import { apiFetch } from '../lib/apiClient';
-import { calculateStudentSummaries, isManagerRole } from '../shared/piketLogic';
+import {
+  calculateStudentSummaries,
+  isManagerRole,
+  paginateItems,
+} from '../shared/piketLogic';
 import {
   parseStudentRosterRows,
   type ParsedStudentRosterResult,
@@ -30,6 +34,7 @@ import {
   downloadStudentRosterTemplateXlsx,
 } from '../utils/exportSpreadsheet';
 import { AnimatedNumber } from './AnimatedNumber';
+import { PaginationBar } from './PaginationBar';
 
 interface StudentRecapViewProps {
   officer?: PublicOfficer;
@@ -59,7 +64,8 @@ export function StudentRecapView({
   const [tierFilter, setTierFilter] = useState<'ALL' | TingkatPembinaan>('ALL');
   const [kelasFilter, setKelasFilter] = useState<string>('ALL');
   const [onlyViolators, setOnlyViolators] = useState<boolean>(false);
-  const [visibleLimit, setVisibleLimit] = useState<number>(30);
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number | 'ALL'>(20);
 
   // Custom student management & bulk Excel/CSV import state (for Admin/Developer)
   const [showAddStudent, setShowAddStudent] = useState(false);
@@ -108,9 +114,9 @@ export function StudentRecapView({
     });
   }, [summaries, query, tierFilter, kelasFilter, onlyViolators]);
 
-  const visibleRows = useMemo(
-    () => filtered.slice(0, visibleLimit),
-    [filtered, visibleLimit]
+  const paginatedStudents = useMemo(
+    () => paginateItems(filtered, page, pageSize),
+    [filtered, page, pageSize]
   );
 
   const needLetterCount = summaries.filter((s) => s.totalPoints >= 26).length;
@@ -668,7 +674,7 @@ export function StudentRecapView({
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
-                setVisibleLimit(30);
+                setPage(1);
               }}
               placeholder="Cari siswa, kelas, atau NIS..."
               className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none"
@@ -681,7 +687,7 @@ export function StudentRecapView({
               value={kelasFilter}
               onChange={(e) => {
                 setKelasFilter(e.target.value);
-                setVisibleLimit(50);
+                setPage(1);
               }}
               className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 focus:border-blue-600 focus:outline-none"
             >
@@ -698,7 +704,7 @@ export function StudentRecapView({
               value={tierFilter}
               onChange={(e) => {
                 setTierFilter(e.target.value as 'ALL' | TingkatPembinaan);
-                setVisibleLimit(30);
+                setPage(1);
               }}
               className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 focus:border-blue-600 focus:outline-none"
             >
@@ -715,7 +721,7 @@ export function StudentRecapView({
                 checked={onlyViolators}
                 onChange={(e) => {
                   setOnlyViolators(e.target.checked);
-                  setVisibleLimit(30);
+                  setPage(1);
                 }}
                 className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-600"
               />
@@ -730,7 +736,7 @@ export function StudentRecapView({
                   setKelasFilter('ALL');
                   setTierFilter('ALL');
                   setOnlyViolators(false);
-                  setVisibleLimit(30);
+                  setPage(1);
                 }}
                 className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
               >
@@ -758,26 +764,26 @@ export function StudentRecapView({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {visibleRows.map((stu) => (
+                {paginatedStudents.items.map((stu) => (
                   <tr key={stu.key} className="transition-colors hover:bg-slate-50/80">
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2.5">
                       <p className="font-medium text-slate-900">{stu.studentName}</p>
                       <p className="font-mono-num text-xs text-slate-500">NIS {stu.studentNis}</p>
                     </td>
-                    <td className="font-mono-num px-4 py-3 text-xs font-semibold text-slate-700">
+                    <td className="font-mono-num px-4 py-2.5 text-xs font-semibold text-slate-700">
                       {stu.kelas}
                     </td>
-                    <td className="font-mono-num px-4 py-3 text-right text-slate-700">
+                    <td className="font-mono-num px-4 py-2.5 text-right text-slate-700">
                       {stu.incidentCount}x
                     </td>
-                    <td className="font-mono-num px-4 py-3 text-right font-bold text-slate-900">
+                    <td className="font-mono-num px-4 py-2.5 text-right font-bold text-slate-900">
                       {stu.totalPoints}
                     </td>
-                    <td className="px-4 py-3 text-xs text-slate-600">
+                    <td className="px-4 py-2.5 text-xs text-slate-600">
                       <p className="text-slate-800">{stu.lastViolationLabel}</p>
                       <p className="font-mono-num text-slate-400">{stu.lastViolationDate}</p>
                     </td>
-                    <td className="px-4 py-3 text-xs font-semibold">
+                    <td className="px-4 py-2.5 text-xs font-semibold">
                       {stu.totalPoints >= 51 ? (
                         <span className="inline-flex items-center gap-1.5 text-red-700">
                           <ShieldAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -802,23 +808,21 @@ export function StudentRecapView({
           )}
         </div>
 
-        {filtered.length > 0 && (
-          <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-100 px-4 py-3 text-xs text-slate-500 sm:flex-row sm:px-5">
-            <span>
-              Menampilkan <strong className="text-slate-700">{visibleRows.length}</strong> dari{' '}
-              <strong className="text-slate-700">{filtered.length}</strong> siswa
-            </span>
-            {visibleRows.length < filtered.length && (
-              <button
-                type="button"
-                onClick={() => setVisibleLimit((prev) => prev + 50)}
-                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-              >
-                Tampilkan 50 Siswa Berikutnya
-              </button>
-            )}
-          </div>
-        )}
+        <PaginationBar
+          page={paginatedStudents.page}
+          totalPages={paginatedStudents.totalPages}
+          totalItems={paginatedStudents.totalItems}
+          startIndex={paginatedStudents.startIndex}
+          endIndex={paginatedStudents.endIndex}
+          pageSize={pageSize}
+          pageSizeOptions={[20, 50, 100]}
+          itemLabel="siswa"
+          onPageChange={setPage}
+          onPageSizeChange={(nextSize) => {
+            setPageSize(nextSize);
+            setPage(1);
+          }}
+        />
       </section>
     </div>
   );

@@ -37,6 +37,8 @@ import {
   getTingkatPembinaan,
   groupViolationsByClass,
   isManagerRole,
+  isUnrestrictedTrialMode,
+  paginateItems,
   searchSimilarStudents,
 } from '../shared/piketLogic';
 import {
@@ -57,6 +59,7 @@ import { downloadVisualPdfReport } from '../utils/exportVisualPdf';
 import { AnimatedNumber } from './AnimatedNumber';
 import { BatchViolationForm } from './BatchViolationForm';
 import { CuteMascot3D, type MascotMood } from './CuteMascot3D';
+import { PaginationBar } from './PaginationBar';
 import { Tilt3DCard } from './Tilt3DCard';
 import { VisualReportModal } from './VisualReportModal';
 
@@ -152,10 +155,13 @@ export function SpreadsheetWorkspace({
   const [editActionTaken, setEditActionTaken] = useState('');
   const [editNotes, setEditNotes] = useState('');
 
-  // Grid filter & grouping view state
+  // Grid filter, grouping & pagination state
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('ALL');
   const [groupByClassView, setGroupByClassView] = useState(false);
+  const [rowPage, setRowPage] = useState(1);
+  const [rowPageSize, setRowPageSize] = useState<number | 'ALL'>(15);
+  const [openClassGroups, setOpenClassGroups] = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
   const [mascotPulse, setMascotPulse] = useState(0);
   const [showVisualPreview, setShowVisualPreview] = useState(false);
@@ -222,6 +228,12 @@ export function SpreadsheetWorkspace({
     [filteredRows]
   );
 
+  const paginatedRows = useMemo(
+    () => paginateItems(filteredRows, rowPage, rowPageSize),
+    [filteredRows, rowPage, rowPageSize]
+  );
+
+  const isTrialUnrestricted = isUnrestrictedTrialMode(appState.simulation);
   const isSheetFinalized = todaySheet?.status === 'FINALIZED';
   const isSheetActive = Boolean(todaySheet && todaySheet.status === 'ACTIVE');
   const canRecordNow = scheduleStatus.allowed && isSheetActive;
@@ -626,6 +638,37 @@ export function SpreadsheetWorkspace({
     }
   }
 
+  async function handleTurnOffTrialMode() {
+    if (!isManagerRole(officer.role)) return;
+    setSubmitting(true);
+    try {
+      const res = await apiFetch('/api/settings/simulation', {
+        method: 'POST',
+        body: JSON.stringify({
+          enabled: false,
+          unrestricted: true,
+          simulatedTime: appState.simulation.simulatedTime || '07:15',
+          simulatedDay: appState.simulation.simulatedDay ?? null,
+          simulatedWeek: appState.simulation.simulatedWeek ?? null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        onNotify(data.error || 'Gagal mematikan Mode Uji Coba.', 'error');
+        return;
+      }
+      onStateUpdate(data.state);
+      onNotify(
+        'Mode Uji Coba dimatikan. Sistem kembali mengikuti jadwal & jam piket normal.',
+        'info'
+      );
+    } catch {
+      onNotify('Gagal terhubung ke server.', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   function handleExportExcel() {
     if (!todaySheet) return;
     try {
@@ -680,7 +723,11 @@ export function SpreadsheetWorkspace({
                 {appState.simulation.enabled && (
                   <>
                     <span aria-hidden="true">·</span>
-                    <span className="font-medium text-blue-600">Mode Uji Coba Waktu Aktif</span>
+                    <span className="font-semibold text-blue-700">
+                      {isTrialUnrestricted
+                        ? 'Mode Uji Coba Bebas Aktif (Tanpa Batas Waktu)'
+                        : 'Mode Uji Coba Jam Simulasi Aktif'}
+                    </span>
                   </>
                 )}
               </div>
@@ -703,42 +750,48 @@ export function SpreadsheetWorkspace({
                     : `Piket Harian — ${formatIndonesianDateLabel(appState.serverDate, appState.serverHari)}`}
                 </h1>
                 <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
-                  {!scheduleStatus.allowed
-                    ? `Mode Lihat Saja (${officer.name}): ${scheduleStatus.reason}`
-                    : autoWindow.phase === 'NON_ACTIVE_DAY'
-                      ? `Hari ${autoWindow.hari} bukan jadwal aktif pembuatan spreadsheet otomatis.`
-                      : !todaySheet && autoWindow.phase === 'BEFORE_START'
-                        ? `Spreadsheet hari ini akan dibuat otomatis pada pukul ${autoWindow.startTime} WIB (${autoWindow.minutesUntilStart} menit lagi).`
-                        : todaySheet?.reopenedManually && isSheetActive
-                          ? 'Spreadsheet sedang dibuka kembali sementara untuk revisi oleh Admin / Developer.'
-                          : isSheetFinalized
-                            ? `Spreadsheet hari ini telah tertutup otomatis pada pukul ${autoWindow.endTime} WIB. Laporan Excel per kelas & PDF siap diunduh.`
-                            : `Spreadsheet aktif otomatis dan akan tertutup pada pukul ${autoWindow.endTime} WIB (${autoWindow.minutesUntilClose} menit tersisa).`}
+                  {isTrialUnrestricted && isSheetActive
+                    ? 'Mode Uji Coba Bebas aktif: spreadsheet tetap terbuka dan semua petugas dapat mencatat kapan saja tanpa batasan waktu hingga Mode Uji Coba dimatikan.'
+                    : !scheduleStatus.allowed
+                      ? `Mode Lihat Saja (${officer.name}): ${scheduleStatus.reason}`
+                      : autoWindow.phase === 'NON_ACTIVE_DAY'
+                        ? `Hari ${autoWindow.hari} bukan jadwal aktif pembuatan spreadsheet otomatis.`
+                        : !todaySheet && autoWindow.phase === 'BEFORE_START'
+                          ? `Spreadsheet hari ini akan dibuat otomatis pada pukul ${autoWindow.startTime} WIB (${autoWindow.minutesUntilStart} menit lagi).`
+                          : todaySheet?.reopenedManually && isSheetActive
+                            ? 'Spreadsheet sedang dibuka kembali sementara untuk revisi oleh Admin / Developer.'
+                            : isSheetFinalized
+                              ? `Spreadsheet hari ini telah tertutup otomatis pada pukul ${autoWindow.endTime} WIB. Laporan Excel per kelas & PDF siap diunduh.`
+                              : `Spreadsheet aktif otomatis dan akan tertutup pada pukul ${autoWindow.endTime} WIB (${autoWindow.minutesUntilClose} menit tersisa).`}
                 </p>
               </div>
 
               <div
                 className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold whitespace-nowrap shrink-0 ${
-                  isSheetFinalized
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                    : isSheetActive
-                      ? 'border-blue-200 bg-blue-50 text-blue-700'
-                      : autoWindow.phase === 'BEFORE_START'
-                        ? 'border-slate-200 bg-slate-50 text-slate-700'
-                        : 'border-amber-200 bg-amber-50 text-amber-800'
+                  isTrialUnrestricted && isSheetActive
+                    ? 'border-blue-300 bg-blue-50 text-blue-700'
+                    : isSheetFinalized
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                      : isSheetActive
+                        ? 'border-blue-200 bg-blue-50 text-blue-700'
+                        : autoWindow.phase === 'BEFORE_START'
+                          ? 'border-slate-200 bg-slate-50 text-slate-700'
+                          : 'border-amber-200 bg-amber-50 text-amber-800'
                 }`}
               >
                 <Clock className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>
-                  {isSheetFinalized
-                    ? `Tutup Otomatis (${autoWindow.endTime} WIB)`
-                    : todaySheet?.reopenedManually
-                      ? 'Mode Revisi Aktif'
-                      : isSheetActive
-                        ? `Aktif · Tutup ${autoWindow.endTime} WIB`
-                        : autoWindow.phase === 'BEFORE_START'
-                          ? `Buka Otomatis ${autoWindow.startTime} WIB`
-                          : 'Hari Tidak Aktif'}
+                  {isTrialUnrestricted && isSheetActive
+                    ? 'Uji Coba Bebas · Tanpa Batas Waktu'
+                    : isSheetFinalized
+                      ? `Tutup Otomatis (${autoWindow.endTime} WIB)`
+                      : todaySheet?.reopenedManually
+                        ? 'Mode Revisi Aktif'
+                        : isSheetActive
+                          ? `Aktif · Tutup ${autoWindow.endTime} WIB`
+                          : autoWindow.phase === 'BEFORE_START'
+                            ? `Buka Otomatis ${autoWindow.startTime} WIB`
+                            : 'Hari Tidak Aktif'}
                 </span>
               </div>
             </div>
@@ -1778,7 +1831,7 @@ export function SpreadsheetWorkspace({
                   Belum ada catatan masuk hari ini. Kontribusi per petugas akan muncul otomatis setelah catatan pertama disimpan.
                 </p>
               ) : (
-                <ul className="divide-y divide-slate-100">
+                <ul className="max-h-56 divide-y divide-slate-100 overflow-y-auto pr-1">
                   {dailyProductivity.officers.map((item) => {
                     const isSelf = item.officerId === officer.id;
                     return (
@@ -1825,7 +1878,9 @@ export function SpreadsheetWorkspace({
                     Status Sesi &amp; Unduh Laporan
                   </h2>
                   <p className="text-xs text-slate-500">
-                    Spreadsheet buka otomatis pukul {autoWindow.startTime} WIB dan tutup otomatis pukul {autoWindow.endTime} WIB.
+                    {isTrialUnrestricted
+                      ? 'Mode Uji Coba Bebas aktif — tidak tertutup otomatis sampai Anda mematikannya.'
+                      : `Spreadsheet buka otomatis pukul ${autoWindow.startTime} WIB dan tutup otomatis pukul ${autoWindow.endTime} WIB.`}
                   </p>
                 </div>
                 <Users className="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
@@ -1857,34 +1912,38 @@ export function SpreadsheetWorkspace({
                   >
                     <div className="flex items-center justify-between gap-2 font-semibold">
                       <span>
-                        {isSheetFinalized
-                          ? 'Spreadsheet Ditutup & Final Otomatis'
-                          : todaySheet.reopenedManually
-                            ? 'Spreadsheet Dibuka Kembali untuk Revisi'
-                            : 'Spreadsheet Sedang Aktif Otomatis'}
+                        {isTrialUnrestricted && isSheetActive
+                          ? 'Mode Uji Coba Bebas Aktif'
+                          : isSheetFinalized
+                            ? 'Spreadsheet Ditutup & Final Otomatis'
+                            : todaySheet.reopenedManually
+                              ? 'Spreadsheet Dibuka Kembali untuk Revisi'
+                              : 'Spreadsheet Sedang Aktif Otomatis'}
                       </span>
                       <span className="font-mono-num">
-                        {autoWindow.startTime} – {autoWindow.endTime}
+                        {isTrialUnrestricted ? 'Tanpa Batas Waktu' : `${autoWindow.startTime} – ${autoWindow.endTime}`}
                       </span>
                     </div>
                     <p className="mt-1 leading-relaxed opacity-90">
-                      {isSheetFinalized
-                        ? `Sesi telah ditutup pada jam selesai (${autoWindow.endTime} WIB). Seluruh file unduhan laporan sekarang terbuka.`
-                        : todaySheet.reopenedManually
-                          ? 'Sesi dibuka sementara oleh Admin/Developer. Klik Tutup & Finalkan Kembali setelah revisi selesai.'
-                          : `Spreadsheet akan otomatis selesai dan terkunci pada pukul ${autoWindow.endTime} WIB (${autoWindow.minutesUntilClose} menit lagi).`}
+                      {isTrialUnrestricted && isSheetActive
+                        ? 'Semua petugas bebas mencatat pelanggaran kapan saja. Spreadsheet tidak akan terkunci otomatis hingga Mode Uji Coba dimatikan.'
+                        : isSheetFinalized
+                          ? `Sesi telah ditutup pada jam selesai (${autoWindow.endTime} WIB). Seluruh file unduhan laporan sekarang terbuka.`
+                          : todaySheet.reopenedManually
+                            ? 'Sesi dibuka sementara oleh Admin/Developer. Klik Tutup & Finalkan Kembali setelah revisi selesai.'
+                            : `Spreadsheet akan otomatis selesai dan terkunci pada pukul ${autoWindow.endTime} WIB (${autoWindow.minutesUntilClose} menit lagi).`}
                     </p>
                   </div>
 
                   {todaySheet.activeOfficers.length > 0 && (
-                    <ul className="divide-y divide-slate-100 border-t border-slate-100">
+                    <ul className="max-h-52 divide-y divide-slate-100 overflow-y-auto border-t border-slate-100 pr-1">
                       {todaySheet.activeOfficers.map((id) => {
                         const activeOff = officerMap.get(id);
                         const isSelf = id === officer.id;
                         return (
                           <li
                             key={id}
-                            className="flex items-center justify-between gap-3 py-2.5"
+                            className="flex items-center justify-between gap-3 py-2"
                           >
                             <div className="min-w-0">
                               <p className="truncate text-sm font-semibold text-slate-900">
@@ -1917,6 +1976,18 @@ export function SpreadsheetWorkspace({
 
                   {isManagerRole(officer.role) && (
                     <div className="space-y-2 pt-1">
+                      {appState.simulation.enabled && (
+                        <button
+                          key="turn-off-trial-btn"
+                          type="button"
+                          disabled={submitting}
+                          onClick={handleTurnOffTrialMode}
+                          className="flex w-full items-center justify-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-900 hover:bg-amber-100 disabled:opacity-60"
+                        >
+                          <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                          <span>Matikan Mode Uji Coba (Kembali Normal)</span>
+                        </button>
+                      )}
                       {isSheetFinalized ? (
                         <button
                           key="reopen-sheet-btn"
@@ -1957,14 +2028,24 @@ export function SpreadsheetWorkspace({
                     consensus.exportUnlocked ? 'text-emerald-700' : 'text-slate-500'
                   }`}
                 >
-                  {consensus.exportUnlocked ? 'Siap Diunduh' : `Terkunci s.d. ${autoWindow.endTime} WIB`}
+                  {consensus.exportUnlocked
+                    ? 'Siap Diunduh'
+                    : isTrialUnrestricted
+                      ? 'Menunggu Uji Coba Dimatikan'
+                      : `Terkunci s.d. ${autoWindow.endTime} WIB`}
                 </span>
               </div>
 
               {!consensus.exportUnlocked && (
                 <p className="mb-3 text-xs text-slate-500">
-                  Tombol unduh akan aktif otomatis setelah spreadsheet ditutup pada jam selesai (
-                  <strong className="font-mono-num text-slate-700">{autoWindow.endTime} WIB</strong>).
+                  {isTrialUnrestricted ? (
+                    'Selama Mode Uji Coba Bebas aktif, spreadsheet tetap terbuka agar bebas mencatat. Matikan Mode Uji Coba jika ingin kembali ke jadwal normal.'
+                  ) : (
+                    <>
+                      Tombol unduh akan aktif otomatis setelah spreadsheet ditutup pada jam selesai (
+                      <strong className="font-mono-num text-slate-700">{autoWindow.endTime} WIB</strong>).
+                    </>
+                  )}
                 </p>
               )}
 
@@ -2027,8 +2108,12 @@ export function SpreadsheetWorkspace({
             </h2>
             <p className="text-xs text-slate-500">
               {todaySheet
-                ? `Menampilkan ${filteredRows.length} dari ${todaySheet.rows.length} catatan`
-                : `Spreadsheet akan dibuat otomatis pukul ${autoWindow.startTime} WIB.`}
+                ? !groupByClassView && filteredRows.length > 0
+                  ? `Menampilkan ${paginatedRows.startIndex}–${paginatedRows.endIndex} dari ${filteredRows.length} catatan`
+                  : `Menampilkan ${filteredRows.length} dari ${todaySheet.rows.length} catatan`
+                : isTrialUnrestricted
+                  ? 'Mode Uji Coba Bebas siap digunakan kapan saja.'
+                  : `Spreadsheet akan dibuat otomatis pukul ${autoWindow.startTime} WIB.`}
             </p>
           </div>
 
@@ -2036,7 +2121,10 @@ export function SpreadsheetWorkspace({
             <div className="flex items-center gap-1 self-start rounded-lg bg-slate-100 p-1">
               <button
                 type="button"
-                onClick={() => setGroupByClassView(false)}
+                onClick={() => {
+                  setGroupByClassView(false);
+                  setRowPage(1);
+                }}
                 className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                   !groupByClassView ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
                 }`}
@@ -2045,7 +2133,10 @@ export function SpreadsheetWorkspace({
               </button>
               <button
                 type="button"
-                onClick={() => setGroupByClassView(true)}
+                onClick={() => {
+                  setGroupByClassView(true);
+                  setRowPage(1);
+                }}
                 className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                   groupByClassView ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
                 }`}
@@ -2063,7 +2154,10 @@ export function SpreadsheetWorkspace({
                 type="search"
                 aria-label="Cari siswa atau pelanggaran"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setRowPage(1);
+                }}
                 placeholder="Cari siswa / kelas / kode..."
                 className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none"
               />
@@ -2072,7 +2166,10 @@ export function SpreadsheetWorkspace({
             <select
               aria-label="Filter kategori pelanggaran"
               value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
+              onChange={(e) => {
+                setFilterCategory(e.target.value);
+                setRowPage(1);
+              }}
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 focus:border-blue-600 focus:outline-none sm:w-auto"
             >
               <option value="ALL">Semua Kategori AKPS</option>
@@ -2089,6 +2186,7 @@ export function SpreadsheetWorkspace({
                 onClick={() => {
                   setSearchQuery('');
                   setFilterCategory('ALL');
+                  setRowPage(1);
                 }}
                 className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 whitespace-nowrap"
               >
@@ -2122,17 +2220,70 @@ export function SpreadsheetWorkspace({
             </div>
           ) : groupByClassView ? (
             <div className="divide-y divide-slate-200">
-              {groupedFilteredRows.map((grp) => (
+              <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50/70 px-4 py-2 text-xs text-slate-600 sm:px-5">
+                <span>
+                  <strong className="font-mono-num text-slate-900">{groupedFilteredRows.length}</strong> kelas memiliki catatan (klik nama kelas untuk buka/tutup)
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next: Record<string, boolean> = {};
+                      groupedFilteredRows.forEach((g) => {
+                        next[g.kelas] = true;
+                      });
+                      setOpenClassGroups(next);
+                    }}
+                    className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    Buka Semua
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next: Record<string, boolean> = {};
+                      groupedFilteredRows.forEach((g) => {
+                        next[g.kelas] = false;
+                      });
+                      setOpenClassGroups(next);
+                    }}
+                    className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    Tutup Semua
+                  </button>
+                </div>
+              </div>
+              {groupedFilteredRows.map((grp, grpIdx) => {
+                const isExpanded = openClassGroups[grp.kelas] ?? grpIdx === 0;
+                return (
                 <div key={grp.kelas}>
-                  <div className="flex items-center justify-between bg-slate-50 px-4 py-2.5 border-b border-slate-200">
+                  <button
+                    type="button"
+                    aria-expanded={isExpanded}
+                    onClick={() =>
+                      setOpenClassGroups((prev) => ({
+                        ...prev,
+                        [grp.kelas]: !isExpanded,
+                      }))
+                    }
+                    className="flex w-full items-center justify-between gap-3 bg-slate-50 px-4 py-2.5 text-left transition-colors hover:bg-slate-100/80"
+                  >
                     <span className="font-display text-sm font-bold text-slate-900">
                       Kelas {grp.kelas}
                     </span>
-                    <span className="font-mono-num text-xs font-semibold text-slate-600">
-                      {grp.totalIncidents} catatan · Total +{grp.totalPoints} poin
+                    <span className="flex items-center gap-2">
+                      <span className="font-mono-num text-xs font-semibold text-slate-600">
+                        {grp.totalIncidents} catatan · Total +{grp.totalPoints} poin
+                      </span>
+                      {isExpanded ? (
+                        <ChevronUp className="h-4 w-4 text-slate-500" aria-hidden="true" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-slate-500" aria-hidden="true" />
+                      )}
                     </span>
-                  </div>
-                  <table className="min-w-[760px] w-full border-collapse text-left text-sm">
+                  </button>
+                  {isExpanded && (
+                  <table className="min-w-[760px] w-full border-collapse border-t border-slate-200 text-left text-sm">
                     <thead>
                       <tr className="border-b border-slate-100 bg-white text-xs font-semibold text-slate-500">
                         <th className="px-4 py-2.5 w-12 text-center">No</th>
@@ -2355,29 +2506,36 @@ export function SpreadsheetWorkspace({
                       })}
                     </tbody>
                   </table>
+                  )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <table className="min-w-[820px] w-full border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
-                  <th className="px-4 py-3 text-center w-12">No</th>
-                  <th className="px-4 py-3 w-20">Jam</th>
-                  <th className="px-4 py-3 w-16">Kode</th>
-                  <th className="px-4 py-3">Siswa & NIS</th>
-                  <th className="px-4 py-3 w-24">Kelas</th>
-                  <th className="px-4 py-3">Pelanggaran & Kategori</th>
-                  <th className="px-4 py-3 text-right w-20">Poin</th>
-                  <th className="px-4 py-3">Tindak Lanjut</th>
-                  <th className="px-4 py-3">Petugas</th>
-                  {canRecordNow && <th className="px-4 py-3 text-right w-28">Aksi</th>}
+                  <th className="px-4 py-2.5 text-center w-12">No</th>
+                  <th className="px-4 py-2.5 w-20">Jam</th>
+                  <th className="px-4 py-2.5 w-16">Kode</th>
+                  <th className="px-4 py-2.5">Siswa & NIS</th>
+                  <th className="px-4 py-2.5 w-24">Kelas</th>
+                  <th className="px-4 py-2.5">Pelanggaran & Kategori</th>
+                  <th className="px-4 py-2.5 text-right w-20">Poin</th>
+                  <th className="px-4 py-2.5">Tindak Lanjut</th>
+                  <th className="px-4 py-2.5">Petugas</th>
+                  {canRecordNow && <th className="px-4 py-2.5 text-right w-28">Aksi</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredRows.map((row, idx) => {
+                {paginatedRows.items.map((row, idx) => {
                   const canModifyRow = canModifyViolationRow(officer, row);
                   const isEditingRow = editingRowId === row.id;
+                  const rowNo =
+                    paginatedRows.pageSize === 'ALL'
+                      ? filteredRows.length - idx
+                      : filteredRows.length -
+                        ((paginatedRows.page - 1) * paginatedRows.pageSize + idx);
                   return (
                     <tr
                       key={row.id}
@@ -2385,13 +2543,13 @@ export function SpreadsheetWorkspace({
                         row.id === lastAddedRowId ? 'animate-row-flash' : ''
                       }`}
                     >
-                      <td className="font-mono-num px-4 py-3 text-center text-xs text-slate-500">
-                        {filteredRows.length - idx}
+                      <td className="font-mono-num px-4 py-2.5 text-center text-xs text-slate-500">
+                        {rowNo}
                       </td>
-                      <td className="font-mono-num px-4 py-3 text-xs font-medium text-slate-700">
+                      <td className="font-mono-num px-4 py-2.5 text-xs font-medium text-slate-700">
                         {row.timeLabel}
                       </td>
-                      <td className="font-mono-num px-4 py-3 text-xs font-semibold text-blue-700">
+                      <td className="font-mono-num px-4 py-2.5 text-xs font-semibold text-blue-700">
                         {isEditingRow ? (
                           <input
                             type="text"
@@ -2405,7 +2563,7 @@ export function SpreadsheetWorkspace({
                           row.violationCode || '-'
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-2.5">
                         {isEditingRow ? (
                           <div className="space-y-1.5">
                             <input
@@ -2432,7 +2590,7 @@ export function SpreadsheetWorkspace({
                           </>
                         )}
                       </td>
-                      <td className="font-mono-num px-4 py-3 text-xs font-semibold text-slate-800">
+                      <td className="font-mono-num px-4 py-2.5 text-xs font-semibold text-slate-800">
                         {isEditingRow ? (
                           <input
                             type="text"
@@ -2445,7 +2603,7 @@ export function SpreadsheetWorkspace({
                           row.kelas
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-2.5">
                         {isEditingRow ? (
                           <div className="space-y-1.5">
                             <input
@@ -2487,7 +2645,7 @@ export function SpreadsheetWorkspace({
                           </>
                         )}
                       </td>
-                      <td className="font-mono-num px-4 py-3 text-right font-semibold text-red-700">
+                      <td className="font-mono-num px-4 py-2.5 text-right font-semibold text-red-700">
                         {isEditingRow ? (
                           <input
                             type="number"
@@ -2501,7 +2659,7 @@ export function SpreadsheetWorkspace({
                           `+${row.points}`
                         )}
                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-600">
+                      <td className="px-4 py-2.5 text-xs text-slate-600">
                         {isEditingRow ? (
                           <input
                             type="text"
@@ -2514,11 +2672,11 @@ export function SpreadsheetWorkspace({
                           row.actionTaken
                         )}
                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-700 whitespace-nowrap">
+                      <td className="px-4 py-2.5 text-xs text-slate-700 whitespace-nowrap">
                         {row.recordedByName}
                       </td>
                       {canRecordNow && (
-                        <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <td className="px-4 py-2.5 text-right whitespace-nowrap">
                           {!canModifyRow ? (
                             <span className="text-[11px] text-slate-400">Petugas lain</span>
                           ) : isEditingRow ? (
@@ -2589,6 +2747,24 @@ export function SpreadsheetWorkspace({
             </table>
           )}
         </div>
+
+        {!groupByClassView && filteredRows.length > 0 && (
+          <PaginationBar
+            page={paginatedRows.page}
+            totalPages={paginatedRows.totalPages}
+            totalItems={paginatedRows.totalItems}
+            startIndex={paginatedRows.startIndex}
+            endIndex={paginatedRows.endIndex}
+            pageSize={rowPageSize}
+            pageSizeOptions={[15, 30, 60]}
+            itemLabel="catatan"
+            onPageChange={setRowPage}
+            onPageSizeChange={(nextSize) => {
+              setRowPageSize(nextSize);
+              setRowPage(1);
+            }}
+          />
+        )}
       </section>
 
       {showVisualPreview && todaySheet && (

@@ -24,6 +24,8 @@ import {
   getScheduleStatus,
   getTingkatPembinaan,
   groupViolationsByClass,
+  isUnrestrictedTrialMode,
+  paginateItems,
   parseBulkAccountEntries,
   removeOfficerFromActiveSpreadsheet,
   searchSimilarStudents,
@@ -702,6 +704,7 @@ test('validateDailySessionInput, getAutoSessionWindowStatus, and evaluateAutoSpr
 
   const beforeStart = getAutoSessionWindowStatus(DEFAULT_DAILY_SESSION_CONFIG, mondayBase, {
     enabled: true,
+    unrestricted: false,
     simulatedDay: 'Senin',
     simulatedTime: '06:00',
   });
@@ -710,6 +713,7 @@ test('validateDailySessionInput, getAutoSessionWindowStatus, and evaluateAutoSpr
 
   const openWindow = getAutoSessionWindowStatus(DEFAULT_DAILY_SESSION_CONFIG, mondayBase, {
     enabled: true,
+    unrestricted: false,
     simulatedDay: 'Senin',
     simulatedTime: '07:15',
   });
@@ -718,6 +722,7 @@ test('validateDailySessionInput, getAutoSessionWindowStatus, and evaluateAutoSpr
 
   const closedWindow = getAutoSessionWindowStatus(DEFAULT_DAILY_SESSION_CONFIG, mondayBase, {
     enabled: true,
+    unrestricted: false,
     simulatedDay: 'Senin',
     simulatedTime: '08:30',
   });
@@ -728,7 +733,7 @@ test('validateDailySessionInput, getAutoSessionWindowStatus, and evaluateAutoSpr
     [],
     DEFAULT_DAILY_SESSION_CONFIG,
     mondayBase,
-    { enabled: true, simulatedDay: 'Senin', simulatedTime: '06:00' },
+    { enabled: true, unrestricted: false, simulatedDay: 'Senin', simulatedTime: '06:00' },
     '2026-11-16T06:00:00+07:00'
   );
   assert.equal(beforeEval.changedSheets.length, 0);
@@ -738,7 +743,7 @@ test('validateDailySessionInput, getAutoSessionWindowStatus, and evaluateAutoSpr
     [],
     DEFAULT_DAILY_SESSION_CONFIG,
     mondayBase,
-    { enabled: true, simulatedDay: 'Senin', simulatedTime: '07:15' },
+    { enabled: true, unrestricted: false, simulatedDay: 'Senin', simulatedTime: '07:15' },
     '2026-11-16T07:15:00+07:00'
   );
   assert.equal(openEval.changedSheets.length, 1);
@@ -753,7 +758,7 @@ test('validateDailySessionInput, getAutoSessionWindowStatus, and evaluateAutoSpr
     [autoOpened],
     DEFAULT_DAILY_SESSION_CONFIG,
     mondayBase,
-    { enabled: true, simulatedDay: 'Senin', simulatedTime: '08:30' },
+    { enabled: true, unrestricted: false, simulatedDay: 'Senin', simulatedTime: '08:30' },
     '2026-11-16T08:30:00+07:00'
   );
   assert.equal(closedEval.changedSheets.length, 1);
@@ -766,7 +771,7 @@ test('validateDailySessionInput, getAutoSessionWindowStatus, and evaluateAutoSpr
     [autoClosed],
     { ...DEFAULT_DAILY_SESSION_CONFIG, endTime: '10:00' },
     mondayBase,
-    { enabled: true, simulatedDay: 'Senin', simulatedTime: '09:00' },
+    { enabled: true, unrestricted: false, simulatedDay: 'Senin', simulatedTime: '09:00' },
     '2026-11-16T09:00:00+07:00'
   );
   assert.equal(extendedEval.changedSheets.length, 1);
@@ -782,7 +787,7 @@ test('validateDailySessionInput, getAutoSessionWindowStatus, and evaluateAutoSpr
     [reopenedManual],
     DEFAULT_DAILY_SESSION_CONFIG,
     mondayBase,
-    { enabled: true, simulatedDay: 'Senin', simulatedTime: '10:00' },
+    { enabled: true, unrestricted: false, simulatedDay: 'Senin', simulatedTime: '10:00' },
     '2026-11-16T10:00:00+07:00'
   );
   assert.equal(keepReopenedEval.changedSheets.length, 0);
@@ -799,7 +804,7 @@ test('validateDailySessionInput, getAutoSessionWindowStatus, and evaluateAutoSpr
     [stalePastSheet],
     DEFAULT_DAILY_SESSION_CONFIG,
     mondayBase,
-    { enabled: true, simulatedDay: 'Senin', simulatedTime: '06:00' },
+    { enabled: true, unrestricted: false, simulatedDay: 'Senin', simulatedTime: '06:00' },
     '2026-11-16T06:00:00+07:00'
   );
   assert.equal(pastFinalizeEval.changedSheets.length, 1);
@@ -1011,5 +1016,120 @@ test('batchViolationLogic builds Cartesian batch entries, enforces max cap, sort
   assert.equal(quickPicks[1].todayCount, 2);
   assert.equal(quickPicks[2].preset.code, 'A1'); // Morning default fills remaining
 });
+
+test('unrestricted Mode Uji Coba lifts all time, day, week, and auto-close limits until turned off', () => {
+  const trialOn = {
+    enabled: true,
+    simulatedTime: '07:15',
+    simulatedDay: 'Senin' as const,
+    simulatedWeek: 1,
+  };
+  assert.equal(isUnrestrictedTrialMode(trialOn), true);
+  assert.equal(isUnrestrictedTrialMode({ ...trialOn, unrestricted: false }), false);
+  assert.equal(isUnrestrictedTrialMode({ ...trialOn, enabled: false }), false);
+
+  // Sunday late night (23:30) and off-duty week/day/hours
+  const sundayNight = new Date('2026-11-15T23:30:00+07:00');
+  const offDutyOfficer: Pick<Officer, 'scheduledDays' | 'shiftStart' | 'shiftEnd' | 'scheduledWeeks'> = {
+    scheduledDays: ['Rabu'],
+    scheduledWeeks: [4],
+    shiftStart: '06:30',
+    shiftEnd: '07:30',
+  };
+
+  // Normal enforcement blocks off-duty officer on Sunday night
+  const normalSchedule = getScheduleStatus(
+    offDutyOfficer,
+    sundayNight,
+    { enabled: false, simulatedTime: '07:15', simulatedDay: null, simulatedWeek: null },
+    DEFAULT_WEEKLY_ROTATION_CONFIG
+  );
+  assert.equal(normalSchedule.allowed, false);
+
+  // Unrestricted Trial Mode unlocks schedule, keeps real clock (23:30 Minggu), and opens sheet indefinitely
+  const trialSchedule = getScheduleStatus(
+    offDutyOfficer,
+    sundayNight,
+    trialOn,
+    DEFAULT_WEEKLY_ROTATION_CONFIG
+  );
+  assert.equal(trialSchedule.allowed, true);
+  assert.equal(trialSchedule.isWeekMatch, true);
+  assert.equal(trialSchedule.isDayMatch, true);
+  assert.equal(trialSchedule.isTimeMatch, true);
+  assert.equal(trialSchedule.currentHari, 'Minggu');
+  assert.equal(trialSchedule.currentTime, '23:30');
+
+  const trialWindow = getAutoSessionWindowStatus(DEFAULT_DAILY_SESSION_CONFIG, sundayNight, trialOn);
+  assert.equal(trialWindow.isActiveDay, true);
+  assert.equal(trialWindow.phase, 'OPEN');
+
+  // Even a finalized today's sheet is reopened unconditionally during unrestricted Trial Mode
+  const finalizedSundaySheet: DailySpreadsheet = {
+    id: 'sheet-2026-11-15',
+    date: '2026-11-15',
+    hari: 'Minggu',
+    title: 'Spreadsheet Piket',
+    status: 'FINALIZED',
+    createdAt: '2026-11-15T06:30:00+07:00',
+    createdById: 'system-auto',
+    createdByName: 'Sistem Otomatis',
+    activeOfficers: [],
+    finishedOfficers: [],
+    reopenedManually: true,
+    finalizedAt: '2026-11-15T08:30:00+07:00',
+    rows: [],
+  };
+  const evalReopen = evaluateAutoSpreadsheetLifecycle(
+    [finalizedSundaySheet],
+    DEFAULT_DAILY_SESSION_CONFIG,
+    sundayNight,
+    trialOn,
+    '2026-11-15T23:30:00+07:00'
+  );
+  assert.equal(evalReopen.changedSheets.length, 1);
+  assert.equal(evalReopen.changedSheets[0].status, 'ACTIVE');
+
+  // Turning Trial Mode OFF restores normal Sunday non-active day enforcement
+  const evalAfterOff = evaluateAutoSpreadsheetLifecycle(
+    [evalReopen.changedSheets[0]],
+    DEFAULT_DAILY_SESSION_CONFIG,
+    sundayNight,
+    { ...trialOn, enabled: false },
+    '2026-11-15T23:31:00+07:00'
+  );
+  assert.equal(evalAfterOff.windowStatus.phase, 'NON_ACTIVE_DAY');
+});
+
+test('paginateItems handles empty lists, page clamping, and ALL mode', () => {
+  const empty = paginateItems([], 3, 15);
+  assert.equal(empty.items.length, 0);
+  assert.equal(empty.page, 1);
+  assert.equal(empty.totalPages, 1);
+  assert.equal(empty.startIndex, 0);
+  assert.equal(empty.endIndex, 0);
+
+  const items = Array.from({ length: 35 }, (_, i) => i + 1);
+  const page2 = paginateItems(items, 2, 15);
+  assert.equal(page2.page, 2);
+  assert.equal(page2.totalPages, 3);
+  assert.equal(page2.startIndex, 16);
+  assert.equal(page2.endIndex, 30);
+  assert.deepEqual(page2.items.slice(0, 3), [16, 17, 18]);
+
+  const clampedHigh = paginateItems(items, 99, 15);
+  assert.equal(clampedHigh.page, 3);
+  assert.equal(clampedHigh.startIndex, 31);
+  assert.equal(clampedHigh.endIndex, 35);
+  assert.equal(clampedHigh.items.length, 5);
+
+  const allMode = paginateItems(items, 2, 'ALL');
+  assert.equal(allMode.page, 1);
+  assert.equal(allMode.totalPages, 1);
+  assert.equal(allMode.startIndex, 1);
+  assert.equal(allMode.endIndex, 35);
+  assert.equal(allMode.items.length, 35);
+});
+
 
 
