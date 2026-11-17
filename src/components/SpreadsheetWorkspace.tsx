@@ -1030,7 +1030,7 @@ export function SpreadsheetWorkspace({
               <p className="text-xs text-slate-500">
                 {isSheetActive
                   ? entryMode === 'batch'
-                    ? 'Pilih pelanggaran lalu centang atau cari banyak siswa sekaligus dalam 1 klik simpan.'
+                    ? 'Isi banyak siswa per baris kolom (siswa, pelanggaran, poin). Opsi 1 pelanggaran untuk banyak siswa tetap tersedia di bawah tabel.'
                     : 'Isi nama siswa lalu pilih kategori pelanggaran sesuai buku AKPS.'
                   : isSheetFinalized
                     ? `Spreadsheet sudah ditutup otomatis pada pukul ${autoWindow.endTime} WIB.`
@@ -1089,6 +1089,7 @@ export function SpreadsheetWorkspace({
             <BatchViolationForm
               appState={appState}
               quickPickItems={quickPickItems}
+              recentPresetIds={recentPresetIds}
               canRecordNow={canRecordNow}
               connectionOffline={connectionOffline}
               lockedNoticeText={

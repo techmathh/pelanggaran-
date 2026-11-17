@@ -923,8 +923,11 @@ test('DEFAULT_WEEKLY_ROTATION_CONFIG places Sunday 2026-11-15 in Minggu 2 and Mo
 
 import {
   MAX_BATCH_VIOLATION_ROWS,
+  buildBatchColumnEntries,
   buildBatchViolationInputs,
+  createEmptyBatchColumnRow,
   filterStudentsByClassAndQuery,
+  getOrderedViolationOptions,
   getQuickPickPresetsWithRecent,
   getSortedStudentClasses,
 } from './batchViolationLogic';
@@ -1130,6 +1133,129 @@ test('paginateItems handles empty lists, page clamping, and ALL mode', () => {
   assert.equal(allMode.endIndex, 35);
   assert.equal(allMode.items.length, 35);
 });
+
+test('batchViolationLogic per-column builder & recent/frequent violation option ordering', () => {
+  const blank1 = createEmptyBatchColumnRow('r1');
+  const blank2 = createEmptyBatchColumnRow('r2');
+
+  // Completely blank rows produce validation notice
+  assert.ok(buildBatchColumnEntries([blank1, blank2]).error);
+
+  const populatedRow1 = {
+    ...blank1,
+    studentName: 'Abdi Pamungkas',
+    kelas: '10a',
+    nis: '',
+    saveToStudentDirectory: true,
+    presetId: 'p-a1',
+    violationCode: 'A1',
+    violationLabel: 'Terlambat masuk sekolah',
+    category: 'A. Kedisiplinan & Kehadiran' as const,
+    points: 5,
+    actionTaken: 'Pembinaan pagi',
+    notes: 'Gerbang timur',
+  };
+
+  // Second row for the same manual student should deduplicate saveToStudentDirectory
+  const populatedRow2 = {
+    ...blank2,
+    studentName: 'Abdi Pamungkas',
+    kelas: '10A',
+    nis: '',
+    saveToStudentDirectory: true,
+    presetId: 'CUSTOM',
+    violationCode: 'CUSTOM',
+    violationLabel: 'Tidak memakai dasi',
+    category: 'E. Kerapian' as const,
+    points: 10,
+    actionTaken: '',
+    notes: '',
+  };
+
+  const blank3 = createEmptyBatchColumnRow('r3'); // trailing blank row ignored
+  const built = buildBatchColumnEntries([populatedRow1, populatedRow2, blank3]);
+  assert.equal(built.error, null);
+  assert.equal(built.startedRowCount, 2);
+  assert.equal(built.entries.length, 2);
+  assert.equal(built.entries[0].kelas, '10A');
+  assert.equal(built.entries[0].studentNis, '-');
+  assert.equal(built.entries[0].saveToStudentDirectory, true);
+  assert.equal(built.entries[1].saveToStudentDirectory, false);
+  assert.equal(built.entries[1].actionTaken, 'Teguran Lisan & Catat');
+
+  // Row validation errors catch missing kelas, missing violation, or invalid points
+  assert.ok(buildBatchColumnEntries([{ ...populatedRow1, kelas: '' }]).error);
+  assert.ok(buildBatchColumnEntries([{ ...populatedRow1, violationLabel: '' }]).error);
+  assert.ok(buildBatchColumnEntries([{ ...populatedRow1, points: 0 }]).error);
+  assert.ok(buildBatchColumnEntries([{ ...populatedRow1, points: 101 }]).error);
+
+  // Recent & frequent ordering puts session recents first, then highest weighted count (today*3 + total), then defaults
+  const samplePresets: ViolationPreset[] = [
+    { id: 'p-a1', code: 'A1', label: 'Terlambat', category: 'A. Kedisiplinan & Kehadiran', points: 5, defaultAction: 'Catat' },
+    { id: 'p-b1', code: 'B1', label: 'Ramai di Kelas', category: 'B. Perilaku & Sikap', points: 10, defaultAction: 'Tegur' },
+    { id: 'p-d1', code: 'D1', label: 'Main HP', category: 'D. Penggunaan Teknologi', points: 15, defaultAction: 'Sita HP' },
+    { id: 'p-e1', code: 'E1', label: 'Atribut', category: 'E. Kerapian', points: 5, defaultAction: 'Lengkapi' },
+  ];
+
+  const historySheets: DailySpreadsheet[] = [
+    {
+      id: 'sheet-old',
+      date: '2026-11-15',
+      hari: 'Sabtu',
+      title: 'Arsip',
+      status: 'FINALIZED',
+      createdAt: '2026-11-15T07:00:00Z',
+      createdById: 'o1',
+      createdByName: 'O1',
+      activeOfficers: ['o1'],
+      finishedOfficers: ['o1'],
+      rows: [
+        {
+          id: 'v-old-1', timestamp: '2026-11-15T07:05:00Z', timeLabel: '07:05',
+          studentName: 'X', studentNis: '-', kelas: '10A', violationCode: 'B1',
+          violationLabel: 'Ramai di Kelas', category: 'B. Perilaku & Sikap',
+          points: 10, actionTaken: 'Tegur', notes: '', recordedById: 'o1', recordedByName: 'O1',
+        },
+        {
+          id: 'v-old-2', timestamp: '2026-11-15T07:06:00Z', timeLabel: '07:06',
+          studentName: 'Y', studentNis: '-', kelas: '10A', violationCode: 'B1',
+          violationLabel: 'Ramai di Kelas', category: 'B. Perilaku & Sikap',
+          points: 10, actionTaken: 'Tegur', notes: '', recordedById: 'o1', recordedByName: 'O1',
+        },
+      ],
+    },
+    {
+      id: 'sheet-today',
+      date: '2026-11-16',
+      hari: 'Senin',
+      title: 'Hari Ini',
+      status: 'ACTIVE',
+      createdAt: '2026-11-16T07:00:00Z',
+      createdById: 'o1',
+      createdByName: 'O1',
+      activeOfficers: ['o1'],
+      finishedOfficers: [],
+      rows: [
+        {
+          id: 'v-today-1', timestamp: '2026-11-16T07:05:00Z', timeLabel: '07:05',
+          studentName: 'Z', studentNis: '-', kelas: '10A', violationCode: 'D1',
+          violationLabel: 'Main HP', category: 'D. Penggunaan Teknologi',
+          points: 15, actionTaken: 'Sita HP', notes: '', recordedById: 'o1', recordedByName: 'O1',
+        },
+      ],
+    },
+  ];
+
+  const ordered = getOrderedViolationOptions(samplePresets, historySheets, ['p-e1'], '2026-11-16', 4);
+  assert.equal(ordered.topFrequentAndRecent[0].preset.code, 'E1'); // session recent first
+  assert.equal(ordered.topFrequentAndRecent[0].isRecent, true);
+  assert.equal(ordered.topFrequentAndRecent[1].preset.code, 'D1'); // today weight 3+1=4 beats old 2
+  assert.equal(ordered.topFrequentAndRecent[2].preset.code, 'B1'); // historical frequent
+  assert.equal(ordered.topFrequentAndRecent[2].totalCount, 2);
+  assert.equal(ordered.topFrequentAndRecent[3].preset.code, 'A1'); // morning default
+  assert.equal(ordered.byCategory.length, 4);
+});
+
 
 
 
