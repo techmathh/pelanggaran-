@@ -61,12 +61,12 @@ test('Server execution mode decouples backend-only cleanly and falls back safely
   assert.equal(resolveServerExecutionMode({ NODE_ENV: 'production' }, [], false), 'backend-only');
 });
 
-test('Data directory config auto-detects Railway Volume mount and warns when ephemeral in production', () => {
+test('Data directory config auto-detects Railway Volume mount and prevents unmounted data loss', () => {
   const cwd = '/app/applet';
 
   // Auto-detects RAILWAY_VOLUME_MOUNT_PATH even if DATA_DIR was not manually configured
   const railwayAuto = resolveDataDirectoryConfig(
-    { NODE_ENV: 'production', RAILWAY_VOLUME_MOUNT_PATH: '/data' },
+    { NODE_ENV: 'production', RAILWAY_ENVIRONMENT: 'production', RAILWAY_VOLUME_MOUNT_PATH: '/data' },
     cwd
   );
   assert.equal(railwayAuto.dataDir, '/data');
@@ -75,14 +75,36 @@ test('Data directory config auto-detects Railway Volume mount and warns when eph
   assert.equal(railwayAuto.isPersistent, true);
   assert.equal(railwayAuto.warning, null);
 
-  // Explicit DATA_DIR=/data
-  const explicitVol = resolveDataDirectoryConfig(
+  // Even if leftover DATA_DIR=./data exists, mounted Railway Volume /data takes precedence so data is NOT lost
+  const railwayOverridePlaceholder = resolveDataDirectoryConfig(
+    {
+      NODE_ENV: 'production',
+      RAILWAY_ENVIRONMENT: 'production',
+      RAILWAY_VOLUME_MOUNT_PATH: '/data',
+      DATA_DIR: './data',
+    },
+    cwd
+  );
+  assert.equal(railwayOverridePlaceholder.dataDir, '/data');
+  assert.equal(railwayOverridePlaceholder.persistenceMode, 'volume');
+  assert.equal(railwayOverridePlaceholder.isPersistent, true);
+
+  // On Railway, setting DATA_DIR=/data WITHOUT actually attaching a Volume must still report volumeMounted=false
+  const railwayMissingVolume = resolveDataDirectoryConfig(
+    { NODE_ENV: 'production', RAILWAY_ENVIRONMENT: 'production', DATA_DIR: '/data' },
+    cwd
+  );
+  assert.equal(railwayMissingVolume.isPersistent, false);
+  assert.ok(railwayMissingVolume.warning && railwayMissingVolume.warning.includes('Volumes'));
+
+  // Non-Railway host with explicit /data volume path
+  const explicitExternalVol = resolveDataDirectoryConfig(
     { NODE_ENV: 'production', DATA_DIR: '/data' },
     cwd
   );
-  assert.equal(explicitVol.persistenceMode, 'volume');
-  assert.equal(explicitVol.isPersistent, true);
-  assert.equal(explicitVol.warning, null);
+  assert.equal(explicitExternalVol.persistenceMode, 'volume');
+  assert.equal(explicitExternalVol.isPersistent, true);
+  assert.equal(explicitExternalVol.warning, null);
 
   // Production on Railway with neither Volume nor external DATA_DIR triggers clear warning
   const ephemeralProd = resolveDataDirectoryConfig(
