@@ -281,9 +281,6 @@ export function VisualReportModal({
                                 </td>
                                 <td className="px-3 py-2">
                                   <p className="font-medium text-slate-900">{r.studentName}</p>
-                                  <p className="font-mono-num text-[11px] text-slate-500">
-                                    NIS {r.studentNis}
-                                  </p>
                                 </td>
                                 <td className="px-3 py-2 text-slate-800">{r.violationLabel}</td>
                                 <td className="font-mono-num px-3 py-2 text-right font-bold text-red-700">

@@ -1,15 +1,13 @@
 import { useMemo, useRef, useState, type FormEvent } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
-  Check,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
   Lock,
+  Pencil,
   Plus,
   Search,
-  Trash2,
-  UserPlus,
   Users,
   WifiOff,
   X,
@@ -19,7 +17,6 @@ import { AKPS_CATEGORIES, searchSimilarStudents } from '../shared/piketLogic';
 import {
   MAX_BATCH_VIOLATION_ROWS,
   buildBatchColumnEntries,
-  buildBatchViolationInputs,
   createEmptyBatchColumnRow,
   filterStudentsByClassAndQuery,
   getOrderedViolationOptions,
@@ -33,12 +30,11 @@ import type {
   KategoriPelanggaran,
   PublicAppState,
   StudentRecord,
-  ViolationPreset,
 } from '../shared/types';
 
 interface BatchViolationFormProps {
   appState: PublicAppState;
-  quickPickItems: QuickPickPresetItem[];
+  quickPickItems?: QuickPickPresetItem[];
   recentPresetIds?: string[];
   canRecordNow: boolean;
   connectionOffline: boolean;
@@ -50,7 +46,6 @@ interface BatchViolationFormProps {
 
 export function BatchViolationForm({
   appState,
-  quickPickItems,
   recentPresetIds = [],
   canRecordNow,
   connectionOffline,
@@ -59,7 +54,7 @@ export function BatchViolationForm({
   onSuccessSubmit,
   onNotify,
 }: BatchViolationFormProps) {
-  // Primary Mode: Per-Column / Row-by-Row Entry Table
+  // Primary Mode: Simple Per-Column Rows (Siswa | Pelanggaran)
   const [rows, setRows] = useState<BatchColumnRow[]>(() => [
     createEmptyBatchColumnRow('init-1'),
     createEmptyBatchColumnRow('init-2'),
@@ -67,20 +62,19 @@ export function BatchViolationForm({
   ]);
   const [activeStudentRowKey, setActiveStudentRowKey] = useState<string | null>(null);
   const [highlightedStudentIdx, setHighlightedStudentIdx] = useState(0);
+  const [expandedDetailRows, setExpandedDetailRows] = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  // Subtle Secondary Feature: "1 Pelanggaran untuk Banyak Siswa"
+  // Subtle Optional Feature: "1 Pelanggaran untuk Banyak Siswa"
   const [showSameRuleDrawer, setShowSameRuleDrawer] = useState(false);
-  const [massPresetId, setMassPresetId] = useState(''); // '' | preset.id | 'CUSTOM'
+  const [massPresetId, setMassPresetId] = useState('');
   const [massCustomLabel, setMassCustomLabel] = useState('');
   const [massCustomCategory, setMassCustomCategory] = useState<KategoriPelanggaran>(
     'A. Kedisiplinan & Kehadiran'
   );
   const [massCustomPoints, setMassCustomPoints] = useState(5);
-  const [massCustomAction, setMassCustomAction] = useState('');
   const [massStudents, setMassStudents] = useState<BatchStudentItem[]>([]);
-  const [massNotes, setMassNotes] = useState('');
-  const [massPickerTab, setMassPickerTab] = useState<'search' | 'class'>('search');
+  const [massClassMode, setMassClassMode] = useState(false);
   const [massSearchText, setMassSearchText] = useState('');
   const [showMassSearchDropdown, setShowMassSearchDropdown] = useState(false);
   const [massHighlightIdx, setMassHighlightIdx] = useState(0);
@@ -93,7 +87,7 @@ export function BatchViolationForm({
   const [selectedClassFilter, setSelectedClassFilter] = useState<string>(
     () => classList[0] ?? 'ALL'
   );
-  const [classSearchQuery, setClassSearchQuery] = useState('');
+  const [rowClassFilter, setRowClassFilter] = useState<string>('');
 
   // Ordered Violation Options: "Terbaru & Sering Dipakai" at the very top, then AKPS categories
   const orderedViolationOptions = useMemo(
@@ -113,15 +107,13 @@ export function BatchViolationForm({
     [appState.presets]
   );
 
-  // Per-row autocomplete matches for whichever row's student input is focused
   const activeRowMatches = useMemo(() => {
     if (!activeStudentRowKey) return [];
     const targetRow = rows.find((r) => r.rowKey === activeStudentRowKey);
     if (!targetRow) return [];
-    return searchSimilarStudents(appState.students, targetRow.studentName, 8);
-  }, [activeStudentRowKey, rows, appState.students]);
+    return searchSimilarStudents(appState.students, targetRow.studentName, 10, rowClassFilter);
+  }, [activeStudentRowKey, rows, appState.students, rowClassFilter]);
 
-  // Built entries preview & validation status for primary per-column table
   const builtColumnResult = useMemo(() => buildBatchColumnEntries(rows), [rows]);
 
   const hasAnyTypedData = useMemo(
@@ -137,7 +129,6 @@ export function BatchViolationForm({
     [rows]
   );
 
-  // Secondary "1 Pelanggaran untuk Banyak Siswa" helpers
   const effectiveClassFilter = useMemo(() => {
     if (selectedClassFilter === 'ALL' || classList.includes(selectedClassFilter)) {
       return selectedClassFilter;
@@ -146,8 +137,8 @@ export function BatchViolationForm({
   }, [selectedClassFilter, classList]);
 
   const studentsInSelectedClass = useMemo(
-    () => filterStudentsByClassAndQuery(appState.students, effectiveClassFilter, classSearchQuery),
-    [appState.students, effectiveClassFilter, classSearchQuery]
+    () => filterStudentsByClassAndQuery(appState.students, effectiveClassFilter, ''),
+    [appState.students, effectiveClassFilter]
   );
 
   const massSearchMatches = useMemo(
@@ -171,7 +162,7 @@ export function BatchViolationForm({
         violationLabel: label,
         category: massCustomCategory,
         points: Math.max(1, Math.min(100, Math.round(Number(massCustomPoints || 5)))),
-        actionTaken: massCustomAction.trim() || 'Teguran Lisan & Catat',
+        actionTaken: 'Teguran Lisan & Catat',
       };
     }
     const preset = presetByIdMap.get(massPresetId);
@@ -185,14 +176,7 @@ export function BatchViolationForm({
       points: preset.points,
       actionTaken: preset.defaultAction,
     };
-  }, [
-    massPresetId,
-    massCustomLabel,
-    massCustomCategory,
-    massCustomPoints,
-    massCustomAction,
-    presetByIdMap,
-  ]);
+  }, [massPresetId, massCustomLabel, massCustomCategory, massCustomPoints, presetByIdMap]);
 
   function makeStudentKey(stu: Pick<StudentRecord, 'id' | 'name' | 'kelas'>): string {
     if (stu.id) return `id:${stu.id}`;
@@ -263,17 +247,16 @@ export function BatchViolationForm({
     });
   }
 
-  function handleAddEmptyRows(count = 1) {
+  function handleAddEmptyRow() {
     setRows((prev) => {
       if (prev.length >= MAX_BATCH_VIOLATION_ROWS) {
         onNotify(`Maksimal ${MAX_BATCH_VIOLATION_ROWS} baris dalam satu tabel.`, 'info');
         return prev;
       }
-      const next = [...prev];
-      for (let i = 0; i < count && next.length < MAX_BATCH_VIOLATION_ROWS; i++) {
-        next.push(createEmptyBatchColumnRow(`${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}`));
-      }
-      return next;
+      return [
+        ...prev,
+        createEmptyBatchColumnRow(`${Date.now()}-${Math.random().toString(36).slice(2, 6)}`),
+      ];
     });
   }
 
@@ -284,6 +267,12 @@ export function BatchViolationForm({
       }
       return prev.filter((r) => r.rowKey !== rowKey);
     });
+    setExpandedDetailRows((prev) => {
+      if (!prev[rowKey]) return prev;
+      const next = { ...prev };
+      delete next[rowKey];
+      return next;
+    });
   }
 
   function handleResetAllRows() {
@@ -292,6 +281,7 @@ export function BatchViolationForm({
       createEmptyBatchColumnRow(`${Date.now()}-2`),
       createEmptyBatchColumnRow(`${Date.now()}-3`),
     ]);
+    setExpandedDetailRows({});
   }
 
   // Secondary "1 Pelanggaran untuk Banyak Siswa" handlers
@@ -347,7 +337,17 @@ export function BatchViolationForm({
     });
   }
 
-  function handleSelectAllVisibleMassClass() {
+  function handleToggleSelectAllMassClass() {
+    const visibleKeys = new Set(studentsInSelectedClass.map((s) => makeStudentKey(s)));
+    const allPicked =
+      studentsInSelectedClass.length > 0 &&
+      studentsInSelectedClass.every((s) => massStudentKeySet.has(makeStudentKey(s)));
+
+    if (allPicked) {
+      setMassStudents((prev) => prev.filter((s) => !visibleKeys.has(s.key)));
+      return;
+    }
+
     setMassStudents((prev) => {
       const existing = new Set(prev.map((s) => s.key));
       const additions: BatchStudentItem[] = [];
@@ -369,22 +369,13 @@ export function BatchViolationForm({
     });
   }
 
-  function handleDeselectVisibleMassClass() {
-    const visibleKeys = new Set(studentsInSelectedClass.map((s) => makeStudentKey(s)));
-    setMassStudents((prev) => prev.filter((s) => !visibleKeys.has(s.key)));
-  }
-
-  const allVisibleMassClassSelected =
-    studentsInSelectedClass.length > 0 &&
-    studentsInSelectedClass.every((s) => massStudentKeySet.has(makeStudentKey(s)));
-
   function handleApplySameRuleToRows() {
     if (!selectedMassRuleItem) {
-      onNotify('Pilih jenis pelanggaran terlebih dahulu.', 'error');
+      onNotify('Pilih pelanggaran terlebih dahulu.', 'error');
       return;
     }
     if (massStudents.length === 0) {
-      onNotify('Pilih minimal 1 siswa untuk dimasukkan ke tabel.', 'error');
+      onNotify('Pilih minimal 1 siswa.', 'error');
       return;
     }
 
@@ -401,11 +392,11 @@ export function BatchViolationForm({
       category: selectedMassRuleItem.category,
       points: selectedMassRuleItem.points,
       actionTaken: selectedMassRuleItem.actionTaken,
-      notes: massNotes.trim(),
+      notes: '',
     }));
 
     setRows((prev) => {
-      const nonEmptyExisting = prev.filter(
+      const filled = prev.filter(
         (r) =>
           Boolean(r.studentName.trim()) ||
           Boolean(r.kelas.trim()) ||
@@ -413,62 +404,16 @@ export function BatchViolationForm({
           Boolean(r.violationLabel.trim()) ||
           Boolean(r.notes.trim())
       );
-      const combined = [...nonEmptyExisting, ...newRows];
-      return combined.slice(0, MAX_BATCH_VIOLATION_ROWS);
+      return [...filled, ...newRows].slice(0, MAX_BATCH_VIOLATION_ROWS);
     });
 
     if (selectedMassRuleItem.presetId) {
       onRecordPresetUsed(selectedMassRuleItem.presetId);
     }
 
-    onNotify(
-      `${newRows.length} siswa dimasukkan ke tabel baris dengan pelanggaran "${selectedMassRuleItem.violationLabel}".`,
-      'success'
-    );
+    onNotify(`${newRows.length} siswa dimasukkan ke daftar baris.`, 'success');
     setMassStudents([]);
-    setMassNotes('');
     setShowSameRuleDrawer(false);
-  }
-
-  async function handleSaveSameRuleDirectly() {
-    if (!canRecordNow || connectionOffline || submitting) return;
-    if (!selectedMassRuleItem) {
-      onNotify('Pilih jenis pelanggaran terlebih dahulu.', 'error');
-      return;
-    }
-    const built = buildBatchViolationInputs(massStudents, [selectedMassRuleItem], massNotes);
-    if (built.error) {
-      onNotify(built.error, 'error');
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const res = await apiFetch('/api/violations/bulk', {
-        method: 'POST',
-        body: JSON.stringify({ entries: built.entries }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        onNotify(data.error || 'Gagal menyimpan catatan massal.', 'error');
-        return;
-      }
-      if (selectedMassRuleItem.presetId) {
-        onRecordPresetUsed(selectedMassRuleItem.presetId);
-      }
-      setMassStudents([]);
-      setMassNotes('');
-      setShowSameRuleDrawer(false);
-      onSuccessSubmit(
-        data.state,
-        Number(data.createdCount ?? built.entries.length),
-        Array.isArray(data.createdIds) ? data.createdIds : []
-      );
-    } catch {
-      onNotify('Tidak dapat menyimpan catatan massal ke server.', 'error');
-    } finally {
-      setSubmitting(false);
-    }
   }
 
   async function handleSubmitColumnTable(e: FormEvent) {
@@ -489,7 +434,7 @@ export function BatchViolationForm({
       });
       const data = await res.json();
       if (!res.ok) {
-        onNotify(data.error || 'Gagal menyimpan catatan baris.', 'error');
+        onNotify(data.error || 'Gagal menyimpan catatan.', 'error');
         return;
       }
 
@@ -500,7 +445,7 @@ export function BatchViolationForm({
         Array.isArray(data.createdIds) ? data.createdIds : []
       );
     } catch {
-      onNotify('Tidak dapat menyimpan catatan baris ke server.', 'error');
+      onNotify('Tidak dapat terhubung ke server.', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -530,406 +475,411 @@ export function BatchViolationForm({
             ))}
           </optgroup>
         ))}
-        <option value="CUSTOM">Pelanggaran Lainnya (Isi Manual)</option>
+        <option value="CUSTOM">Lainnya (Isi Manual)</option>
       </>
     );
   }
 
+  const allVisibleMassClassSelected =
+    studentsInSelectedClass.length > 0 &&
+    studentsInSelectedClass.every((s) => massStudentKeySet.has(makeStudentKey(s)));
+
   return (
-    <form onSubmit={handleSubmitColumnTable} className="mt-5 space-y-4">
-      {/* Header Baris Per Kolom */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <p className="text-sm font-bold text-slate-900">
-            Tabel Input Per Kolom (1 Baris = 1 Siswa &amp; Pelanggarannya)
-          </p>
-          <p className="text-xs text-slate-500">
-            Pilih nama siswa lalu pilih pelanggarannya per baris. Pelanggaran yang sering/baru dipakai otomatis muncul paling atas.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {hasAnyTypedData && (
-            <button
-              type="button"
-              disabled={submitting}
-              onClick={handleResetAllRows}
-              className="text-xs font-medium text-slate-500 underline hover:text-slate-800 whitespace-nowrap"
+    <form onSubmit={handleSubmitColumnTable} className="mt-4 space-y-3.5">
+      {/* Clean Single Per-Column Table Surface */}
+      <div className="rounded-xl border border-slate-200 bg-white">
+        {/* Top Filter Strip: Cari Nama dari Kelas */}
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 bg-slate-50/75 px-3 py-2">
+          <span className="text-[11px] font-medium text-slate-500">
+            Ketik nama atau pilih kelas untuk menyaring daftar nama siswa
+          </span>
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="batch-row-class-filter"
+              className="text-[11px] font-medium text-slate-600 whitespace-nowrap"
             >
-              Bersihkan
-            </button>
-          )}
-          <motion.button
-            type="button"
-            whileHover={{ y: -1 }}
-            whileTap={{ scale: 0.97 }}
-            disabled={!canRecordNow || submitting || rows.length >= MAX_BATCH_VIOLATION_ROWS}
-            onClick={() => handleAddEmptyRows(1)}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 whitespace-nowrap"
-          >
-            <Plus className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
-            <span>Tambah Baris</span>
-          </motion.button>
+              Cari dari kelas:
+            </label>
+            <select
+              id="batch-row-class-filter"
+              disabled={!canRecordNow || submitting}
+              value={rowClassFilter}
+              onChange={(e) => setRowClassFilter(e.target.value)}
+              className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 focus:border-blue-600 focus:outline-none"
+            >
+              <option value="">Semua Kelas</option>
+              {classList.map((cls) => (
+                <option key={cls} value={cls}>
+                  Kelas {cls}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-      </div>
 
-      {/* Desktop Column Headers */}
-      <div className="hidden md:grid md:grid-cols-[28px_minmax(0,1.15fr)_minmax(0,1.35fr)_152px_32px] md:items-center md:gap-2.5 md:px-3 md:text-[11px] md:font-semibold md:text-slate-500">
-        <div className="text-center">#</div>
-        <div>Siswa &amp; Kelas</div>
-        <div>Jenis Pelanggaran</div>
-        <div>Poin &amp; Catatan</div>
-        <div className="text-right">Hapus</div>
-      </div>
+        {/* Desktop Column Header */}
+        <div className="hidden border-b border-slate-100 bg-slate-50/40 px-3 py-1.5 text-[11px] font-semibold text-slate-500 md:grid md:grid-cols-[24px_minmax(0,1fr)_minmax(0,1.2fr)_64px] md:items-center md:gap-2.5">
+          <span className="text-center">#</span>
+          <span>Nama Siswa</span>
+          <span>Pelanggaran</span>
+          <span className="text-right">Aksi</span>
+        </div>
 
-      {/* Row-by-Row Per-Column List (Grid avoids overflow-x-auto clipping autocomplete dropdowns) */}
-      <div className="space-y-2.5">
-        <AnimatePresence initial={false}>
-          {rows.map((row, idx) => {
-            const isMatchedStudent = Boolean(row.studentId);
-            const showManualFields = !isMatchedStudent && Boolean(row.studentName.trim());
-            const isDropdownOpen = activeStudentRowKey === row.rowKey;
+        <div className="divide-y divide-slate-100">
+          <AnimatePresence initial={false}>
+            {rows.map((row, idx) => {
+              const isMatchedStudent = Boolean(row.studentId);
+              const showManualClass = !isMatchedStudent && Boolean(row.studentName.trim());
+              const isDropdownOpen = activeStudentRowKey === row.rowKey;
+              const isDetailOpen = Boolean(expandedDetailRows[row.rowKey]);
 
-            return (
-              <motion.div
-                key={row.rowKey}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.16 }}
-                className="rounded-xl border border-slate-200 bg-slate-50/55 p-3 transition-colors focus-within:border-blue-300 focus-within:bg-white"
-              >
-                <div className="grid grid-cols-1 gap-2.5 md:grid-cols-[28px_minmax(0,1.15fr)_minmax(0,1.35fr)_152px_32px] md:items-start">
-                  {/* Nomor Baris */}
-                  <div className="flex items-center justify-between md:justify-center md:pt-2">
-                    <span className="font-mono-num text-xs font-bold text-slate-500 whitespace-nowrap">
-                      <span className="md:hidden">Baris </span>
-                      {idx + 1}
-                    </span>
-                    <button
-                      type="button"
-                      disabled={submitting}
-                      aria-label={`Hapus baris ${idx + 1}`}
-                      onClick={() => handleRemoveRow(row.rowKey)}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-700 md:hidden"
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
-                    </button>
-                  </div>
-
-                  {/* Kolom 1: Siswa & Kelas */}
-                  <div className="relative space-y-1.5 min-w-0">
-                    <label
-                      htmlFor={`col-student-${row.rowKey}`}
-                      className="block text-[11px] font-medium text-slate-600 md:sr-only"
-                    >
-                      Siswa Baris {idx + 1}
-                    </label>
-                    <div className="relative">
-                      <Search
-                        className="pointer-events-none absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400"
-                        aria-hidden="true"
-                      />
-                      <input
-                        id={`col-student-${row.rowKey}`}
-                        type="text"
-                        autoComplete="off"
-                        disabled={!canRecordNow || submitting}
-                        value={row.studentName}
-                        onFocus={() => {
-                          setActiveStudentRowKey(row.rowKey);
-                          setHighlightedStudentIdx(0);
-                        }}
-                        onBlur={() =>
-                          window.setTimeout(
-                            () =>
-                              setActiveStudentRowKey((curr) =>
-                                curr === row.rowKey ? null : curr
-                              ),
-                            170
-                          )
-                        }
-                        onChange={(e) => {
-                          updateRow(row.rowKey, {
-                            studentName: e.target.value,
-                            studentId: undefined,
-                            saveToStudentDirectory: false,
-                          });
-                          setActiveStudentRowKey(row.rowKey);
-                          setHighlightedStudentIdx(0);
-                        }}
-                        onKeyDown={(e) => {
-                          if (!isDropdownOpen || activeRowMatches.length === 0) return;
-                          if (e.key === 'ArrowDown') {
-                            e.preventDefault();
-                            setHighlightedStudentIdx(
-                              (prev) => (prev + 1) % activeRowMatches.length
-                            );
-                          } else if (e.key === 'ArrowUp') {
-                            e.preventDefault();
-                            setHighlightedStudentIdx((prev) =>
-                              prev <= 0 ? activeRowMatches.length - 1 : prev - 1
-                            );
-                          } else if (e.key === 'Enter') {
-                            const picked =
-                              activeRowMatches[highlightedStudentIdx] ?? activeRowMatches[0];
-                            if (picked) {
-                              e.preventDefault();
-                              handleSelectRowStudent(row.rowKey, picked.student);
-                            }
-                          } else if (e.key === 'Escape') {
-                            setActiveStudentRowKey(null);
-                          }
-                        }}
-                        placeholder="Ketik nama siswa..."
-                        className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-8 pr-8 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-100"
-                      />
-                      {row.studentName && (
+              return (
+                <motion.div
+                  key={row.rowKey}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: -8 }}
+                  transition={{ duration: 0.15 }}
+                  className="p-2.5 sm:px-3 sm:py-2.5"
+                >
+                  <div className="grid grid-cols-1 gap-2 md:grid-cols-[24px_minmax(0,1fr)_minmax(0,1.2fr)_64px] md:items-center md:gap-2.5">
+                    {/* Row Index */}
+                    <div className="flex items-center justify-between md:justify-center">
+                      <span className="font-mono-num text-xs font-semibold text-slate-400">
+                        <span className="md:hidden">Baris </span>
+                        {idx + 1}
+                      </span>
+                      <div className="flex items-center gap-1 md:hidden">
                         <button
                           type="button"
-                          aria-label={`Kosongkan siswa baris ${idx + 1}`}
-                          onClick={() => handleClearRowStudent(row.rowKey)}
-                          className="absolute right-1.5 top-1.5 inline-flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                          disabled={!canRecordNow || submitting}
+                          aria-label={`Ubah poin atau catatan baris ${idx + 1}`}
+                          onClick={() =>
+                            setExpandedDetailRows((prev) => ({
+                              ...prev,
+                              [row.rowKey]: !prev[row.rowKey],
+                            }))
+                          }
+                          className={`inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+                            isDetailOpen || row.notes.trim()
+                              ? 'bg-blue-50 text-blue-700'
+                              : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700'
+                          }`}
                         >
-                          <X className="h-3.5 w-3.5" aria-hidden="true" />
+                          <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                         </button>
-                      )}
+                        <button
+                          type="button"
+                          disabled={submitting}
+                          aria-label={`Hapus baris ${idx + 1}`}
+                          onClick={() => handleRemoveRow(row.rowKey)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Kolom 1: Nama Siswa */}
+                    <div className="relative min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <div className="relative min-w-0 flex-1">
+                          <Search
+                            className="pointer-events-none absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400"
+                            aria-hidden="true"
+                          />
+                          <input
+                            id={`col-student-${row.rowKey}`}
+                            type="text"
+                            autoComplete="off"
+                            aria-label={`Nama siswa baris ${idx + 1}`}
+                            disabled={!canRecordNow || submitting}
+                            value={row.studentName}
+                            onFocus={() => {
+                              setActiveStudentRowKey(row.rowKey);
+                              setHighlightedStudentIdx(0);
+                            }}
+                            onBlur={() =>
+                              window.setTimeout(
+                                () =>
+                                  setActiveStudentRowKey((curr) =>
+                                    curr === row.rowKey ? null : curr
+                                  ),
+                                170
+                              )
+                            }
+                            onChange={(e) => {
+                              updateRow(row.rowKey, {
+                                studentName: e.target.value,
+                                studentId: undefined,
+                                saveToStudentDirectory: false,
+                              });
+                              setActiveStudentRowKey(row.rowKey);
+                              setHighlightedStudentIdx(0);
+                            }}
+                            onKeyDown={(e) => {
+                              if (!isDropdownOpen || activeRowMatches.length === 0) return;
+                              if (e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                setHighlightedStudentIdx(
+                                  (prev) => (prev + 1) % activeRowMatches.length
+                                );
+                              } else if (e.key === 'ArrowUp') {
+                                e.preventDefault();
+                                setHighlightedStudentIdx((prev) =>
+                                  prev <= 0 ? activeRowMatches.length - 1 : prev - 1
+                                );
+                              } else if (e.key === 'Enter') {
+                                const picked =
+                                  activeRowMatches[highlightedStudentIdx] ?? activeRowMatches[0];
+                                if (picked) {
+                                  e.preventDefault();
+                                  handleSelectRowStudent(row.rowKey, picked.student);
+                                }
+                              } else if (e.key === 'Escape') {
+                                setActiveStudentRowKey(null);
+                              }
+                            }}
+                            placeholder={
+                              rowClassFilter
+                                ? `Cari nama kelas ${rowClassFilter}...`
+                                : 'Cari nama atau kelas (mis. 10A)...'
+                            }
+                            className={`w-full rounded-lg border border-slate-200 bg-white py-2 pl-8 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 ${
+                              isMatchedStudent ? 'pr-20' : row.studentName ? 'pr-7' : 'pr-2.5'
+                            }`}
+                          />
+
+                          {isMatchedStudent && (
+                            <span className="font-mono-num pointer-events-none absolute right-7 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-emerald-700">
+                              {row.kelas}
+                            </span>
+                          )}
+
+                          {row.studentName && (
+                            <button
+                              type="button"
+                              aria-label={`Kosongkan siswa baris ${idx + 1}`}
+                              onClick={() => handleClearRowStudent(row.rowKey)}
+                              className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex h-5 w-5 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                            >
+                              <X className="h-3 w-3" aria-hidden="true" />
+                            </button>
+                          )}
+                        </div>
+
+                        {showManualClass && (
+                          <input
+                            type="text"
+                            disabled={!canRecordNow || submitting}
+                            value={row.kelas}
+                            onChange={(e) => updateRow(row.rowKey, { kelas: e.target.value })}
+                            placeholder="Kelas"
+                            aria-label={`Kelas siswa baris ${idx + 1}`}
+                            className="w-20 shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-900 focus:border-blue-600 focus:outline-none"
+                          />
+                        )}
+                      </div>
 
                       {isDropdownOpen && canRecordNow && (
                         <div
                           role="listbox"
                           aria-label={`Saran siswa baris ${idx + 1}`}
-                          className="absolute left-0 right-0 z-40 mt-1 max-h-56 overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl"
+                          className="absolute left-0 right-0 z-40 mt-1 max-h-52 overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl"
                         >
-                          {!row.studentName.trim() ? (
+                          {!row.studentName.trim() && !rowClassFilter ? (
                             <p className="px-3 py-2 text-[11px] text-slate-500">
-                              Ketik beberapa huruf nama (mis. <strong>abdi</strong> atau{' '}
-                              <strong>ahmad 12c</strong>)...
+                              Ketik nama atau kelas (mis. <strong>10a</strong>), atau pilih kelas di atas.
                             </p>
                           ) : activeRowMatches.length === 0 ? (
                             <p className="px-3 py-2 text-[11px] text-slate-500">
-                              Tidak ditemukan di direktori. Isi kolom <strong>Kelas</strong> di bawah untuk input manual.
+                              Tidak ada di daftar. Isi kolom <strong>Kelas</strong> di sampingnya.
                             </p>
                           ) : (
-                            activeRowMatches.map(({ student: stu }, mIdx) => {
-                              const isHighlighted = mIdx === highlightedStudentIdx;
-                              return (
-                                <button
-                                  key={stu.id}
-                                  type="button"
-                                  role="option"
-                                  aria-selected={isHighlighted}
-                                  onMouseEnter={() => setHighlightedStudentIdx(mIdx)}
-                                  onMouseDown={(ev) => {
-                                    ev.preventDefault();
-                                    handleSelectRowStudent(row.rowKey, stu);
-                                  }}
-                                  className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-xs transition-colors ${
-                                    isHighlighted
-                                      ? 'bg-blue-50 text-blue-950'
-                                      : 'hover:bg-slate-50'
-                                  }`}
-                                >
-                                  <span className="min-w-0 truncate font-medium text-slate-900">
-                                    {stu.name}
-                                  </span>
-                                  <span className="font-mono-num shrink-0 font-bold text-slate-600">
-                                    {stu.kelas}
-                                    {stu.nis && stu.nis !== '-' ? ` · ${stu.nis}` : ''}
-                                  </span>
-                                </button>
-                              );
-                            })
+                            activeRowMatches.map(({ student: stu }, mIdx) => (
+                              <button
+                                key={stu.id}
+                                type="button"
+                                role="option"
+                                aria-selected={mIdx === highlightedStudentIdx}
+                                onMouseEnter={() => setHighlightedStudentIdx(mIdx)}
+                                onMouseDown={(ev) => {
+                                  ev.preventDefault();
+                                  handleSelectRowStudent(row.rowKey, stu);
+                                }}
+                                className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-xs transition-colors ${
+                                  mIdx === highlightedStudentIdx
+                                    ? 'bg-blue-50 text-blue-950'
+                                    : 'hover:bg-slate-50'
+                                }`}
+                              >
+                                <span className="min-w-0 truncate font-medium text-slate-900">
+                                  {stu.name}
+                                </span>
+                                <span className="font-mono-num shrink-0 font-bold text-slate-600">
+                                  {stu.kelas}
+                                </span>
+                              </button>
+                            ))
                           )}
                         </div>
                       )}
                     </div>
 
-                    {isMatchedStudent && (
-                      <div className="flex items-center justify-between gap-2 px-0.5 text-[11px] text-emerald-800">
-                        <span className="truncate font-medium">
-                          Kelas <strong className="font-mono-num">{row.kelas}</strong>
-                          {row.nis ? ` · NIS ${row.nis}` : ''}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleClearRowStudent(row.rowKey)}
-                          className="shrink-0 font-medium text-slate-500 underline hover:text-slate-800"
-                        >
-                          Ganti
-                        </button>
-                      </div>
-                    )}
+                    {/* Kolom 2: Pelanggaran (Terbaru & Sering Dipakai di Atas) */}
+                    <div className="min-w-0">
+                      <select
+                        id={`col-rule-${row.rowKey}`}
+                        aria-label={`Jenis pelanggaran baris ${idx + 1}`}
+                        disabled={!canRecordNow || submitting}
+                        value={row.presetId}
+                        onChange={(e) => handleSelectRowViolation(row.rowKey, e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50"
+                      >
+                        {renderViolationSelectOptions()}
+                      </select>
+                    </div>
 
-                    {showManualFields && (
-                      <div className="flex flex-wrap items-center gap-2">
-                        <input
-                          type="text"
-                          disabled={!canRecordNow || submitting}
-                          value={row.kelas}
-                          onChange={(e) => updateRow(row.rowKey, { kelas: e.target.value })}
-                          placeholder="Kelas (mis. 10A)"
-                          aria-label={`Kelas siswa baris ${idx + 1}`}
-                          className="w-28 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:border-blue-600 focus:outline-none"
-                        />
-                        <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-slate-600">
+                    {/* Kolom 3: Aksi Minimal (Edit Catatan/Poin Opsional + Hapus) */}
+                    <div className="hidden items-center justify-end gap-1 md:flex">
+                      <button
+                        type="button"
+                        disabled={!canRecordNow || submitting}
+                        title="Tambah catatan atau ubah poin"
+                        aria-label={`Ubah poin atau catatan baris ${idx + 1}`}
+                        onClick={() =>
+                          setExpandedDetailRows((prev) => ({
+                            ...prev,
+                            [row.rowKey]: !prev[row.rowKey],
+                          }))
+                        }
+                        className={`inline-flex h-7 w-7 items-center justify-center rounded-lg transition-colors ${
+                          isDetailOpen || row.notes.trim()
+                            ? 'bg-blue-50 text-blue-700'
+                            : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700'
+                        }`}
+                      >
+                        <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={submitting}
+                        aria-label={`Hapus baris ${idx + 1}`}
+                        onClick={() => handleRemoveRow(row.rowKey)}
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-700"
+                      >
+                        <X className="h-3.5 w-3.5" aria-hidden="true" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Field Tambahan (Hanya Muncul Jika Pilih Manual atau Klik Edit Catatan) */}
+                  {(row.presetId === 'CUSTOM' || isDetailOpen) && (
+                    <div className="mt-2 grid grid-cols-1 gap-2 rounded-lg bg-slate-50 p-2 sm:grid-cols-12 md:ml-8">
+                      {row.presetId === 'CUSTOM' && (
+                        <>
                           <input
-                            type="checkbox"
-                            checked={Boolean(row.saveToStudentDirectory)}
+                            type="text"
+                            disabled={!canRecordNow || submitting}
+                            value={row.violationLabel}
+                            onChange={(e) =>
+                              updateRow(row.rowKey, { violationLabel: e.target.value })
+                            }
+                            placeholder="Tulis pelanggaran manual..."
+                            aria-label={`Keterangan pelanggaran manual baris ${idx + 1}`}
+                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 sm:col-span-6"
+                          />
+                          <select
+                            disabled={!canRecordNow || submitting}
+                            value={row.category}
                             onChange={(e) =>
                               updateRow(row.rowKey, {
-                                saveToStudentDirectory: e.target.checked,
+                                category: e.target.value as KategoriPelanggaran,
                               })
                             }
-                            className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600"
-                          />
-                          <span>Simpan ke daftar siswa</span>
-                        </label>
+                            aria-label={`Kategori manual baris ${idx + 1}`}
+                            className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-800 sm:col-span-6"
+                          >
+                            {AKPS_CATEGORIES.map((c) => (
+                              <option key={c} value={c}>
+                                {c}
+                              </option>
+                            ))}
+                          </select>
+                        </>
+                      )}
+                      <div className="sm:col-span-3">
+                        <input
+                          type="number"
+                          min={1}
+                          max={100}
+                          disabled={!canRecordNow || submitting}
+                          value={row.points}
+                          onChange={(e) => updateRow(row.rowKey, { points: Number(e.target.value) })}
+                          aria-label={`Poin baris ${idx + 1}`}
+                          placeholder="Poin"
+                          className="font-mono-num w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-900"
+                        />
                       </div>
-                    )}
-                  </div>
-
-                  {/* Kolom 2: Jenis Pelanggaran (Terbaru & Sering Dipakai di Atas) */}
-                  <div className="space-y-1.5 min-w-0">
-                    <label
-                      htmlFor={`col-rule-${row.rowKey}`}
-                      className="block text-[11px] font-medium text-slate-600 md:sr-only"
-                    >
-                      Jenis Pelanggaran Baris {idx + 1}
-                    </label>
-                    <select
-                      id={`col-rule-${row.rowKey}`}
-                      disabled={!canRecordNow || submitting}
-                      value={row.presetId}
-                      onChange={(e) => handleSelectRowViolation(row.rowKey, e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-100"
-                    >
-                      {renderViolationSelectOptions()}
-                    </select>
-
-                    {row.presetId === 'CUSTOM' && (
-                      <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                      <div className="sm:col-span-9">
                         <input
                           type="text"
                           disabled={!canRecordNow || submitting}
-                          value={row.violationLabel}
-                          onChange={(e) =>
-                            updateRow(row.rowKey, { violationLabel: e.target.value })
-                          }
-                          placeholder="Tulis jenis pelanggaran..."
-                          aria-label={`Keterangan pelanggaran manual baris ${idx + 1}`}
-                          className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 sm:col-span-2"
-                        />
-                        <select
-                          disabled={!canRecordNow || submitting}
-                          value={row.category}
-                          onChange={(e) =>
-                            updateRow(row.rowKey, {
-                              category: e.target.value as KategoriPelanggaran,
-                            })
-                          }
-                          aria-label={`Kategori manual baris ${idx + 1}`}
-                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] text-slate-800"
-                        >
-                          {AKPS_CATEGORIES.map((c) => (
-                            <option key={c} value={c}>
-                              {c}
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          type="text"
-                          disabled={!canRecordNow || submitting}
-                          value={row.actionTaken}
-                          onChange={(e) => updateRow(row.rowKey, { actionTaken: e.target.value })}
-                          placeholder="Tindak lanjut..."
-                          aria-label={`Tindak lanjut manual baris ${idx + 1}`}
-                          className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] text-slate-900"
+                          value={row.notes}
+                          onChange={(e) => updateRow(row.rowKey, { notes: e.target.value })}
+                          placeholder="Catatan singkat (opsional)..."
+                          aria-label={`Catatan baris ${idx + 1}`}
+                          className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 placeholder:text-slate-400"
                         />
                       </div>
-                    )}
-                  </div>
-
-                  {/* Kolom 3: Poin & Catatan Opsional */}
-                  <div className="flex items-start gap-1.5 min-w-0">
-                    <div className="w-14 shrink-0">
-                      <label
-                        htmlFor={`col-points-${row.rowKey}`}
-                        className="block text-[11px] font-medium text-slate-600 md:sr-only"
-                      >
-                        Poin Baris {idx + 1}
-                      </label>
-                      <input
-                        id={`col-points-${row.rowKey}`}
-                        type="number"
-                        min={1}
-                        max={100}
-                        disabled={!canRecordNow || submitting}
-                        value={row.points}
-                        onChange={(e) => updateRow(row.rowKey, { points: Number(e.target.value) })}
-                        title="Poin pelanggaran"
-                        aria-label={`Poin baris ${idx + 1}`}
-                        className="font-mono-num w-full rounded-lg border border-slate-200 bg-white px-1.5 py-2 text-center text-xs font-semibold text-slate-900 focus:border-blue-600 focus:outline-none disabled:bg-slate-100"
-                      />
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <label
-                        htmlFor={`col-notes-${row.rowKey}`}
-                        className="block text-[11px] font-medium text-slate-600 md:sr-only"
-                      >
-                        Catatan Baris {idx + 1}
-                      </label>
-                      <input
-                        id={`col-notes-${row.rowKey}`}
-                        type="text"
-                        disabled={!canRecordNow || submitting}
-                        value={row.notes}
-                        onChange={(e) => updateRow(row.rowKey, { notes: e.target.value })}
-                        placeholder="Catatan..."
-                        aria-label={`Catatan baris ${idx + 1}`}
-                        className="w-full rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none disabled:bg-slate-100"
-                      />
-                    </div>
-                  </div>
+                  )}
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
 
-                  {/* Kolom 4: Hapus Baris (Desktop) */}
-                  <div className="hidden justify-end md:flex md:pt-0.5">
-                    <button
-                      type="button"
-                      disabled={submitting}
-                      aria-label={`Hapus baris ${idx + 1}`}
-                      onClick={() => handleRemoveRow(row.rowKey)}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
+        {/* Footer Tabel: Tambah Baris & Bersihkan */}
+        <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 px-3 py-2">
+          <button
+            type="button"
+            disabled={!canRecordNow || submitting || rows.length >= MAX_BATCH_VIOLATION_ROWS}
+            onClick={handleAddEmptyRow}
+            className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-800 disabled:opacity-50"
+          >
+            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>Tambah Baris</span>
+          </button>
+
+          {hasAnyTypedData && (
+            <button
+              type="button"
+              disabled={submitting}
+              onClick={handleResetAllRows}
+              className="text-xs font-medium text-slate-500 hover:text-slate-800"
+            >
+              Bersihkan
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Opsi Tambahan (Tetap Terlihat, Tidak Terlalu Menonjol & Tidak Tersembunyi): 1 Pelanggaran untuk Banyak Siswa */}
-      <div className="rounded-xl border border-slate-200 bg-slate-50/75 px-3.5 py-2.5">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-slate-700">
-              Opsi Tambahan: Pakai 1 Pelanggaran untuk Banyak Siswa
-            </p>
-            <p className="text-[11px] text-slate-500">
-              Gunakan jika beberapa siswa melakukan pelanggaran yang sama sekaligus (mis. razia seragam/terlambat).
-            </p>
-          </div>
+      {/* Opsi Ringan & Tetap Terlihat: 1 Pelanggaran untuk Banyak Siswa */}
+      <div className="rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs text-slate-600">
+            1 pelanggaran sama untuk banyak siswa sekaligus?
+          </span>
           <button
             type="button"
             disabled={!canRecordNow || submitting}
             aria-expanded={showSameRuleDrawer}
             onClick={() => setShowSameRuleDrawer((prev) => !prev)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 whitespace-nowrap shrink-0"
           >
             <Users className="h-3.5 w-3.5 text-slate-500" aria-hidden="true" />
-            <span>{showSameRuleDrawer ? 'Tutup' : 'Pilih Massal'}</span>
+            <span>{showSameRuleDrawer ? 'Tutup' : 'Pilih Sekaligus'}</span>
             {showSameRuleDrawer ? (
               <ChevronUp className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
             ) : (
@@ -942,133 +892,71 @@ export function BatchViolationForm({
           {showSameRuleDrawer && (
             <motion.div
               key="same-rule-drawer"
-              initial={{ opacity: 0, y: -6 }}
+              initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.18 }}
-              className="mt-3 space-y-3 border-t border-slate-200/80 pt-3"
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.16 }}
+              className="mt-2.5 space-y-2.5 border-t border-slate-200/80 pt-2.5"
             >
-              {/* A. Pilih 1 Jenis Pelanggaran */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="mass-rule-select"
-                  className="block text-xs font-semibold text-slate-800"
-                >
-                  1. Pilih 1 Jenis Pelanggaran
-                </label>
-                {quickPickItems.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {quickPickItems.slice(0, 5).map(({ preset, todayCount }) => {
-                      const active = massPresetId === preset.id;
-                      const shortLabel =
-                        preset.label.length > 30 ? `${preset.label.slice(0, 28)}…` : preset.label;
-                      return (
-                        <button
-                          key={preset.id}
-                          type="button"
-                          onClick={() => handlePickMassPreset(active ? '' : preset.id)}
-                          className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-medium whitespace-nowrap transition-colors ${
-                            active
-                              ? 'border-slate-800 bg-slate-800 text-white'
-                              : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100'
-                          }`}
-                        >
-                          {active && <Check className="h-3 w-3 shrink-0" aria-hidden="true" />}
-                          <span>
-                            {preset.code} · {shortLabel} (+{preset.points})
-                          </span>
-                          {todayCount > 0 && (
-                            <span className="font-mono-num opacity-75">· {todayCount}×</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+              <select
+                id="mass-rule-select"
+                aria-label="Pilih 1 pelanggaran untuk banyak siswa"
+                value={massPresetId}
+                onChange={(e) => handlePickMassPreset(e.target.value)}
+                className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-900 focus:border-blue-600 focus:outline-none"
+              >
+                {renderViolationSelectOptions()}
+              </select>
 
-                <select
-                  id="mass-rule-select"
-                  value={massPresetId}
-                  onChange={(e) => handlePickMassPreset(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-blue-600 focus:outline-none"
-                >
-                  {renderViolationSelectOptions()}
-                </select>
-
-                {massPresetId === 'CUSTOM' && (
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-12">
-                    <input
-                      type="text"
-                      value={massCustomLabel}
-                      onChange={(e) => setMassCustomLabel(e.target.value)}
-                      placeholder="Keterangan pelanggaran..."
-                      className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs sm:col-span-5"
-                    />
-                    <select
-                      value={massCustomCategory}
-                      onChange={(e) =>
-                        setMassCustomCategory(e.target.value as KategoriPelanggaran)
-                      }
-                      className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs sm:col-span-4"
-                    >
-                      {AKPS_CATEGORIES.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      type="number"
-                      min={1}
-                      max={100}
-                      value={massCustomPoints}
-                      onChange={(e) => setMassCustomPoints(Number(e.target.value))}
-                      aria-label="Poin pelanggaran massal"
-                      className="font-mono-num rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs sm:col-span-3"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* B. Pilih Banyak Siswa */}
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-xs font-semibold text-slate-800">
-                    2. Pilih Siswa ({massStudents.length} dipilih)
-                  </span>
-                  <div
-                    role="tablist"
-                    aria-label="Metode pilih siswa untuk satu pelanggaran"
-                    className="inline-flex items-center gap-1 rounded-lg bg-slate-200/70 p-0.5"
+              {massPresetId === 'CUSTOM' && (
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-12">
+                  <input
+                    type="text"
+                    value={massCustomLabel}
+                    onChange={(e) => setMassCustomLabel(e.target.value)}
+                    placeholder="Tulis pelanggaran manual..."
+                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs sm:col-span-6"
+                  />
+                  <select
+                    value={massCustomCategory}
+                    onChange={(e) =>
+                      setMassCustomCategory(e.target.value as KategoriPelanggaran)
+                    }
+                    className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs sm:col-span-4"
                   >
-                    {(
-                      [
-                        { id: 'search', label: 'Cari Nama' },
-                        { id: 'class', label: 'Centang Kelas' },
-                      ] as const
-                    ).map((tab) => {
-                      const active = massPickerTab === tab.id;
-                      return (
-                        <button
-                          key={tab.id}
-                          type="button"
-                          role="tab"
-                          aria-selected={active}
-                          onClick={() => setMassPickerTab(tab.id)}
-                          className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors whitespace-nowrap ${
-                            active
-                              ? 'bg-white text-slate-900 shadow-sm'
-                              : 'text-slate-600 hover:text-slate-900'
-                          }`}
-                        >
-                          {tab.label}
-                        </button>
-                      );
-                    })}
-                  </div>
+                    {AKPS_CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={massCustomPoints}
+                    onChange={(e) => setMassCustomPoints(Number(e.target.value))}
+                    aria-label="Poin pelanggaran massal"
+                    className="font-mono-num rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs sm:col-span-2"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2 text-xs">
+                  <span className="font-medium text-slate-700">
+                    Pilih Siswa ({massStudents.length})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setMassClassMode((prev) => !prev)}
+                    className="text-[11px] font-semibold text-blue-700 hover:underline"
+                  >
+                    {massClassMode ? 'Kembali ke cari nama' : 'Atau centang per kelas'}
+                  </button>
                 </div>
 
-                {massPickerTab === 'search' ? (
+                {!massClassMode ? (
                   <div className="relative">
                     <Search
                       className="pointer-events-none absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400"
@@ -1109,21 +997,17 @@ export function BatchViolationForm({
                           setShowMassSearchDropdown(false);
                         }
                       }}
-                      placeholder="Ketik nama siswa lalu klik / Enter untuk menambah..."
+                      placeholder="Ketik nama siswa lalu klik untuk menambah..."
                       className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-8 pr-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none"
                     />
-                    {showMassSearchDropdown && (
+                    {showMassSearchDropdown && massSearchText.trim() && (
                       <div
                         role="listbox"
-                        className="absolute left-0 right-0 z-30 mt-1 max-h-52 overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl"
+                        className="absolute left-0 right-0 z-30 mt-1 max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl"
                       >
-                        {!massSearchText.trim() ? (
+                        {massSearchMatches.length === 0 ? (
                           <p className="px-3 py-2 text-[11px] text-slate-500">
-                            Ketik nama siswa untuk menambahkannya ke daftar pilihan massal.
-                          </p>
-                        ) : massSearchMatches.length === 0 ? (
-                          <p className="px-3 py-2 text-[11px] text-slate-500">
-                            Tidak ditemukan di direktori. Gunakan tabel baris di atas untuk siswa manual.
+                            Siswa tidak ditemukan.
                           </p>
                         ) : (
                           massSearchMatches.map(({ student: stu }, idx) => {
@@ -1166,48 +1050,32 @@ export function BatchViolationForm({
                     )}
                   </div>
                 ) : (
-                  <div className="space-y-2 rounded-lg border border-slate-200 bg-white p-2.5">
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-12">
+                  <div className="space-y-1.5 rounded-lg border border-slate-200 bg-white p-2">
+                    <div className="flex items-center justify-between gap-2">
                       <select
                         value={effectiveClassFilter}
                         onChange={(e) => setSelectedClassFilter(e.target.value)}
-                        aria-label="Filter kelas siswa"
-                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-900 sm:col-span-5"
+                        aria-label="Pilih kelas siswa"
+                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-900"
                       >
                         {classList.map((cls) => (
                           <option key={cls} value={cls}>
                             Kelas {cls}
                           </option>
                         ))}
-                        <option value="ALL">Semua Kelas ({appState.students.length})</option>
+                        <option value="ALL">Semua Kelas</option>
                       </select>
-                      <input
-                        type="text"
-                        value={classSearchQuery}
-                        onChange={(e) => setClassSearchQuery(e.target.value)}
-                        placeholder="Saring nama di kelas..."
-                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs sm:col-span-7"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between text-[11px] text-slate-600">
-                      <span>{studentsInSelectedClass.length} siswa ditampilkan</span>
                       {studentsInSelectedClass.length > 0 && (
                         <button
                           type="button"
-                          onClick={
-                            allVisibleMassClassSelected
-                              ? handleDeselectVisibleMassClass
-                              : handleSelectAllVisibleMassClass
-                          }
-                          className="font-semibold text-blue-700 underline"
+                          onClick={handleToggleSelectAllMassClass}
+                          className="text-[11px] font-semibold text-blue-700 hover:underline"
                         >
-                          {allVisibleMassClassSelected
-                            ? 'Batal pilih semua'
-                            : `Pilih semua (${studentsInSelectedClass.length})`}
+                          {allVisibleMassClassSelected ? 'Batal semua' : 'Centang semua'}
                         </button>
                       )}
                     </div>
-                    <div className="max-h-44 overflow-y-auto divide-y divide-slate-100 rounded-lg border border-slate-100">
+                    <div className="max-h-40 overflow-y-auto divide-y divide-slate-100 rounded-lg border border-slate-100">
                       {studentsInSelectedClass.map((stu) => {
                         const checked = massStudentKeySet.has(makeStudentKey(stu));
                         return (
@@ -1239,14 +1107,14 @@ export function BatchViolationForm({
                 )}
 
                 {massStudents.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 rounded-lg border border-slate-200 bg-white p-2">
+                  <div className="flex flex-wrap gap-1.5">
                     {massStudents.map((stu) => (
                       <span
                         key={stu.key}
-                        className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] text-slate-800"
+                        className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[11px] text-slate-800"
                       >
-                        <span className="font-medium">{stu.name}</span>
-                        <span className="font-mono-num text-slate-500">({stu.kelas})</span>
+                        <span>{stu.name}</span>
+                        <span className="font-mono-num text-slate-500">{stu.kelas}</span>
                         <button
                           type="button"
                           aria-label={`Keluarkan ${stu.name}`}
@@ -1261,40 +1129,17 @@ export function BatchViolationForm({
                     ))}
                   </div>
                 )}
-
-                <input
-                  type="text"
-                  value={massNotes}
-                  onChange={(e) => setMassNotes(e.target.value)}
-                  placeholder="Catatan bersama (opsional, mis. Razia gerbang pagi)..."
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400"
-                />
               </div>
 
-              <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+              <div className="flex justify-end">
                 <button
                   type="button"
                   disabled={!selectedMassRuleItem || massStudents.length === 0 || submitting}
                   onClick={handleApplySameRuleToRows}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-100 disabled:opacity-50 whitespace-nowrap"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-900 disabled:opacity-50 whitespace-nowrap"
                 >
-                  <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>Masukkan ke Tabel Baris ({massStudents.length})</span>
-                </button>
-                <button
-                  type="button"
-                  disabled={
-                    !canRecordNow ||
-                    connectionOffline ||
-                    submitting ||
-                    !selectedMassRuleItem ||
-                    massStudents.length === 0
-                  }
-                  onClick={handleSaveSameRuleDirectly}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-slate-800 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-900 disabled:opacity-50 whitespace-nowrap"
-                >
-                  <Check className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>Simpan Langsung ({massStudents.length})</span>
+                  <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>Masukkan ke Tabel ({massStudents.length} Siswa)</span>
                 </button>
               </div>
             </motion.div>
@@ -1302,67 +1147,55 @@ export function BatchViolationForm({
         </AnimatePresence>
       </div>
 
-      {/* Ringkasan & Tombol Simpan Utama Tabel Per Kolom */}
-      <div className="space-y-2.5 pt-1">
-        {builtColumnResult.startedRowCount > 0 && (
-          <div
-            className={`rounded-xl border px-3.5 py-2 text-xs ${
-              builtColumnResult.error
-                ? 'border-amber-200 bg-amber-50/75 text-amber-900'
-                : 'border-emerald-200 bg-emerald-50 text-emerald-900'
-            }`}
-          >
-            {builtColumnResult.error
-              ? builtColumnResult.error
-              : `Siap menyimpan ${builtColumnResult.entries.length} catatan siswa dari tabel baris ke spreadsheet hari ini.`}
-          </div>
-        )}
+      {/* Validasi Baris & Tombol Simpan Tunggal */}
+      {builtColumnResult.startedRowCount > 0 && builtColumnResult.error && (
+        <p className="rounded-lg border border-amber-200 bg-amber-50/75 px-3 py-2 text-xs text-amber-900">
+          {builtColumnResult.error}
+        </p>
+      )}
 
-        {connectionOffline && canRecordNow && (
-          <div
-            role="alert"
-            className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs text-red-900"
-          >
-            <WifiOff className="mt-0.5 h-4 w-4 shrink-0 text-red-600" aria-hidden="true" />
-            <span>
-              <strong>Koneksi sedang terputus.</strong> Jangan tekan simpan dulu agar data tidak gagal terkirim. Data di tabel baris tetap aman di layar.
-            </span>
-          </div>
-        )}
-
-        <motion.button
-          type="submit"
-          whileHover={{ scale: 1.008 }}
-          whileTap={{ scale: 0.988 }}
-          disabled={
-            !canRecordNow ||
-            submitting ||
-            connectionOffline ||
-            Boolean(builtColumnResult.error) ||
-            builtColumnResult.entries.length === 0
-          }
-          className="btn-3d-primary inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+      {connectionOffline && canRecordNow && (
+        <div
+          role="alert"
+          className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-900"
         >
-          {connectionOffline ? (
-            <WifiOff className="h-4 w-4" aria-hidden="true" />
-          ) : !canRecordNow ? (
-            <Lock className="h-4 w-4" aria-hidden="true" />
-          ) : (
-            <Plus className="h-4 w-4" aria-hidden="true" />
-          )}
-          <span>
-            {connectionOffline
-              ? 'Koneksi Terputus — Menunggu Tersambung...'
-              : submitting
-                ? 'Menyimpan Catatan Baris...'
-                : !canRecordNow
-                  ? lockedNoticeText
-                  : builtColumnResult.entries.length > 0
-                    ? `Simpan Semua (${builtColumnResult.entries.length} Catatan)`
-                    : 'Isi Nama Siswa & Pelanggaran untuk Menyimpan'}
-          </span>
-        </motion.button>
-      </div>
+          <WifiOff className="mt-0.5 h-4 w-4 shrink-0 text-red-600" aria-hidden="true" />
+          <span>Koneksi terputus. Data di tabel tetap aman di layar.</span>
+        </div>
+      )}
+
+      <motion.button
+        type="submit"
+        whileHover={{ scale: 1.008 }}
+        whileTap={{ scale: 0.988 }}
+        disabled={
+          !canRecordNow ||
+          submitting ||
+          connectionOffline ||
+          Boolean(builtColumnResult.error) ||
+          builtColumnResult.entries.length === 0
+        }
+        className="btn-3d-primary inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+      >
+        {connectionOffline ? (
+          <WifiOff className="h-4 w-4" aria-hidden="true" />
+        ) : !canRecordNow ? (
+          <Lock className="h-4 w-4" aria-hidden="true" />
+        ) : (
+          <Plus className="h-4 w-4" aria-hidden="true" />
+        )}
+        <span>
+          {connectionOffline
+            ? 'Koneksi Terputus...'
+            : submitting
+              ? 'Menyimpan...'
+              : !canRecordNow
+                ? lockedNoticeText
+                : builtColumnResult.entries.length > 0
+                  ? `Simpan Semua (${builtColumnResult.entries.length} Siswa)`
+                  : 'Isi Nama Siswa & Pelanggaran'}
+        </span>
+      </motion.button>
     </form>
   );
 }

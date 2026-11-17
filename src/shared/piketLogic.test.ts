@@ -358,6 +358,24 @@ test('SMAN 1 Kemangkon roster integrity and searchSimilarStudents fuzzy/partial 
   assert.equal(classSpecific[0]?.student.name, 'Ahmad Slamet Fauzan');
   assert.equal(classSpecific[0]?.student.kelas, '12C');
   assert.equal(classSpecific[0]?.student.nis, '2942');
+
+  // Class-only query & "kelas 10a" / "10 a" variants return full class sorted A-Z
+  const class10ABrowse = searchSimilarStudents(SMAN1_KEMANGKON_STUDENTS, '10A', 10);
+  assert.ok(class10ABrowse.length > 20);
+  assert.ok(class10ABrowse.every((m) => m.student.kelas === '10A'));
+  assert.equal(class10ABrowse[0]?.student.name, 'Abdi Pamungkas');
+
+  const classWithWord = searchSimilarStudents(SMAN1_KEMANGKON_STUDENTS, 'kelas 10 a', 10);
+  assert.equal(classWithWord.length, class10ABrowse.length);
+  assert.ok(classWithWord.every((m) => m.student.kelas === '10A'));
+
+  // Explicit classFilter scopes empty query & name query strictly to that class
+  const filter11DBrowse = searchSimilarStudents(SMAN1_KEMANGKON_STUDENTS, '', 10, '11D');
+  assert.ok(filter11DBrowse.length > 20);
+  assert.ok(filter11DBrowse.every((m) => m.student.kelas === '11D'));
+  const filter11DName = searchSimilarStudents(SMAN1_KEMANGKON_STUDENTS, 'nurlia', 5, '11D');
+  assert.equal(filter11DName[0]?.student.name, 'Nurlia Estiningsih');
+  assert.equal(filter11DName[0]?.student.kelas, '11D');
 });
 
 test('weekly rotation cycle rotates automatically every Monday and enforces per-week officer access', () => {

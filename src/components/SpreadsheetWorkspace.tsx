@@ -47,6 +47,7 @@ import {
 import {
   buildBatchViolationInputs,
   getQuickPickPresetsWithRecent,
+  getSortedStudentClasses,
   type BatchRuleItem,
 } from '../shared/batchViolationLogic';
 import type {
@@ -133,6 +134,8 @@ export function SpreadsheetWorkspace({
   const [studentName, setStudentName] = useState('');
   const [studentNis, setStudentNis] = useState('');
   const [kelas, setKelas] = useState('');
+  const [studentClassFilter, setStudentClassFilter] = useState('');
+  const [manualClassEntry, setManualClassEntry] = useState(false);
   const [saveToStudentDirectory, setSaveToStudentDirectory] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<KategoriPelanggaran | 'CUSTOM' | ''>('');
   const [selectedPresetId, setSelectedPresetId] = useState('');
@@ -183,9 +186,14 @@ export function SpreadsheetWorkspace({
     count: number;
   } | null>(null);
 
+  const sortedStudentClasses = useMemo(
+    () => getSortedStudentClasses(appState.students),
+    [appState.students]
+  );
+
   const matchingStudents = useMemo(
-    () => searchSimilarStudents(appState.students, studentName, 10),
-    [appState.students, studentName]
+    () => searchSimilarStudents(appState.students, studentName, 10, studentClassFilter),
+    [appState.students, studentName, studentClassFilter]
   );
 
   const isNewManualStudent = useMemo(() => {
@@ -197,6 +205,8 @@ export function SpreadsheetWorkspace({
   function handleSelectStudent(stu: StudentRecord) {
     setStudentName(stu.name);
     setKelas(stu.kelas);
+    setStudentClassFilter(stu.kelas);
+    setManualClassEntry(false);
     setStudentNis(stu.nis && stu.nis !== '-' ? stu.nis : '');
     setSelectedStudentId(stu.id);
     setSaveToStudentDirectory(false);
@@ -502,6 +512,8 @@ export function SpreadsheetWorkspace({
       setStudentName('');
       setStudentNis('');
       setKelas('');
+      setStudentClassFilter('');
+      setManualClassEntry(false);
       setSelectedStudentId(null);
       setSaveToStudentDirectory(false);
       setNotes('');
@@ -1030,7 +1042,7 @@ export function SpreadsheetWorkspace({
               <p className="text-xs text-slate-500">
                 {isSheetActive
                   ? entryMode === 'batch'
-                    ? 'Isi banyak siswa per baris kolom (siswa, pelanggaran, poin). Opsi 1 pelanggaran untuk banyak siswa tetap tersedia di bawah tabel.'
+                    ? 'Pilih siswa dan pelanggarannya di tiap baris, lalu simpan sekaligus.'
                     : 'Isi nama siswa lalu pilih kategori pelanggaran sesuai buku AKPS.'
                   : isSheetFinalized
                     ? `Spreadsheet sudah ditutup otomatis pada pukul ${autoWindow.endTime} WIB.`
@@ -1131,7 +1143,71 @@ export function SpreadsheetWorkspace({
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-12">
-                  <div className="relative sm:col-span-6">
+                  <div className="sm:col-span-4">
+                    <label
+                      htmlFor="student-class-select"
+                      className="block text-xs font-medium text-slate-700"
+                    >
+                      Kelas (Cari dari Kelas)
+                    </label>
+                    <select
+                      id="student-class-select"
+                      disabled={!canRecordNow || submitting}
+                      value={manualClassEntry ? '__MANUAL__' : studentClassFilter}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '__MANUAL__') {
+                          setManualClassEntry(true);
+                          setStudentClassFilter('');
+                          setKelas('');
+                          return;
+                        }
+                        setManualClassEntry(false);
+                        setStudentClassFilter(val);
+                        setKelas(val);
+                        setHighlightedIndex(0);
+                        if (selectedStudentId) {
+                          const current = appState.students.find((s) => s.id === selectedStudentId);
+                          if (current && val && current.kelas.toUpperCase() !== val.toUpperCase()) {
+                            setSelectedStudentId(null);
+                            setStudentName('');
+                            setStudentNis('');
+                          }
+                        }
+                        if (val) {
+                          window.requestAnimationFrame(() => {
+                            studentInputRef.current?.focus();
+                            setShowStudentDropdown(true);
+                          });
+                        }
+                      }}
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
+                    >
+                      <option value="">Semua Kelas</option>
+                      {sortedStudentClasses.map((cls) => (
+                        <option key={cls} value={cls}>
+                          Kelas {cls}
+                        </option>
+                      ))}
+                      <option value="__MANUAL__">Kelas Lain (Ketik Manual)</option>
+                    </select>
+
+                    {manualClassEntry && (
+                      <input
+                        id="student-kelas"
+                        type="text"
+                        required
+                        disabled={!canRecordNow || submitting}
+                        value={kelas}
+                        onChange={(e) => setKelas(e.target.value)}
+                        placeholder="Ketik kelas (mis. 10G)"
+                        aria-label="Kelas manual"
+                        className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm uppercase text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none"
+                      />
+                    )}
+                  </div>
+
+                  <div className="relative sm:col-span-8">
                     <label
                       htmlFor="student-name"
                       className="block text-xs font-medium text-slate-700"
@@ -1164,7 +1240,7 @@ export function SpreadsheetWorkspace({
                           setShowStudentDropdown(true);
                           if (selectedStudentId) {
                             setSelectedStudentId(null);
-                            if (!nextVal.trim()) {
+                            if (!nextVal.trim() && !studentClassFilter && !manualClassEntry) {
                               setKelas('');
                               setStudentNis('');
                             }
@@ -1190,7 +1266,11 @@ export function SpreadsheetWorkspace({
                             setShowStudentDropdown(false);
                           }
                         }}
-                        placeholder="Ketik beberapa huruf nama..."
+                        placeholder={
+                          studentClassFilter
+                            ? `Ketik atau pilih siswa kelas ${studentClassFilter}...`
+                            : 'Ketik nama atau kelas (mis. abdi atau 10a)...'
+                        }
                         className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-9 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
                       />
                       {studentName && !submitting && canRecordNow && (
@@ -1199,9 +1279,11 @@ export function SpreadsheetWorkspace({
                           aria-label="Kosongkan nama siswa"
                           onClick={() => {
                             setStudentName('');
-                            setKelas('');
                             setStudentNis('');
                             setSelectedStudentId(null);
+                            if (!manualClassEntry) {
+                              setKelas(studentClassFilter);
+                            }
                             studentInputRef.current?.focus();
                           }}
                           className="absolute right-2.5 top-2.5 inline-flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700"
@@ -1216,8 +1298,7 @@ export function SpreadsheetWorkspace({
                         <span className="inline-flex items-center gap-1">
                           <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                           <span>
-                            Kelas <strong>{kelas}</strong>
-                            {studentNis ? ` · NIS ${studentNis}` : ''} terisi otomatis
+                            Kelas <strong>{kelas}</strong> terisi otomatis
                           </span>
                         </span>
                       </p>
@@ -1227,26 +1308,25 @@ export function SpreadsheetWorkspace({
                       <div
                         id="student-autocomplete-listbox"
                         role="listbox"
-                        className="absolute left-0 right-0 z-30 mt-1.5 max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl sm:right-auto sm:w-[430px] sm:max-w-[calc(100vw-3rem)]"
+                        className="absolute left-0 right-0 z-30 mt-1.5 max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl"
                       >
-                        {!studentName.trim() ? (
+                        {!studentName.trim() && !studentClassFilter ? (
                           <div className="px-3.5 py-2.5 text-xs text-slate-500">
-                            Ketik beberapa huruf nama (mis. <strong className="text-slate-700">abdi</strong>,{' '}
-                            <strong className="text-slate-700">nurlia</strong>, atau{' '}
-                            <strong className="text-slate-700">ahmad 12c</strong>) — kelas akan terisi otomatis.
+                            Ketik nama siswa (mis. <strong className="text-slate-700">abdi</strong>), ketik kelas (mis. <strong className="text-slate-700">10a</strong>), atau pilih kelas di samping kiri.
                           </div>
                         ) : matchingStudents.length === 0 ? (
                           <div className="px-3.5 py-2.5 text-xs text-slate-500">
-                            Tidak ditemukan nama yang mirip dengan &ldquo;{studentName.trim()}&rdquo;. Anda tetap dapat mengisi kelas secara manual.
+                            Tidak ditemukan nama yang cocok{studentClassFilter ? ` di kelas ${studentClassFilter}` : ''}. Pilih kelas di samping untuk input manual.
                           </div>
                         ) : (
                           <>
                             <div className="border-b border-slate-100 px-3.5 py-1.5 text-[11px] font-medium text-slate-500">
-                              {matchingStudents.length} pilihan cocok — klik untuk isi kelas otomatis
+                              {studentClassFilter
+                                ? `Siswa kelas ${studentClassFilter} (${matchingStudents.length})`
+                                : `${matchingStudents.length} pilihan cocok — klik untuk isi kelas otomatis`}
                             </div>
                             {matchingStudents.map(({ student: stu, matchType }, idx) => {
                               const isHighlighted = idx === highlightedIndex;
-                              const hasNis = Boolean(stu.nis && stu.nis !== '-');
                               return (
                                 <button
                                   key={stu.id}
@@ -1264,10 +1344,9 @@ export function SpreadsheetWorkspace({
                                 >
                                   <div className="min-w-0">
                                     <p className="truncate font-medium text-slate-900">{stu.name}</p>
-                                    <p className="text-[11px] text-slate-500">
-                                      {hasNis ? `NIS ${stu.nis}` : 'Siswa SMAN 1 Kemangkon'}
-                                      {matchType === 'similar' ? ' · Ejaan mirip' : ''}
-                                    </p>
+                                    {matchType === 'similar' && (
+                                      <p className="text-[11px] text-slate-500">Ejaan mirip</p>
+                                    )}
                                   </div>
                                   <span className="font-mono-num shrink-0 rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-800">
                                     {stu.kelas}
@@ -1279,43 +1358,6 @@ export function SpreadsheetWorkspace({
                         )}
                       </div>
                     )}
-                  </div>
-
-                  <div className="sm:col-span-3">
-                    <label
-                      htmlFor="student-kelas"
-                      className="block text-xs font-medium text-slate-700"
-                    >
-                      Kelas
-                    </label>
-                    <input
-                      id="student-kelas"
-                      type="text"
-                      required
-                      disabled={!canRecordNow || submitting}
-                      value={kelas}
-                      onChange={(e) => setKelas(e.target.value)}
-                      placeholder="Otomatis / 11D"
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
-                    />
-                  </div>
-
-                  <div className="sm:col-span-3">
-                    <label
-                      htmlFor="student-nis"
-                      className="block text-xs font-medium text-slate-700"
-                    >
-                      NIS (Opsional)
-                    </label>
-                    <input
-                      id="student-nis"
-                      type="text"
-                      disabled={!canRecordNow || submitting}
-                      value={studentNis}
-                      onChange={(e) => setStudentNis(e.target.value)}
-                      placeholder="Otomatis"
-                      className="font-mono-num mt-1 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
-                    />
                   </div>
                 </div>
 
@@ -2428,7 +2470,7 @@ export function SpreadsheetWorkspace({
                         <th className="px-4 py-2.5 w-12 text-center">No</th>
                         <th className="px-4 py-2.5 w-20">Jam</th>
                         <th className="px-4 py-2.5 w-16">Kode</th>
-                        <th className="px-4 py-2.5">Siswa & NIS</th>
+                        <th className="px-4 py-2.5">Siswa</th>
                         <th className="px-4 py-2.5">Pelanggaran AKPS</th>
                         <th className="px-4 py-2.5 text-right w-20">Poin</th>
                         <th className="px-4 py-2.5">Tindak Lanjut</th>
@@ -2477,30 +2519,16 @@ export function SpreadsheetWorkspace({
                                     placeholder="Nama siswa"
                                     className="w-full rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-900"
                                   />
-                                  <div className="flex gap-1.5">
-                                    <input
-                                      type="text"
-                                      value={editKelas}
-                                      onChange={(e) => setEditKelas(e.target.value)}
-                                      placeholder="Kelas"
-                                      className="w-20 rounded-lg border border-slate-200 px-2 py-1 text-xs uppercase"
-                                    />
-                                    <input
-                                      type="text"
-                                      value={editStudentNis}
-                                      onChange={(e) => setEditStudentNis(e.target.value)}
-                                      placeholder="NIS"
-                                      className="font-mono-num w-24 rounded-lg border border-slate-200 px-2 py-1 text-xs"
-                                    />
-                                  </div>
+                                  <input
+                                    type="text"
+                                    value={editKelas}
+                                    onChange={(e) => setEditKelas(e.target.value)}
+                                    placeholder="Kelas"
+                                    className="w-24 rounded-lg border border-slate-200 px-2 py-1 text-xs uppercase"
+                                  />
                                 </div>
                               ) : (
-                                <>
-                                  <p className="font-medium text-slate-900">{row.studentName}</p>
-                                  <p className="font-mono-num text-xs text-slate-500">
-                                    NIS {row.studentNis}
-                                  </p>
-                                </>
+                                <p className="font-medium text-slate-900">{row.studentName}</p>
                               )}
                             </td>
                             <td className="px-4 py-2.5">
@@ -2657,7 +2685,7 @@ export function SpreadsheetWorkspace({
                   <th className="px-4 py-2.5 text-center w-12">No</th>
                   <th className="px-4 py-2.5 w-20">Jam</th>
                   <th className="px-4 py-2.5 w-16">Kode</th>
-                  <th className="px-4 py-2.5">Siswa & NIS</th>
+                  <th className="px-4 py-2.5">Siswa</th>
                   <th className="px-4 py-2.5 w-24">Kelas</th>
                   <th className="px-4 py-2.5">Pelanggaran & Kategori</th>
                   <th className="px-4 py-2.5 text-right w-20">Poin</th>
@@ -2704,29 +2732,15 @@ export function SpreadsheetWorkspace({
                       </td>
                       <td className="px-4 py-2.5">
                         {isEditingRow ? (
-                          <div className="space-y-1.5">
-                            <input
-                              type="text"
-                              value={editStudentName}
-                              onChange={(e) => setEditStudentName(e.target.value)}
-                              placeholder="Nama siswa"
-                              className="w-full rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-900"
-                            />
-                            <input
-                              type="text"
-                              value={editStudentNis}
-                              onChange={(e) => setEditStudentNis(e.target.value)}
-                              placeholder="NIS"
-                              className="font-mono-num w-full rounded-lg border border-slate-200 px-2.5 py-1 text-xs"
-                            />
-                          </div>
+                          <input
+                            type="text"
+                            value={editStudentName}
+                            onChange={(e) => setEditStudentName(e.target.value)}
+                            placeholder="Nama siswa"
+                            className="w-full rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-900"
+                          />
                         ) : (
-                          <>
-                            <p className="font-medium text-slate-900">{row.studentName}</p>
-                            <p className="font-mono-num text-xs text-slate-500">
-                              NIS {row.studentNis}
-                            </p>
-                          </>
+                          <p className="font-medium text-slate-900">{row.studentName}</p>
                         )}
                       </td>
                       <td className="font-mono-num px-4 py-2.5 text-xs font-semibold text-slate-800">

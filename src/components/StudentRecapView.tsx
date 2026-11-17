@@ -347,7 +347,7 @@ export function StudentRecapView({
                   onSubmit={handleAddCustomStudent}
                   className="mt-4 grid grid-cols-1 gap-3 border-t border-blue-100 pt-4 sm:grid-cols-12"
                 >
-                  <div className="sm:col-span-5">
+                  <div className="sm:col-span-6">
                     <input
                       type="text"
                       required
@@ -357,7 +357,7 @@ export function StudentRecapView({
                       className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900"
                     />
                   </div>
-                  <div className="sm:col-span-2">
+                  <div className="sm:col-span-3">
                     <input
                       type="text"
                       required
@@ -365,15 +365,6 @@ export function StudentRecapView({
                       onChange={(e) => setNewStuKelas(e.target.value)}
                       placeholder="Kelas (mis. 10A)"
                       className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs uppercase text-slate-900"
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <input
-                      type="text"
-                      value={newStuNis}
-                      onChange={(e) => setNewStuNis(e.target.value)}
-                      placeholder="NIS (Opsional)"
-                      className="font-mono-num w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900"
                     />
                   </div>
                   <div className="sm:col-span-3">
@@ -601,7 +592,6 @@ export function StudentRecapView({
                           <thead>
                             <tr className="border-b border-slate-200 bg-slate-50 text-slate-600">
                               <th className="px-3 py-2 font-semibold">No</th>
-                              <th className="px-3 py-2 font-semibold">NIS</th>
                               <th className="px-3 py-2 font-semibold">Nama Siswa</th>
                               <th className="px-3 py-2 font-semibold">Kelas</th>
                             </tr>
@@ -611,9 +601,6 @@ export function StudentRecapView({
                               <tr key={`${item.name}-${item.kelas}-${idx}`}>
                                 <td className="font-mono-num px-3 py-1.5 text-slate-500">
                                   {idx + 1}
-                                </td>
-                                <td className="font-mono-num px-3 py-1.5 text-slate-600">
-                                  {item.nis}
                                 </td>
                                 <td className="px-3 py-1.5 font-medium text-slate-900">
                                   {item.name}
@@ -670,13 +657,13 @@ export function StudentRecapView({
             />
             <input
               type="search"
-              aria-label="Cari nama atau NIS siswa"
+              aria-label="Cari nama atau kelas siswa"
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
                 setPage(1);
               }}
-              placeholder="Cari siswa, kelas, atau NIS..."
+              placeholder="Cari siswa atau kelas..."
               className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none"
             />
           </div>
@@ -755,7 +742,7 @@ export function StudentRecapView({
             <table className="min-w-[680px] w-full border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
-                  <th className="px-4 py-3">Siswa & NIS</th>
+                  <th className="px-4 py-3">Siswa</th>
                   <th className="px-4 py-3">Kelas</th>
                   <th className="px-4 py-3 text-right">Total Pelanggaran</th>
                   <th className="px-4 py-3 text-right">Akumulasi Poin</th>
@@ -768,7 +755,6 @@ export function StudentRecapView({
                   <tr key={stu.key} className="transition-colors hover:bg-slate-50/80">
                     <td className="px-4 py-2.5">
                       <p className="font-medium text-slate-900">{stu.studentName}</p>
-                      <p className="font-mono-num text-xs text-slate-500">NIS {stu.studentNis}</p>
                     </td>
                     <td className="font-mono-num px-4 py-2.5 text-xs font-semibold text-slate-700">
                       {stu.kelas}

@@ -252,9 +252,6 @@ export function ArchiveView({ appState, onNotify }: ArchiveViewProps) {
                           </td>
                           <td className="px-4 py-3">
                             <p className="font-medium text-slate-900">{row.studentName}</p>
-                            <p className="font-mono-num text-xs text-slate-500">
-                              NIS {row.studentNis}
-                            </p>
                           </td>
                           <td className="font-mono-num px-4 py-3 text-xs font-semibold text-slate-700">
                             {row.kelas}

@@ -1417,27 +1417,66 @@ function scoreTokenAgainstWords(
 export function searchSimilarStudents(
   students: StudentRecord[],
   query: string,
-  limit = 10
+  limit = 10,
+  classFilter = ''
 ): StudentMatchResult[] {
+  const cleanClassFilter = classFilter.trim().toUpperCase();
+  const hasExplicitClassFilter = Boolean(cleanClassFilter && cleanClassFilter !== 'ALL');
   const trimmed = query.trim();
-  if (!trimmed) return [];
+
+  if (!trimmed && !hasExplicitClassFilter) return [];
+
+  const scopedStudents = hasExplicitClassFilter
+    ? students.filter((s) => s.kelas.trim().toUpperCase() === cleanClassFilter)
+    : students;
+
+  if (!trimmed && hasExplicitClassFilter) {
+    return [...scopedStudents]
+      .sort((a, b) => a.name.localeCompare(b.name, 'id'))
+      .slice(0, Math.max(limit, 45))
+      .map((student) => ({ student, score: 100, matchType: 'prefix' as const }));
+  }
 
   const normQuery = normalizeStudentText(trimmed);
   if (!normQuery) return [];
 
-  const rawTokens = normQuery.split(' ').filter(Boolean);
-  const classTokens = rawTokens.filter((t) => /^(10|11|12)[a-f]?$/.test(t));
-  const nameTokens = rawTokens.filter((t) => !/^(10|11|12)[a-f]?$/.test(t));
+  // Merge spaced grade+section like "10 a" -> "10a" and strip helper word "kelas"/"kls" when paired with a class token
+  const rawSplit = normQuery.split(' ').filter(Boolean);
+  const mergedTokens: string[] = [];
+  for (let i = 0; i < rawSplit.length; i++) {
+    const cur = rawSplit[i];
+    const next = rawSplit[i + 1];
+    if (/^(10|11|12)$/.test(cur) && next && /^[a-f]$/.test(next)) {
+      mergedTokens.push(`${cur}${next}`);
+      i++;
+    } else {
+      mergedTokens.push(cur);
+    }
+  }
+
+  const classTokens = mergedTokens.filter((t) => /^(10|11|12)[a-f]?$/.test(t));
+  const rawNameTokens = mergedTokens.filter((t) => !/^(10|11|12)[a-f]?$/.test(t));
+  const nameTokens =
+    classTokens.length > 0 || hasExplicitClassFilter
+      ? rawNameTokens.filter((t) => t !== 'kelas' && t !== 'kls')
+      : rawNameTokens;
+
+  // Also allow matching arbitrary/custom class names (e.g. "xi-ipa-1" or "10-b") when typed directly
+  const exactCustomClassQuery =
+    classTokens.length === 0 && rawNameTokens.length === 1 && !hasExplicitClassFilter
+      ? rawNameTokens[0]
+      : '';
+
   const normNameQuery = nameTokens.join(' ');
   const phoneticQuery = phoneticIndonesian(normNameQuery || normQuery);
 
   const results: StudentMatchResult[] = [];
 
-  for (const stu of students) {
+  for (const stu of scopedStudents) {
     const kelasLower = stu.kelas.toLowerCase();
     const nisLower = stu.nis && stu.nis !== '-' ? stu.nis.toLowerCase() : '';
 
-    // Filter strictly on explicit class tokens if user included one (e.g. "abdi 10a" or "ahmad 12")
+    // Filter strictly on explicit class tokens if user included one (e.g. "abdi 10a", "kelas 10a", or "ahmad 12")
     if (classTokens.length > 0) {
       const allClassMatch = classTokens.every((ct) => kelasLower.startsWith(ct));
       if (!allClassMatch) continue;
@@ -1448,12 +1487,18 @@ export function searchSimilarStudents(
       continue;
     }
 
-    // Direct NIS match
-    if (nisLower && rawTokens.length === 1 && nisLower.includes(rawTokens[0])) {
+    // Custom non-numeric class name match (e.g. "xi-ipa-1")
+    if (exactCustomClassQuery && normalizeStudentText(stu.kelas) === exactCustomClassQuery) {
+      results.push({ student: stu, score: 92, matchType: 'prefix' });
+      continue;
+    }
+
+    // Direct NIS match (kept silent for internal search compatibility)
+    if (nisLower && mergedTokens.length === 1 && nisLower.includes(mergedTokens[0])) {
       results.push({
         student: stu,
-        score: nisLower === rawTokens[0] ? 130 : 100,
-        matchType: nisLower === rawTokens[0] ? 'exact' : 'prefix',
+        score: nisLower === mergedTokens[0] ? 130 : 100,
+        matchType: nisLower === mergedTokens[0] ? 'exact' : 'prefix',
       });
       continue;
     }
@@ -1533,7 +1578,12 @@ export function searchSimilarStudents(
     return a.student.name.localeCompare(b.student.name, 'id');
   });
 
-  return results.slice(0, limit);
+  const effectiveLimit =
+    nameTokens.length === 0 && (classTokens.length > 0 || hasExplicitClassFilter)
+      ? Math.max(limit, 45)
+      : limit;
+
+  return results.slice(0, effectiveLimit);
 }
 
 export function calculateDailyOfficerProductivity(
