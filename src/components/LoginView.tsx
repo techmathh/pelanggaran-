@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   Eye,
   EyeOff,
@@ -125,8 +126,10 @@ export function LoginView({
             </Tilt3DCard>
 
             <div className="grid grid-cols-1 gap-3 border-t border-slate-100 pt-5 sm:grid-cols-3">
-              <button
+              <motion.button
                 type="button"
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => document.getElementById('login-username')?.focus()}
                 className="card-3d-interactive group rounded-xl border border-slate-200/70 bg-white p-2.5 text-left hover:border-sky-200 hover:bg-sky-50/50"
               >
@@ -136,19 +139,27 @@ export function LoginView({
                 <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
                   Login sesuai akun petugas OSIS yang sudah dibagikan pengurus.
                 </p>
-              </button>
-              <div className="card-3d-interactive rounded-xl border border-slate-200/60 bg-slate-50/40 p-2.5">
+              </motion.button>
+              <motion.div
+                whileHover={{ y: -2 }}
+                transition={{ type: 'spring', stiffness: 360, damping: 24 }}
+                className="card-3d-interactive rounded-xl border border-slate-200/60 bg-slate-50/40 p-2.5"
+              >
                 <p className="text-xs font-semibold text-slate-900">02. Catat Siswa Cepat</p>
                 <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
                   Ketik beberapa huruf nama siswa — kelas dan poin AKPS terisi otomatis.
                 </p>
-              </div>
-              <div className="card-3d-interactive rounded-xl border border-slate-200/60 bg-slate-50/40 p-2.5">
+              </motion.div>
+              <motion.div
+                whileHover={{ y: -2 }}
+                transition={{ type: 'spring', stiffness: 360, damping: 24 }}
+                className="card-3d-interactive rounded-xl border border-slate-200/60 bg-slate-50/40 p-2.5"
+              >
                 <p className="text-xs font-semibold text-slate-900">03. Tutup Otomatis &amp; Unduh</p>
                 <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
                   Saat jam selesai tercapai, spreadsheet terkunci otomatis &amp; Excel/PDF siap diunduh.
                 </p>
-              </div>
+              </motion.div>
             </div>
           </section>
 
@@ -218,14 +229,20 @@ export function LoginView({
                     </div>
                   </div>
 
-                  {error && (
-                    <div
-                      role="alert"
-                      className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs font-medium text-red-700"
-                    >
-                      {error}
-                    </div>
-                  )}
+                  <AnimatePresence>
+                    {error && (
+                      <motion.div
+                        role="alert"
+                        initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                        transition={{ duration: 0.18 }}
+                        className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs font-medium text-red-700"
+                      >
+                        {error}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
                   <button
                     type="submit"

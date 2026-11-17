@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   AlertTriangle,
+  Check,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
@@ -17,6 +19,7 @@ import {
   Save,
   Search,
   SlidersHorizontal,
+  Sparkles,
   Trash2,
   Users,
   WifiOff,
@@ -174,6 +177,11 @@ export function SpreadsheetWorkspace({
   const [showManualDetails, setShowManualDetails] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [lastAddedRowId, setLastAddedRowId] = useState<string | null>(null);
+  const [lastSaveCelebration, setLastSaveCelebration] = useState<{
+    studentName: string;
+    totalPoints: number;
+    count: number;
+  } | null>(null);
 
   const matchingStudents = useMemo(
     () => searchSimilarStudents(appState.students, studentName, 10),
@@ -477,6 +485,19 @@ export function SpreadsheetWorkspace({
           setLastAddedRowId((curr) => (curr === addedId ? null : curr));
         }, 2500);
       }
+      const savedTotalPts = rulesToSave.reduce((acc, r) => acc + r.points, 0);
+      const savedName = studentName.trim();
+      setLastSaveCelebration({
+        studentName: savedName,
+        totalPoints: savedTotalPts,
+        count: rulesToSave.length,
+      });
+      window.setTimeout(() => {
+        setLastSaveCelebration((curr) =>
+          curr && curr.studentName === savedName ? null : curr
+        );
+      }, 2800);
+
       setMascotPulse((c) => c + 1);
       setStudentName('');
       setStudentNis('');
@@ -705,8 +726,8 @@ export function SpreadsheetWorkspace({
       <section className="surface-3d animate-stagger-1 grid grid-cols-1 items-stretch gap-5 rounded-2xl border border-slate-200/90 bg-white p-4 sm:gap-6 sm:p-6 lg:grid-cols-12">
         <div className="flex flex-col justify-between lg:col-span-8">
           <div>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
                 <span>{SCHOOL_IDENTITY.sekolah}</span>
                 <span aria-hidden="true">·</span>
                 <span>{formatIndonesianDateLabel(appState.serverDate, appState.serverHari)}</span>
@@ -834,28 +855,39 @@ export function SpreadsheetWorkspace({
               </button>
             </div>
 
+            <AnimatePresence initial={false}>
             {showGuide && (
-              <div className="mt-4 grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 text-xs text-slate-700 sm:grid-cols-3">
-                <div>
-                  <p className="font-semibold text-slate-900">1. Buka Otomatis di Jam Mulai</p>
-                  <p className="mt-0.5 leading-relaxed text-slate-600">
-                    Spreadsheet hari ini otomatis dibuat pukul {autoWindow.startTime} WIB tanpa perlu menekan tombol buat manual.
-                  </p>
+              <motion.div
+                key="hero-guide-drawer"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-4 grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 text-xs text-slate-700 sm:grid-cols-3">
+                  <div>
+                    <p className="font-semibold text-slate-900">1. Buka Otomatis di Jam Mulai</p>
+                    <p className="mt-0.5 leading-relaxed text-slate-600">
+                      Spreadsheet hari ini otomatis dibuat pukul {autoWindow.startTime} WIB tanpa perlu menekan tombol buat manual.
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-900">2. Cari Siswa &amp; Pilih AKPS</p>
+                    <p className="mt-0.5 leading-relaxed text-slate-600">
+                      Ketik beberapa huruf nama siswa agar kelas terisi otomatis, lalu pilih kategori (A–F) dan simpan.
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-900">3. Tutup Otomatis &amp; Unduh</p>
+                    <p className="mt-0.5 leading-relaxed text-slate-600">
+                      Saat pukul {autoWindow.endTime} WIB, spreadsheet tertutup &amp; final otomatis sehingga Excel per kelas dan PDF terbuka.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold text-slate-900">2. Cari Siswa &amp; Pilih AKPS</p>
-                  <p className="mt-0.5 leading-relaxed text-slate-600">
-                    Ketik beberapa huruf nama siswa agar kelas terisi otomatis, lalu pilih kategori (A–F) dan simpan.
-                  </p>
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-900">3. Tutup Otomatis &amp; Unduh</p>
-                  <p className="mt-0.5 leading-relaxed text-slate-600">
-                    Saat pukul {autoWindow.endTime} WIB, spreadsheet tertutup &amp; final otomatis sehingga Excel per kelas dan PDF terbuka.
-                  </p>
-                </div>
-              </div>
+              </motion.div>
             )}
+            </AnimatePresence>
           </div>
 
           <div className="mt-6 grid grid-cols-2 gap-4 border-t border-slate-100 pt-5 sm:grid-cols-4">
@@ -1019,32 +1051,36 @@ export function SpreadsheetWorkspace({
                 aria-label="Mode pencatatan pelanggaran"
                 className="inline-flex items-center gap-1 rounded-xl bg-slate-100 p-1"
               >
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={entryMode === 'single'}
-                  onClick={() => setEntryMode('single')}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
-                    entryMode === 'single'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Catat 1 Siswa
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={entryMode === 'batch'}
-                  onClick={() => setEntryMode('batch')}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
-                    entryMode === 'batch'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Catat Banyak Siswa
-                </button>
+                {(
+                  [
+                    { id: 'single', label: 'Catat 1 Siswa' },
+                    { id: 'batch', label: 'Catat Banyak Siswa' },
+                  ] as const
+                ).map((modeTab) => {
+                  const active = entryMode === modeTab.id;
+                  return (
+                    <button
+                      key={modeTab.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => setEntryMode(modeTab.id)}
+                      className={`relative rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
+                        active ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      {active && (
+                        <motion.span
+                          layoutId="entry-mode-pill"
+                          transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                          className="absolute inset-0 rounded-lg bg-white shadow-sm"
+                          aria-hidden="true"
+                        />
+                      )}
+                      <span className="relative z-10">{modeTab.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -1083,563 +1119,514 @@ export function SpreadsheetWorkspace({
               onNotify={onNotify}
             />
           ) : (
-            <form onSubmit={handleAddViolation} className="mt-5 space-y-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
-                <div className="relative sm:col-span-6">
-                  <div className="flex items-center justify-between gap-2">
+            <form onSubmit={handleAddViolation} className="mt-5 space-y-5">
+              {/* LANGKAH 1 · DATA SISWA */}
+              <div className="space-y-3 border-b border-slate-100 pb-5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-bold text-slate-900">Langkah 1 · Data Siswa</p>
+                  <span className="text-[11px] text-slate-400">
+                    Cari dari {appState.students.length} siswa
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-12">
+                  <div className="relative sm:col-span-6">
                     <label
                       htmlFor="student-name"
-                      className="block text-sm font-medium text-slate-700"
+                      className="block text-xs font-medium text-slate-700"
                     >
                       Nama Siswa
                     </label>
-                    <span className="text-[11px] text-slate-400">
-                      Cari dari {appState.students.length} siswa
-                    </span>
-                  </div>
-                  <div className="relative mt-1.5">
-                    <Search
-                      className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400"
-                      aria-hidden="true"
-                    />
-                    <input
-                      ref={studentInputRef}
-                      id="student-name"
-                      type="text"
-                      required
-                      autoComplete="off"
-                    role="combobox"
-                    aria-expanded={showStudentDropdown && canRecordNow}
-                    aria-autocomplete="list"
-                    aria-controls="student-autocomplete-listbox"
-                    disabled={!canRecordNow || submitting}
-                    value={studentName}
-                    onFocus={() => setShowStudentDropdown(true)}
-                    onBlur={() => window.setTimeout(() => setShowStudentDropdown(false), 180)}
-                    onChange={(e) => {
-                      const nextVal = e.target.value;
-                      setStudentName(nextVal);
-                      setHighlightedIndex(0);
-                      setShowStudentDropdown(true);
-                      if (selectedStudentId) {
-                        setSelectedStudentId(null);
-                        if (!nextVal.trim()) {
-                          setKelas('');
-                          setStudentNis('');
-                        }
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (!showStudentDropdown || matchingStudents.length === 0) return;
-                      if (e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        setHighlightedIndex((prev) => (prev + 1) % matchingStudents.length);
-                      } else if (e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        setHighlightedIndex((prev) =>
-                          prev <= 0 ? matchingStudents.length - 1 : prev - 1
-                        );
-                      } else if (e.key === 'Enter' && showStudentDropdown) {
-                        const picked = matchingStudents[highlightedIndex] ?? matchingStudents[0];
-                        if (picked) {
-                          e.preventDefault();
-                          handleSelectStudent(picked.student);
-                        }
-                      } else if (e.key === 'Escape') {
-                        setShowStudentDropdown(false);
-                      }
-                    }}
-                    placeholder="Ketik beberapa huruf nama siswa..."
-                    className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
-                  />
-                </div>
+                    <div className="relative mt-1">
+                      <Search
+                        className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400"
+                        aria-hidden="true"
+                      />
+                      <input
+                        ref={studentInputRef}
+                        id="student-name"
+                        type="text"
+                        required
+                        autoComplete="off"
+                        role="combobox"
+                        aria-expanded={showStudentDropdown && canRecordNow}
+                        aria-autocomplete="list"
+                        aria-controls="student-autocomplete-listbox"
+                        disabled={!canRecordNow || submitting}
+                        value={studentName}
+                        onFocus={() => setShowStudentDropdown(true)}
+                        onBlur={() => window.setTimeout(() => setShowStudentDropdown(false), 180)}
+                        onChange={(e) => {
+                          const nextVal = e.target.value;
+                          setStudentName(nextVal);
+                          setHighlightedIndex(0);
+                          setShowStudentDropdown(true);
+                          if (selectedStudentId) {
+                            setSelectedStudentId(null);
+                            if (!nextVal.trim()) {
+                              setKelas('');
+                              setStudentNis('');
+                            }
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (!showStudentDropdown || matchingStudents.length === 0) return;
+                          if (e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            setHighlightedIndex((prev) => (prev + 1) % matchingStudents.length);
+                          } else if (e.key === 'ArrowUp') {
+                            e.preventDefault();
+                            setHighlightedIndex((prev) =>
+                              prev <= 0 ? matchingStudents.length - 1 : prev - 1
+                            );
+                          } else if (e.key === 'Enter' && showStudentDropdown) {
+                            const picked = matchingStudents[highlightedIndex] ?? matchingStudents[0];
+                            if (picked) {
+                              e.preventDefault();
+                              handleSelectStudent(picked.student);
+                            }
+                          } else if (e.key === 'Escape') {
+                            setShowStudentDropdown(false);
+                          }
+                        }}
+                        placeholder="Ketik beberapa huruf nama..."
+                        className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-9 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
+                      />
+                      {studentName && !submitting && canRecordNow && (
+                        <button
+                          type="button"
+                          aria-label="Kosongkan nama siswa"
+                          onClick={() => {
+                            setStudentName('');
+                            setKelas('');
+                            setStudentNis('');
+                            setSelectedStudentId(null);
+                            studentInputRef.current?.focus();
+                          }}
+                          className="absolute right-2.5 top-2.5 inline-flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                        >
+                          <X className="h-3.5 w-3.5" aria-hidden="true" />
+                        </button>
+                      )}
+                    </div>
 
-                {selectedStudentId && kelas && (
-                  <p className="mt-1.5 flex items-center justify-between gap-2 text-xs text-emerald-700">
-                    <span className="inline-flex items-center gap-1">
-                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                      <span>
-                        Kelas <strong>{kelas}</strong>
-                        {studentNis ? ` · NIS ${studentNis}` : ''} terisi otomatis
-                      </span>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setStudentName('');
-                        setKelas('');
-                        setStudentNis('');
-                        setSelectedStudentId(null);
-                      }}
-                      className="font-medium text-slate-500 underline hover:text-slate-800"
-                    >
-                      Ganti
-                    </button>
-                  </p>
-                )}
+                    {selectedStudentId && kelas && (
+                      <p className="mt-1.5 flex items-center justify-between gap-2 text-xs text-emerald-700">
+                        <span className="inline-flex items-center gap-1">
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                          <span>
+                            Kelas <strong>{kelas}</strong>
+                            {studentNis ? ` · NIS ${studentNis}` : ''} terisi otomatis
+                          </span>
+                        </span>
+                      </p>
+                    )}
 
-                {showStudentDropdown && canRecordNow && (
-                  <div
-                    id="student-autocomplete-listbox"
-                    role="listbox"
-                    className="absolute left-0 right-0 z-30 mt-1.5 max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl sm:right-auto sm:w-[430px] sm:max-w-[calc(100vw-3rem)]"
-                  >
-                    {!studentName.trim() ? (
-                      <div className="px-3.5 py-2.5 text-xs text-slate-500">
-                        Ketik beberapa huruf nama (mis. <strong className="text-slate-700">abdi</strong>,{' '}
-                        <strong className="text-slate-700">nurlia</strong>, atau{' '}
-                        <strong className="text-slate-700">ahmad 12c</strong>) — kelas akan terisi otomatis.
+                    {showStudentDropdown && canRecordNow && (
+                      <div
+                        id="student-autocomplete-listbox"
+                        role="listbox"
+                        className="absolute left-0 right-0 z-30 mt-1.5 max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl sm:right-auto sm:w-[430px] sm:max-w-[calc(100vw-3rem)]"
+                      >
+                        {!studentName.trim() ? (
+                          <div className="px-3.5 py-2.5 text-xs text-slate-500">
+                            Ketik beberapa huruf nama (mis. <strong className="text-slate-700">abdi</strong>,{' '}
+                            <strong className="text-slate-700">nurlia</strong>, atau{' '}
+                            <strong className="text-slate-700">ahmad 12c</strong>) — kelas akan terisi otomatis.
+                          </div>
+                        ) : matchingStudents.length === 0 ? (
+                          <div className="px-3.5 py-2.5 text-xs text-slate-500">
+                            Tidak ditemukan nama yang mirip dengan &ldquo;{studentName.trim()}&rdquo;. Anda tetap dapat mengisi kelas secara manual.
+                          </div>
+                        ) : (
+                          <>
+                            <div className="border-b border-slate-100 px-3.5 py-1.5 text-[11px] font-medium text-slate-500">
+                              {matchingStudents.length} pilihan cocok — klik untuk isi kelas otomatis
+                            </div>
+                            {matchingStudents.map(({ student: stu, matchType }, idx) => {
+                              const isHighlighted = idx === highlightedIndex;
+                              const hasNis = Boolean(stu.nis && stu.nis !== '-');
+                              return (
+                                <button
+                                  key={stu.id}
+                                  type="button"
+                                  role="option"
+                                  aria-selected={isHighlighted}
+                                  onMouseEnter={() => setHighlightedIndex(idx)}
+                                  onMouseDown={(ev) => {
+                                    ev.preventDefault();
+                                    handleSelectStudent(stu);
+                                  }}
+                                  className={`flex w-full items-center justify-between gap-3 px-3.5 py-2 text-left text-sm transition-colors ${
+                                    isHighlighted ? 'bg-blue-50 text-blue-950' : 'hover:bg-slate-50'
+                                  }`}
+                                >
+                                  <div className="min-w-0">
+                                    <p className="truncate font-medium text-slate-900">{stu.name}</p>
+                                    <p className="text-[11px] text-slate-500">
+                                      {hasNis ? `NIS ${stu.nis}` : 'Siswa SMAN 1 Kemangkon'}
+                                      {matchType === 'similar' ? ' · Ejaan mirip' : ''}
+                                    </p>
+                                  </div>
+                                  <span className="font-mono-num shrink-0 rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-800">
+                                    {stu.kelas}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </>
+                        )}
                       </div>
-                    ) : matchingStudents.length === 0 ? (
-                      <div className="px-3.5 py-2.5 text-xs text-slate-500">
-                        Tidak ditemukan nama yang mirip dengan &ldquo;{studentName.trim()}&rdquo;. Anda tetap dapat mengisi kelas secara manual.
-                      </div>
-                    ) : (
-                      <>
-                        <div className="border-b border-slate-100 px-3.5 py-1.5 text-[11px] font-medium text-slate-500">
-                          Menampilkan {matchingStudents.length} pilihan nama yang cocok — klik untuk isi kelas otomatis
-                        </div>
-                        {matchingStudents.map(({ student: stu, matchType }, idx) => {
-                          const isHighlighted = idx === highlightedIndex;
-                          const hasNis = Boolean(stu.nis && stu.nis !== '-');
-                          return (
-                            <button
-                              key={stu.id}
-                              type="button"
-                              role="option"
-                              aria-selected={isHighlighted}
-                              onMouseEnter={() => setHighlightedIndex(idx)}
-                              onMouseDown={(ev) => {
-                                ev.preventDefault();
-                                handleSelectStudent(stu);
-                              }}
-                              className={`flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left text-sm transition-colors ${
-                                isHighlighted ? 'bg-blue-50 text-blue-950' : 'hover:bg-slate-50'
-                              }`}
-                            >
-                              <div className="min-w-0">
-                                <p className="truncate font-medium text-slate-900">{stu.name}</p>
-                                <p className="text-[11px] text-slate-500">
-                                  {hasNis ? `NIS ${stu.nis}` : 'Siswa SMAN 1 Kemangkon'}
-                                  {matchType === 'similar' ? ' · Ejaan mirip' : ''}
-                                </p>
-                              </div>
-                              <span className="font-mono-num shrink-0 rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-800">
-                                {stu.kelas}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </>
                     )}
                   </div>
-                )}
-              </div>
 
-              <div className="sm:col-span-3">
-                <label
-                  htmlFor="student-kelas"
-                  className="block text-sm font-medium text-slate-700"
-                >
-                  Kelas
-                </label>
-                <input
-                  id="student-kelas"
-                  type="text"
-                  required
-                  disabled={!canRecordNow || submitting}
-                  value={kelas}
-                  onChange={(e) => setKelas(e.target.value)}
-                  placeholder="Otomatis / mis. 11D"
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
-                />
-              </div>
-
-              <div className="sm:col-span-3">
-                <label
-                  htmlFor="student-nis"
-                  className="block text-sm font-medium text-slate-700"
-                >
-                  NIS (Opsional)
-                </label>
-                <input
-                  id="student-nis"
-                  type="text"
-                  disabled={!canRecordNow || submitting}
-                  value={studentNis}
-                  onChange={(e) => setStudentNis(e.target.value)}
-                  placeholder="Otomatis Kls 12"
-                  className="font-mono-num mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
-                />
-              </div>
-            </div>
-
-            {isNewManualStudent && canRecordNow && (
-              <label className="flex items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-2.5 text-xs text-slate-700 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={saveToStudentDirectory}
-                  onChange={(e) => setSaveToStudentDirectory(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600"
-                />
-                <span>
-                  Nama <strong>{studentName.trim()}</strong> belum ada di daftar {appState.students.length} siswa resmi. Centang jika ini <strong>siswa baru/pindahan</strong> agar disimpan permanen ke direktori sekolah.
-                </span>
-              </label>
-            )}
-
-            {matchedStudentSummary && (
-              <div
-                className={`flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-xs ${
-                  matchedStudentSummary.totalPoints +
-                    (combinedSinglePointsTotal || Number(points || 0)) >=
-                  26
-                    ? 'border-red-200 bg-red-50 text-red-900'
-                    : 'border-amber-200 bg-amber-50 text-amber-900'
-                }`}
-              >
-                <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
-                <span>
-                  Akumulasi <strong>{matchedStudentSummary.studentName}</strong> saat ini:{' '}
-                  <strong className="font-mono-num">{matchedStudentSummary.totalPoints} poin</strong>{' '}
-                  (setelah input menjadi{' '}
-                  <strong className="font-mono-num">
-                    {matchedStudentSummary.totalPoints +
-                      (combinedSinglePointsTotal || Number(points || 0))}{' '}
-                    poin
-                  </strong>{' '}
-                  →{' '}
-                  {getTingkatPembinaan(
-                    matchedStudentSummary.totalPoints +
-                      (combinedSinglePointsTotal || Number(points || 0))
-                  )}
-                  ).
-                </span>
-              </div>
-            )}
-
-            {/* Quick-pick common + recent/today frequent violations */}
-            {quickPickItems.length > 0 && (
-              <div>
-                <p className="text-xs font-medium text-slate-600">
-                  Pilihan Cepat (Terakhir &amp; Sering Dipakai Hari Ini):
-                </p>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {quickPickItems.map(({ preset: qp, todayCount }) => {
-                    const isPicked =
-                      selectedPresetId === qp.id ||
-                      extraRules.some((r) => r.presetId === qp.id);
-                    const shortTitle =
-                      qp.label.length > 32 ? `${qp.label.slice(0, 30)}…` : qp.label;
-                    return (
-                      <button
-                        key={qp.id}
-                        type="button"
-                        disabled={!canRecordNow || submitting}
-                        onClick={() => handlePresetChange(qp.id)}
-                        className={`card-3d-interactive rounded-lg border px-2.5 py-1.5 text-xs font-medium whitespace-nowrap disabled:opacity-50 ${
-                          isPicked
-                            ? 'border-blue-600 bg-blue-600 text-white'
-                            : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
-                        }`}
-                      >
-                        {qp.code} · {shortTitle} (+{qp.points})
-                        {todayCount > 0 ? ` · ${todayCount}×` : ''}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Stacked multi-violation list for the same student */}
-            {extraRules.length > 0 && (
-              <div className="rounded-xl border border-blue-200 bg-blue-50/45 p-3">
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="font-semibold text-blue-950">
-                    Pelanggaran sudah dipilih untuk siswa ini ({extraRules.length}):
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setExtraRules([])}
-                    className="font-medium text-slate-500 underline hover:text-slate-800"
-                  >
-                    Hapus semua
-                  </button>
-                </div>
-                <ul className="mt-1.5 divide-y divide-blue-100">
-                  {extraRules.map((rule) => (
-                    <li
-                      key={rule.key}
-                      className="flex items-center justify-between gap-2 py-1.5 text-xs text-slate-800"
+                  <div className="sm:col-span-3">
+                    <label
+                      htmlFor="student-kelas"
+                      className="block text-xs font-medium text-slate-700"
                     >
-                      <span className="min-w-0 truncate">
-                        <strong className="font-mono-num text-blue-800">
-                          [{rule.violationCode}]
-                        </strong>{' '}
-                        {rule.violationLabel}{' '}
-                        <span className="text-slate-500">· +{rule.points} poin</span>
-                      </span>
-                      <button
-                        type="button"
-                        aria-label={`Hapus ${rule.violationLabel}`}
-                        onClick={() =>
-                          setExtraRules((prev) => prev.filter((item) => item.key !== rule.key))
-                        }
-                        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-blue-100 hover:text-red-700"
-                      >
-                        <X className="h-3.5 w-3.5" aria-hidden="true" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+                      Kelas
+                    </label>
+                    <input
+                      id="student-kelas"
+                      type="text"
+                      required
+                      disabled={!canRecordNow || submitting}
+                      value={kelas}
+                      onChange={(e) => setKelas(e.target.value)}
+                      placeholder="Otomatis / 11D"
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
+                    />
+                  </div>
 
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between gap-2">
-                  <label
-                    htmlFor="category-select"
-                    className="block text-sm font-medium text-slate-700"
-                  >
-                    1. Pilih Kategori Pelanggaran (A – F)
-                  </label>
+                  <div className="sm:col-span-3">
+                    <label
+                      htmlFor="student-nis"
+                      className="block text-xs font-medium text-slate-700"
+                    >
+                      NIS (Opsional)
+                    </label>
+                    <input
+                      id="student-nis"
+                      type="text"
+                      disabled={!canRecordNow || submitting}
+                      value={studentNis}
+                      onChange={(e) => setStudentNis(e.target.value)}
+                      placeholder="Otomatis"
+                      className="font-mono-num mt-1 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
+                    />
+                  </div>
+                </div>
+
+                <AnimatePresence>
+                  {isNewManualStudent && canRecordNow && (
+                    <motion.label
+                      key="new-manual-student-opt"
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-2.5 text-xs text-slate-700"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={saveToStudentDirectory}
+                        onChange={(e) => setSaveToStudentDirectory(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600"
+                      />
+                      <span>
+                        Nama <strong>{studentName.trim()}</strong> belum ada di direktori resmi. Centang jika ini <strong>siswa baru/pindahan</strong> agar disimpan permanen.
+                      </span>
+                    </motion.label>
+                  )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                  {matchedStudentSummary && (
+                    <motion.div
+                      key="matched-student-points-alert"
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      className={`flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-xs ${
+                        matchedStudentSummary.totalPoints +
+                          (combinedSinglePointsTotal || Number(points || 0)) >=
+                        26
+                          ? 'border-red-200 bg-red-50 text-red-900'
+                          : 'border-amber-200 bg-amber-50 text-amber-900'
+                      }`}
+                    >
+                      <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      <span>
+                        Akumulasi <strong>{matchedStudentSummary.studentName}</strong> saat ini:{' '}
+                        <strong className="font-mono-num">{matchedStudentSummary.totalPoints} poin</strong>{' '}
+                        (setelah input:{' '}
+                        <strong className="font-mono-num">
+                          {matchedStudentSummary.totalPoints +
+                            (combinedSinglePointsTotal || Number(points || 0))}{' '}
+                          poin
+                        </strong>{' '}
+                        →{' '}
+                        {getTingkatPembinaan(
+                          matchedStudentSummary.totalPoints +
+                            (combinedSinglePointsTotal || Number(points || 0))
+                        )}
+                        ).
+                      </span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* LANGKAH 2 · PILIH PELANGGARAN */}
+              <div className="space-y-3.5 border-b border-slate-100 pb-5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">
+                      Langkah 2 · Pilih Pelanggaran (AKPS)
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      Klik langsung tombol cepat atau pilih salah satu kartu kategori A–F di bawah.
+                    </p>
+                  </div>
                   {selectedCategory && (
                     <button
                       type="button"
                       disabled={!canRecordNow || submitting}
                       onClick={() => handleCategoryChange('')}
-                      className="text-xs font-medium text-slate-500 hover:text-slate-800 underline disabled:opacity-50"
+                      className="text-xs font-medium text-slate-500 underline hover:text-slate-800 disabled:opacity-50 whitespace-nowrap shrink-0"
                     >
-                      Ganti kategori
+                      Reset pilihan
                     </button>
                   )}
                 </div>
 
-                {/* Interactive 1-tap category grid synced with #category-select */}
-                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {AKPS_CATEGORIES.map((cat) => {
-                    const count = appState.presets.filter((p) => p.category === cat).length;
-                    const code = cat.split('.')[0];
-                    const cardLabels: Record<string, string> = {
-                      A: 'Kedisiplinan',
-                      B: 'Perilaku & Sikap',
-                      C: 'Sepeda & Motor',
-                      D: 'HP & Teknologi',
-                      E: 'Kerapihan',
-                      F: 'Lain-lain AKPS',
-                    };
-                    const shortLabel = cardLabels[code] ?? cat.replace(/^[A-F]\.\s*/, '');
-                    const isActive = selectedCategory === cat;
-                    return (
-                      <button
-                        key={cat}
-                        type="button"
-                        title={cat}
-                        disabled={!canRecordNow || submitting}
-                        onClick={() => handleCategoryChange(cat)}
-                        className={`card-3d-interactive group rounded-xl border px-3 py-2 text-left disabled:cursor-not-allowed disabled:opacity-50 ${
-                          isActive
-                            ? 'border-blue-600 bg-blue-50/95 text-blue-950 ring-2 ring-blue-600/15'
-                            : 'border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-slate-50'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-1">
-                          <span
-                            className={`font-mono-num text-[11px] font-bold ${
-                              isActive ? 'text-blue-700' : 'text-slate-500 group-hover:text-blue-600'
+                {/* Quick-pick common + recent/today frequent violations */}
+                {quickPickItems.length > 0 && (
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      Pilihan Cepat Hari Ini
+                    </p>
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {quickPickItems.map(({ preset: qp, todayCount }) => {
+                        const isPicked =
+                          selectedPresetId === qp.id ||
+                          extraRules.some((r) => r.presetId === qp.id);
+                        const shortTitle =
+                          qp.label.length > 32 ? `${qp.label.slice(0, 30)}…` : qp.label;
+                        return (
+                          <motion.button
+                            key={qp.id}
+                            type="button"
+                            whileHover={{ y: -1, scale: 1.015 }}
+                            whileTap={{ scale: 0.96 }}
+                            transition={{ type: 'spring', stiffness: 450, damping: 28 }}
+                            disabled={!canRecordNow || submitting}
+                            onClick={() => handlePresetChange(qp.id)}
+                            className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium whitespace-nowrap transition-colors disabled:opacity-50 ${
+                              isPicked
+                                ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                                : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-blue-300 hover:bg-blue-50/50'
                             }`}
                           >
-                            Kat. {code}
-                          </span>
-                          <span className="font-mono-num text-[11px] text-slate-400">
-                            {count}
-                          </span>
-                        </div>
-                        <p className="mt-0.5 truncate text-xs font-semibold leading-tight">
-                          {shortLabel}
-                        </p>
-                      </button>
-                    );
-                  })}
-                  <button
-                    type="button"
-                    disabled={!canRecordNow || submitting}
-                    onClick={() => handleCategoryChange('CUSTOM')}
-                    className={`card-3d-interactive rounded-xl border px-3 py-2 text-left disabled:cursor-not-allowed disabled:opacity-50 ${
-                      selectedCategory === 'CUSTOM'
-                        ? 'border-blue-600 bg-blue-50/95 text-blue-950 ring-2 ring-blue-600/15'
-                        : 'border-dashed border-slate-300 bg-slate-50/60 text-slate-700 hover:border-blue-300 hover:bg-slate-50'
-                    }`}
-                  >
-                    <span className="font-mono-num text-[11px] font-bold text-slate-500">
-                      Lainnya
-                    </span>
-                    <p className="mt-0.5 truncate text-xs font-semibold leading-tight">
-                      Isi Manual
-                    </p>
-                  </button>
-                </div>
-
-                <select
-                  id="category-select"
-                  required={extraRules.length === 0}
-                  disabled={!canRecordNow || submitting}
-                  value={selectedCategory}
-                  onChange={(e) => handleCategoryChange(e.target.value)}
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-700 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
-                >
-                  <option value="">-- Atau pilih kategori dari daftar (A sampai F) --</option>
-                  {AKPS_CATEGORIES.map((cat) => {
-                    const count = appState.presets.filter((p) => p.category === cat).length;
-                    return (
-                      <option key={cat} value={cat}>
-                        {cat} ({count} aturan)
-                      </option>
-                    );
-                  })}
-                  <option value="CUSTOM">Pelanggaran Lainnya (Isi Sendiri)</option>
-                </select>
-                {!selectedCategory && (
-                  <p className="mt-1.5 text-xs text-slate-500">
-                    Klik salah satu kartu kategori di atas agar daftar aturannya langsung muncul.
-                  </p>
+                            {isPicked && <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
+                            <span>
+                              {qp.code} · {shortTitle} (+{qp.points})
+                            </span>
+                            {todayCount > 0 && (
+                              <span
+                                className={`font-mono-num text-[11px] ${
+                                  isPicked ? 'text-blue-100' : 'text-slate-500'
+                                }`}
+                              >
+                                · {todayCount}×
+                              </span>
+                            )}
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 )}
-              </div>
 
-              {selectedCategory && selectedCategory !== 'CUSTOM' && (
-                <div className="animate-panel-reveal grid grid-cols-1 gap-4 rounded-xl border border-blue-100 bg-blue-50/35 p-3.5 sm:grid-cols-12">
-                  <div className="sm:col-span-9">
-                    <label
-                      htmlFor="preset-select"
-                      className="block text-sm font-medium text-slate-700"
+                {/* Stacked multi-violation list for the same student */}
+                <AnimatePresence>
+                  {extraRules.length > 0 && (
+                    <motion.div
+                      key="single-extra-rules"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      className="rounded-xl border border-blue-200 bg-blue-50/45 p-3"
                     >
-                      2. Pilih Aturan ({selectedCategory})
-                    </label>
-                    <select
-                      id="preset-select"
-                      required={extraRules.length === 0}
-                      disabled={!canRecordNow || submitting}
-                      value={selectedPresetId}
-                      onChange={(e) => handlePresetChange(e.target.value)}
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
-                    >
-                      <option value="">
-                        -- Pilih aturan pelanggaran ({presetsForSelectedCategory.length} pilihan) --
-                      </option>
-                      {presetsForSelectedCategory.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          [{p.code}] {p.label} (+{p.points} poin)
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <span className="font-semibold text-blue-950">
+                          Pelanggaran tambahan untuk siswa ini ({extraRules.length}):
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setExtraRules([])}
+                          className="font-medium text-slate-500 underline hover:text-slate-800"
+                        >
+                          Hapus semua
+                        </button>
+                      </div>
+                      <ul className="mt-1.5 divide-y divide-blue-100">
+                        <AnimatePresence initial={false}>
+                          {extraRules.map((rule) => (
+                            <motion.li
+                              key={rule.key}
+                              initial={{ opacity: 0, x: -8 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: 8 }}
+                              transition={{ duration: 0.16 }}
+                              className="flex items-center justify-between gap-2 py-1.5 text-xs text-slate-800"
+                            >
+                              <span className="min-w-0 truncate">
+                                <strong className="font-mono-num text-blue-800">
+                                  [{rule.violationCode}]
+                                </strong>{' '}
+                                {rule.violationLabel}{' '}
+                                <span className="text-slate-500">· +{rule.points} poin</span>
+                              </span>
+                              <button
+                                type="button"
+                                aria-label={`Hapus ${rule.violationLabel}`}
+                                onClick={() =>
+                                  setExtraRules((prev) =>
+                                    prev.filter((item) => item.key !== rule.key)
+                                  )
+                                }
+                                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-blue-100 hover:text-red-700"
+                              >
+                                <X className="h-3.5 w-3.5" aria-hidden="true" />
+                              </button>
+                            </motion.li>
+                          ))}
+                        </AnimatePresence>
+                      </ul>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-                  <div className="sm:col-span-3">
-                    <label
-                      htmlFor="violation-points"
-                      className="block text-sm font-medium text-slate-700"
-                    >
-                      Poin
-                    </label>
-                    <input
-                      id="violation-points"
-                      type="number"
-                      min={1}
-                      max={100}
-                      required
-                      disabled={!canRecordNow || submitting || !selectedPresetId}
-                      value={points}
-                      onChange={(e) => setPoints(Number(e.target.value))}
-                      className="font-mono-num mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {selectedCategory && selectedCategory !== 'CUSTOM' && selectedPresetId && (
-                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-xs">
-                  <p className="min-w-0 text-slate-600">
-                    Tindak lanjut otomatis:{' '}
-                    <strong className="text-slate-800">{actionTaken || 'Catat & pembinaan'}</strong>
+                {/* Category Grid (Single Clear Picker — No Duplicate Dropdown) */}
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    Kategori Pelanggaran (A – F)
                   </p>
-                  <div className="flex flex-wrap items-center gap-3 shrink-0">
-                    <button
+                  <div className="mt-1.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    {AKPS_CATEGORIES.map((cat) => {
+                      const count = appState.presets.filter((p) => p.category === cat).length;
+                      const code = cat.split('.')[0];
+                      const cardLabels: Record<string, string> = {
+                        A: 'Kedisiplinan',
+                        B: 'Perilaku & Sikap',
+                        C: 'Sepeda & Motor',
+                        D: 'HP & Teknologi',
+                        E: 'Kerapihan',
+                        F: 'Lain-lain AKPS',
+                      };
+                      const shortLabel = cardLabels[code] ?? cat.replace(/^[A-F]\.\s*/, '');
+                      const isActive = selectedCategory === cat;
+                      return (
+                        <motion.button
+                          key={cat}
+                          type="button"
+                          title={cat}
+                          aria-pressed={isActive}
+                          whileHover={{ y: -2, scale: 1.01 }}
+                          whileTap={{ scale: 0.97 }}
+                          transition={{ type: 'spring', stiffness: 450, damping: 28 }}
+                          disabled={!canRecordNow || submitting}
+                          onClick={() => handleCategoryChange(cat)}
+                          className={`group rounded-xl border px-3 py-2 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                            isActive
+                              ? 'border-blue-600 bg-blue-50/95 text-blue-950 ring-2 ring-blue-600/15'
+                              : 'border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-slate-50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span
+                              className={`font-mono-num text-[11px] font-bold ${
+                                isActive ? 'text-blue-700' : 'text-slate-500 group-hover:text-blue-600'
+                              }`}
+                            >
+                              Kat. {code}
+                            </span>
+                            <span className="font-mono-num text-[11px] text-slate-400">
+                              {count}
+                            </span>
+                          </div>
+                          <p className="mt-0.5 truncate text-xs font-semibold leading-tight">
+                            {shortLabel}
+                          </p>
+                        </motion.button>
+                      );
+                    })}
+                    <motion.button
                       type="button"
+                      aria-pressed={selectedCategory === 'CUSTOM'}
+                      whileHover={{ y: -2, scale: 1.01 }}
+                      whileTap={{ scale: 0.97 }}
+                      transition={{ type: 'spring', stiffness: 450, damping: 28 }}
                       disabled={!canRecordNow || submitting}
-                      onClick={handleStackCurrentRule}
-                      className="inline-flex items-center gap-1 font-semibold text-emerald-700 hover:text-emerald-800 whitespace-nowrap disabled:opacity-50"
+                      onClick={() => handleCategoryChange('CUSTOM')}
+                      className={`rounded-xl border px-3 py-2 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                        selectedCategory === 'CUSTOM'
+                          ? 'border-blue-600 bg-blue-50/95 text-blue-950 ring-2 ring-blue-600/15'
+                          : 'border-dashed border-slate-300 bg-slate-50/60 text-slate-700 hover:border-blue-300 hover:bg-slate-50'
+                      }`}
                     >
-                      <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>Tambah Pelanggaran Lain</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowManualDetails((prev) => !prev)}
-                      className="inline-flex items-center gap-1 font-semibold text-blue-700 hover:text-blue-800 whitespace-nowrap shrink-0"
-                    >
-                      <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>{showManualDetails ? 'Sembunyikan Detail' : 'Ubah Detail / Sanksi'}</span>
-                      {showManualDetails ? (
-                        <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
-                      ) : (
-                        <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
-                      )}
-                    </button>
+                      <span className="font-mono-num text-[11px] font-bold text-slate-500">
+                        Lainnya
+                      </span>
+                      <p className="mt-0.5 truncate text-xs font-semibold leading-tight">
+                        Isi Manual
+                      </p>
+                    </motion.button>
                   </div>
                 </div>
-              )}
 
-              {(showManualDetails || selectedCategory === 'CUSTOM') && (
-                <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50/40 p-3.5">
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
-                    <div className={selectedCategory === 'CUSTOM' ? 'sm:col-span-6' : 'sm:col-span-7'}>
-                      <label
-                        htmlFor="violation-label"
-                        className="block text-sm font-medium text-slate-700"
-                      >
-                        Keterangan Pelanggaran
-                      </label>
-                      <input
-                        id="violation-label"
-                        type="text"
-                        required={extraRules.length === 0}
-                        disabled={!canRecordNow || submitting}
-                        value={violationLabel}
-                        onChange={(e) => setViolationLabel(e.target.value)}
-                        placeholder="Contoh: Terlambat masuk sekolah"
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
-                      />
-                    </div>
-
-                    <div className={selectedCategory === 'CUSTOM' ? 'sm:col-span-4' : 'sm:col-span-5'}>
-                      <label
-                        htmlFor="violation-category"
-                        className="block text-sm font-medium text-slate-700"
-                      >
-                        Kategori AKPS
-                      </label>
-                      <select
-                        id="violation-category"
-                        disabled={!canRecordNow || submitting}
-                        value={category}
-                        onChange={(e) => setCategory(e.target.value as KategoriPelanggaran)}
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
-                      >
-                        {AKPS_CATEGORIES.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
+                {/* Step 2b: Rule Dropdown + Points (Animated Reveal when A-F picked) */}
+                <AnimatePresence initial={false}>
+                  {selectedCategory && selectedCategory !== 'CUSTOM' && (
+                    <motion.div
+                      key={`rule-box-${selectedCategory}`}
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.18 }}
+                      className="grid grid-cols-1 gap-3 rounded-xl border border-blue-100 bg-blue-50/35 p-3.5 sm:grid-cols-12"
+                    >
+                      <div className="sm:col-span-9">
+                        <label
+                          htmlFor="preset-select"
+                          className="block text-xs font-semibold text-slate-700"
+                        >
+                          Pilih Aturan ({selectedCategory})
+                        </label>
+                        <select
+                          id="preset-select"
+                          required={extraRules.length === 0}
+                          disabled={!canRecordNow || submitting}
+                          value={selectedPresetId}
+                          onChange={(e) => handlePresetChange(e.target.value)}
+                          className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
+                        >
+                          <option value="">
+                            -- Pilih aturan pelanggaran ({presetsForSelectedCategory.length} pilihan) --
                           </option>
-                        ))}
-                      </select>
-                    </div>
+                          {presetsForSelectedCategory.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              [{p.code}] {p.label} (+{p.points} poin)
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-                    {selectedCategory === 'CUSTOM' && (
-                      <div className="sm:col-span-2">
+                      <div className="sm:col-span-3">
                         <label
                           htmlFor="violation-points"
-                          className="block text-sm font-medium text-slate-700"
+                          className="block text-xs font-semibold text-slate-700"
                         >
                           Poin
                         </label>
@@ -1648,125 +1635,269 @@ export function SpreadsheetWorkspace({
                           type="number"
                           min={1}
                           max={100}
-                          required={extraRules.length === 0}
-                          disabled={!canRecordNow || submitting}
+                          required
+                          disabled={!canRecordNow || submitting || !selectedPresetId}
                           value={points}
                           onChange={(e) => setPoints(Number(e.target.value))}
                           className="font-mono-num mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
                         />
                       </div>
-                    )}
-                  </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-                  <div>
-                    <label
-                      htmlFor="action-taken"
-                      className="block text-sm font-medium text-slate-700"
-                    >
-                      Tindak Lanjut / Sanksi
-                    </label>
-                    <input
-                      id="action-taken"
-                      type="text"
-                      disabled={!canRecordNow || submitting}
-                      value={actionTaken}
-                      onChange={(e) => setActionTaken(e.target.value)}
-                      placeholder="Contoh: Penyitaan HP sesuai aturan AKPS"
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
-                    />
-                  </div>
-
-                  {selectedCategory === 'CUSTOM' && violationLabel.trim() && (
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        disabled={!canRecordNow || submitting}
-                        onClick={handleStackCurrentRule}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800 whitespace-nowrap disabled:opacity-50"
-                      >
-                        <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-                        <span>Tambah Pelanggaran Lain</span>
-                      </button>
+                {/* Step 2c: Action bar + Progressive Disclosure for Optional Detail & Notes */}
+                {(selectedPresetId || selectedCategory === 'CUSTOM' || showManualDetails) && (
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-xs">
+                    <p className="min-w-0 text-slate-600">
+                      Sanksi:{' '}
+                      <strong className="text-slate-800">{actionTaken || 'Teguran Lisan & Catat'}</strong>
+                      {notes.trim() ? ' · Ada catatan tambahan' : ''}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-3 shrink-0">
+                      {currentDraftRule && (
+                        <button
+                          type="button"
+                          disabled={!canRecordNow || submitting}
+                          onClick={handleStackCurrentRule}
+                          className="inline-flex items-center gap-1 font-semibold text-emerald-700 hover:text-emerald-800 whitespace-nowrap disabled:opacity-50"
+                        >
+                          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                          <span>Tambah Pelanggaran Lain</span>
+                        </button>
+                      )}
+                      {selectedCategory !== 'CUSTOM' && (
+                        <button
+                          type="button"
+                          onClick={() => setShowManualDetails((prev) => !prev)}
+                          className="inline-flex items-center gap-1 font-semibold text-blue-700 hover:text-blue-800 whitespace-nowrap shrink-0"
+                        >
+                          <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
+                          <span>
+                            {showManualDetails ? 'Tutup Detail / Catatan' : 'Catatan & Ubah Sanksi (Opsional)'}
+                          </span>
+                          {showManualDetails ? (
+                            <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+                          ) : (
+                            <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+                          )}
+                        </button>
+                      )}
                     </div>
+                  </div>
+                )}
+
+                <AnimatePresence initial={false}>
+                  {(showManualDetails || selectedCategory === 'CUSTOM') && (
+                    <motion.div
+                      key="single-optional-details"
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.18 }}
+                      className="space-y-3.5 rounded-xl border border-slate-200 bg-slate-50/40 p-3.5"
+                    >
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-12">
+                        <div className={selectedCategory === 'CUSTOM' ? 'sm:col-span-6' : 'sm:col-span-7'}>
+                          <label
+                            htmlFor="violation-label"
+                            className="block text-xs font-medium text-slate-700"
+                          >
+                            Keterangan Pelanggaran
+                          </label>
+                          <input
+                            id="violation-label"
+                            type="text"
+                            required={extraRules.length === 0}
+                            disabled={!canRecordNow || submitting}
+                            value={violationLabel}
+                            onChange={(e) => setViolationLabel(e.target.value)}
+                            placeholder="Contoh: Terlambat masuk sekolah"
+                            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
+                          />
+                        </div>
+
+                        <div className={selectedCategory === 'CUSTOM' ? 'sm:col-span-4' : 'sm:col-span-5'}>
+                          <label
+                            htmlFor="violation-category"
+                            className="block text-xs font-medium text-slate-700"
+                          >
+                            Kategori AKPS
+                          </label>
+                          <select
+                            id="violation-category"
+                            disabled={!canRecordNow || submitting}
+                            value={category}
+                            onChange={(e) => setCategory(e.target.value as KategoriPelanggaran)}
+                            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
+                          >
+                            {AKPS_CATEGORIES.map((c) => (
+                              <option key={c} value={c}>
+                                {c}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {selectedCategory === 'CUSTOM' && (
+                          <div className="sm:col-span-2">
+                            <label
+                              htmlFor="violation-points"
+                              className="block text-xs font-medium text-slate-700"
+                            >
+                              Poin
+                            </label>
+                            <input
+                              id="violation-points"
+                              type="number"
+                              min={1}
+                              max={100}
+                              required={extraRules.length === 0}
+                              disabled={!canRecordNow || submitting}
+                              value={points}
+                              onChange={(e) => setPoints(Number(e.target.value))}
+                              className="font-mono-num mt-1 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div>
+                          <label
+                            htmlFor="action-taken"
+                            className="block text-xs font-medium text-slate-700"
+                          >
+                            Tindak Lanjut / Sanksi
+                          </label>
+                          <input
+                            id="action-taken"
+                            type="text"
+                            disabled={!canRecordNow || submitting}
+                            value={actionTaken}
+                            onChange={(e) => setActionTaken(e.target.value)}
+                            placeholder="Contoh: Penyitaan HP sesuai aturan AKPS"
+                            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="violation-notes"
+                            className="block text-xs font-medium text-slate-700"
+                          >
+                            Catatan Tambahan (Opsional)
+                          </label>
+                          <input
+                            id="violation-notes"
+                            type="text"
+                            disabled={!canRecordNow || submitting}
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            placeholder="Boleh dikosongkan..."
+                            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* LANGKAH 3 · KUNCI & SIMPAN */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-bold text-slate-900">Langkah 3 · Simpan Catatan</p>
+                  {!selectedPresetId && !showManualDetails && selectedCategory !== 'CUSTOM' && (
+                    <button
+                      type="button"
+                      onClick={() => setShowManualDetails(true)}
+                      className="text-xs font-medium text-slate-500 hover:text-blue-700 underline whitespace-nowrap"
+                    >
+                      + Tambah Catatan / Ubah Sanksi
+                    </button>
                   )}
                 </div>
-              )}
-            </div>
 
-            <div>
-              <label
-                htmlFor="violation-notes"
-                className="block text-sm font-medium text-slate-700"
-              >
-                Catatan Tambahan (Opsional)
-              </label>
-              <input
-                id="violation-notes"
-                type="text"
-                disabled={!canRecordNow || submitting}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Boleh dikosongkan jika tidak ada keterangan tambahan..."
-                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15 disabled:bg-slate-50 disabled:text-slate-400"
-              />
-            </div>
+                <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-xs text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={lockViolationAfterSave}
+                    onChange={(e) => setLockViolationAfterSave(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600"
+                  />
+                  <span>
+                    <strong className="text-slate-900">Kunci jenis pelanggaran ini untuk siswa berikutnya</strong>{' '}
+                    (aturan tetap terpilih &amp; kursor langsung siap ketik siswa berikutnya).
+                  </span>
+                </label>
 
-            <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-xs text-slate-700">
-              <input
-                type="checkbox"
-                checked={lockViolationAfterSave}
-                onChange={(e) => setLockViolationAfterSave(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600"
-              />
-              <span>
-                <strong className="text-slate-900">Kunci jenis pelanggaran ini untuk siswa berikutnya</strong>{' '}
-                (setelah simpan, aturan tetap terpilih &amp; kursor otomatis siap ketik nama siswa berikutnya).
-              </span>
-            </label>
+                <AnimatePresence>
+                  {lastSaveCelebration && (
+                    <motion.div
+                      key="save-celebrate-banner"
+                      initial={{ opacity: 0, scale: 0.94, y: 6 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                      transition={{ type: 'spring', stiffness: 420, damping: 26 }}
+                      className="flex items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-xs font-semibold text-emerald-900"
+                    >
+                      <span className="inline-flex items-center gap-1.5">
+                        <Sparkles className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                        <span>
+                          Tersimpan untuk <strong>{lastSaveCelebration.studentName}</strong> ({lastSaveCelebration.count} aturan)
+                        </span>
+                      </span>
+                      <span className="font-mono-num text-emerald-700">
+                        +{lastSaveCelebration.totalPoints} poin
+                      </span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-            {connectionOffline && canRecordNow && (
-              <div
-                role="alert"
-                className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs text-red-900"
-              >
-                <WifiOff className="mt-0.5 h-4 w-4 shrink-0 text-red-600" aria-hidden="true" />
-                <span>
-                  <strong>Koneksi sedang terputus.</strong> Jangan tekan simpan dulu agar catatan tidak gagal terkirim. Data yang sudah Anda ketik di formulir tetap aman menunggu koneksi kembali.
-                </span>
-              </div>
-            )}
-
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={!canRecordNow || submitting || connectionOffline}
-                className="btn-3d-primary inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-              >
-                {connectionOffline ? (
-                  <WifiOff className="h-4 w-4" aria-hidden="true" />
-                ) : (
-                  <Plus className="h-4 w-4" aria-hidden="true" />
+                {connectionOffline && canRecordNow && (
+                  <div
+                    role="alert"
+                    className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs text-red-900"
+                  >
+                    <WifiOff className="mt-0.5 h-4 w-4 shrink-0 text-red-600" aria-hidden="true" />
+                    <span>
+                      <strong>Koneksi sedang terputus.</strong> Jangan tekan simpan dulu agar catatan tidak gagal terkirim. Data yang sudah Anda ketik tetap aman menunggu koneksi kembali.
+                    </span>
+                  </div>
                 )}
-                <span>
-                  {connectionOffline
-                    ? 'Koneksi Terputus — Menunggu Tersambung...'
-                    : submitting
-                      ? 'Menyimpan...'
-                      : !scheduleStatus.allowed
-                        ? 'Terkunci (Di Luar Jadwal Piket)'
-                        : isSheetFinalized
-                          ? 'Spreadsheet Sudah Ditutup Final'
-                          : !todaySheet && autoWindow.phase === 'BEFORE_START'
-                            ? `Menunggu Jam Buka (${autoWindow.startTime} WIB)`
-                            : !todaySheet
-                              ? 'Spreadsheet Tidak Aktif Hari Ini'
-                              : combinedSingleStudentRules.length > 1
-                                ? `Simpan ${combinedSingleStudentRules.length} Pelanggaran (+${combinedSinglePointsTotal} Poin)`
-                                : 'Simpan ke Spreadsheet Hari Ini'}
-                </span>
-              </button>
-            </div>
-          </form>
+
+                <motion.button
+                  type="submit"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.985 }}
+                  disabled={!canRecordNow || submitting || connectionOffline}
+                  className="btn-3d-primary inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                >
+                  {connectionOffline ? (
+                    <WifiOff className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <Plus className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  <span>
+                    {connectionOffline
+                      ? 'Koneksi Terputus — Menunggu Tersambung...'
+                      : submitting
+                        ? 'Menyimpan...'
+                        : !scheduleStatus.allowed
+                          ? 'Terkunci (Di Luar Jadwal Piket)'
+                          : isSheetFinalized
+                            ? 'Spreadsheet Sudah Ditutup Final'
+                            : !todaySheet && autoWindow.phase === 'BEFORE_START'
+                              ? `Menunggu Jam Buka (${autoWindow.startTime} WIB)`
+                              : !todaySheet
+                                ? 'Spreadsheet Tidak Aktif Hari Ini'
+                                : combinedSingleStudentRules.length > 1
+                                  ? `Simpan ${combinedSingleStudentRules.length} Pelanggaran (+${combinedSinglePointsTotal} Poin)`
+                                  : 'Simpan ke Spreadsheet Hari Ini'}
+                  </span>
+                </motion.button>
+              </div>
+            </form>
           )}
         </section>
 
@@ -2119,30 +2250,37 @@ export function SpreadsheetWorkspace({
 
           <div className="flex w-full flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center lg:w-auto">
             <div className="flex items-center gap-1 self-start rounded-lg bg-slate-100 p-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setGroupByClassView(false);
-                  setRowPage(1);
-                }}
-                className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                  !groupByClassView ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
-                }`}
-              >
-                Semua Baris
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setGroupByClassView(true);
-                  setRowPage(1);
-                }}
-                className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                  groupByClassView ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
-                }`}
-              >
-                Pisahkan per Kelas
-              </button>
+              {(
+                [
+                  { grouped: false, label: 'Semua Baris' },
+                  { grouped: true, label: 'Pisahkan per Kelas' },
+                ] as const
+              ).map((viewTab) => {
+                const active = groupByClassView === viewTab.grouped;
+                return (
+                  <button
+                    key={viewTab.label}
+                    type="button"
+                    onClick={() => {
+                      setGroupByClassView(viewTab.grouped);
+                      setRowPage(1);
+                    }}
+                    className={`relative rounded-md px-2.5 py-1 text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
+                      active ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="row-view-pill"
+                        transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                        className="absolute inset-0 rounded-md bg-white shadow-sm"
+                        aria-hidden="true"
+                      />
+                    )}
+                    <span className="relative z-10">{viewTab.label}</span>
+                  </button>
+                );
+              })}
             </div>
 
             <div className="relative w-full sm:w-52">

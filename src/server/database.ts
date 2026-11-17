@@ -22,7 +22,12 @@ import {
   type AddViolationInput,
 } from '../shared/piketLogic';
 import { MAX_BATCH_VIOLATION_ROWS } from '../shared/batchViolationLogic';
+import {
+  normalizeImportedUsername,
+  type ParsedAccountImportSkip,
+} from '../shared/accountImportLogic';
 import type {
+  AccountImportEntry,
   DailySessionConfig,
   DailySpreadsheet,
   GeneratedAccountCredential,
@@ -1304,6 +1309,173 @@ export function createAccountsBulk(params: {
   bumpStateVersion();
   return {
     credentials,
+    state: getPublicAppState(),
+  };
+}
+
+export function importAccountsFromSpreadsheet(params: {
+  entries: AccountImportEntry[];
+  creatorId: string;
+  allowAdminRole: boolean;
+  forcePasswordChangeForExplicit?: boolean;
+}): {
+  credentials: GeneratedAccountCredential[];
+  skipped: ParsedAccountImportSkip[];
+  state: PublicAppState;
+} {
+  const db = getDatabase();
+  const existingAccounts = getAllAccounts();
+  const existingUsernames = new Set(existingAccounts.map((a) => a.username.toLowerCase()));
+  const weeklyCfg = getWeeklyRotationConfig();
+  const cycleWeeks = clampCycleWeeks(weeklyCfg.cycleWeeks);
+  const currentCount = existingUsernames.size;
+  const nowIso = new Date().toISOString();
+
+  const credentials: GeneratedAccountCredential[] = [];
+  const skipped: ParsedAccountImportSkip[] = [];
+
+  const insertStmt = db.prepare(
+    `INSERT INTO accounts (
+      id, name, username, password_hash, role, division, kelas, avatar_color,
+      scheduled_days_json, scheduled_weeks_json, shift_start, shift_end, is_protected, must_change_password,
+      created_by, created_at, password_changed_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, NULL)`
+  );
+
+  db.exec('BEGIN');
+  try {
+    params.entries.forEach((entry, idx) => {
+      const rowNum = idx + 1;
+      const cleanName = String(entry.name ?? '').replace(/\s+/g, ' ').trim();
+      if (!cleanName) {
+        skipped.push({ rowNumber: rowNum, reason: 'Nama lengkap kosong.' });
+        return;
+      }
+
+      const rawRole = entry.role === 'admin' ? 'admin' : 'petugas';
+      if (rawRole === 'admin' && !params.allowAdminRole) {
+        skipped.push({
+          rowNumber: rowNum,
+          name: cleanName,
+          reason: 'Admin tidak diizinkan mengimpor akun Admin OSIS.',
+        });
+        return;
+      }
+
+      let username: string;
+      if (entry.username && entry.username.trim()) {
+        const normalized = normalizeImportedUsername(entry.username);
+        if (normalized.length < 3) {
+          skipped.push({
+            rowNumber: rowNum,
+            name: cleanName,
+            reason: `Username "${entry.username}" minimal 3 karakter.`,
+          });
+          return;
+        }
+        if (existingUsernames.has(normalized)) {
+          skipped.push({
+            rowNumber: rowNum,
+            name: cleanName,
+            reason: `Username "@${normalized}" sudah terdaftar di sistem.`,
+          });
+          return;
+        }
+        existingUsernames.add(normalized);
+        username = normalized;
+      } else {
+        username = generateUniqueUsername(cleanName, existingUsernames);
+      }
+
+      const hasExplicitPassword = Boolean(entry.password && entry.password.trim().length > 0);
+      if (hasExplicitPassword && entry.password!.trim().length < 6) {
+        skipped.push({
+          rowNumber: rowNum,
+          name: cleanName,
+          reason: `Password untuk "${cleanName}" minimal 6 karakter.`,
+        });
+        return;
+      }
+
+      const plainPassword = hasExplicitPassword
+        ? entry.password!.trim()
+        : generateTemporaryPassword(8);
+      const passwordHash = hashPassword(plainPassword);
+      const mustChange = hasExplicitPassword
+        ? params.forcePasswordChangeForExplicit
+          ? 1
+          : 0
+        : 1;
+
+      const validDays =
+        Array.isArray(entry.scheduledDays) && entry.scheduledDays.length > 0
+          ? entry.scheduledDays.filter((d): d is HariPiket => HARI_LIST.includes(d))
+          : (['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'] as HariPiket[]);
+
+      const assignedWeeks =
+        rawRole === 'admin' || cycleWeeks === 1
+          ? [...ALL_ROTATION_WEEKS]
+          : Array.isArray(entry.scheduledWeeks) && entry.scheduledWeeks.length > 0
+            ? Array.from(
+                new Set(entry.scheduledWeeks.map(Number).filter((w) => w >= 1 && w <= 4))
+              ).sort((a, b) => a - b)
+            : [...ALL_ROTATION_WEEKS];
+
+      const shiftStart = entry.shiftStart?.trim() || (rawRole === 'admin' ? '06:00' : '06:30');
+      const shiftEnd = entry.shiftEnd?.trim() || (rawRole === 'admin' ? '22:00' : '08:30');
+      const kelas =
+        entry.kelas?.trim().toUpperCase() || (rawRole === 'admin' ? 'OSIS-ADMIN' : 'XI-A');
+      const division =
+        entry.division?.trim() ||
+        (rawRole === 'admin' ? 'Admin Pengurus OSIS' : 'Sekbid Kedisiplinan');
+      const avatarColor = AVATAR_PALETTE[(currentCount + idx) % AVATAR_PALETTE.length];
+      const id = `acc-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
+
+      insertStmt.run(
+        id,
+        cleanName,
+        username,
+        passwordHash,
+        rawRole,
+        division,
+        kelas,
+        avatarColor,
+        JSON.stringify(validDays),
+        JSON.stringify(assignedWeeks),
+        shiftStart,
+        shiftEnd,
+        mustChange,
+        params.creatorId,
+        nowIso
+      );
+
+      credentials.push({
+        id,
+        name: cleanName,
+        username,
+        temporaryPassword: plainPassword,
+        role: rawRole,
+        division,
+        kelas,
+        scheduledDays: validDays,
+        scheduledWeeks: assignedWeeks,
+        shiftStart,
+        shiftEnd,
+      });
+    });
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+
+  if (credentials.length > 0) {
+    bumpStateVersion();
+  }
+
+  return {
+    credentials,
+    skipped,
     state: getPublicAppState(),
   };
 }

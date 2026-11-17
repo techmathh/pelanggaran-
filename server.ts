@@ -23,6 +23,7 @@ import {
   resolveServerExecutionMode,
 } from './src/shared/runtimeConfig';
 import type {
+  AccountImportEntry,
   HariPiket,
   Officer,
   RolePetugas,
@@ -50,6 +51,7 @@ import {
   getPublicAppState,
   getPublicMeta,
   getSessionSyncSnapshot,
+  importAccountsFromSpreadsheet,
   importStudentsRosterRecord,
   recordViolationInDb,
   recordViolationsBulkInDb,
@@ -714,6 +716,57 @@ async function startServer() {
     });
 
     res.json(result);
+  });
+
+  // Developer / Admin: import accounts from uploaded Excel/CSV file
+  app.post('/api/accounts/import', requireFullAuth, (req: AuthedRequest, res) => {
+    const requester = req.account!;
+    if (!isManagerRole(requester.role)) {
+      res.status(403).json({
+        error: 'Hanya Developer atau Admin yang dapat mengimpor data akun.',
+      });
+      return;
+    }
+
+    const { entries, forcePasswordChangeForExplicit } = (req.body ?? {}) as {
+      entries?: AccountImportEntry[];
+      forcePasswordChangeForExplicit?: boolean;
+    };
+
+    if (!Array.isArray(entries) || entries.length === 0) {
+      res.status(400).json({ error: 'Daftar akun dari Excel tidak boleh kosong.' });
+      return;
+    }
+    if (entries.length > 200) {
+      res.status(400).json({ error: 'Maksimal 200 akun dalam satu kali unggah Excel.' });
+      return;
+    }
+
+    const allowAdminRole = requester.role === 'developer';
+    if (!allowAdminRole && entries.some((item) => item?.role === 'admin')) {
+      res.status(403).json({
+        error: 'Admin hanya diperbolehkan mengimpor akun Petugas Piket.',
+      });
+      return;
+    }
+
+    try {
+      const result = importAccountsFromSpreadsheet({
+        entries,
+        creatorId: requester.id,
+        allowAdminRole,
+        forcePasswordChangeForExplicit: Boolean(forcePasswordChangeForExplicit),
+      });
+      res.json({
+        ok: true,
+        createdCount: result.credentials.length,
+        skipped: result.skipped,
+        credentials: result.credentials,
+        state: result.state,
+      });
+    } catch (err: any) {
+      res.status(400).json({ error: err?.message || 'Gagal mengimpor akun dari Excel.' });
+    }
   });
 
   // Developer / Admin: edit account profile (name, kelas, division, and role if Developer)

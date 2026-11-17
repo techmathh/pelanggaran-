@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { CheckCircle2, Info, XCircle } from 'lucide-react';
 import {
   SESSION_INVALIDATED_EVENT,
@@ -398,125 +399,142 @@ export default function App() {
       : activeTab;
 
   return (
-    <div className="min-h-screen bg-transparent text-slate-900">
-      {pendingPasswordChange ? (
-        <>
-          <div className="sticky top-0 z-40">
-            <ConnectionStatusBar
-              banner={connection.banner}
-              isChecking={connection.isChecking}
-              onRetry={() => void connection.checkNow()}
-              onDismiss={connection.dismissReconnected}
-            />
-          </div>
-          <MandatoryPasswordChangeView
-            meta={meta}
-            pending={pendingPasswordChange}
-            onSuccess={handleMandatoryPasswordUpdated}
-            onCancel={handleCancelMandatoryChange}
-          />
-        </>
-      ) : !currentOfficer || !appState ? (
-        <>
-          <div className="sticky top-0 z-40">
-            <ConnectionStatusBar
-              banner={connection.banner}
-              isChecking={connection.isChecking}
-              onRetry={() => void connection.checkNow()}
-              onDismiss={connection.dismissReconnected}
-            />
-          </div>
-          <LoginView
-            meta={meta}
-            onLoginSuccess={handleLoginSuccess}
-            onRequiresPasswordChange={handleRequiresPasswordChange}
-          />
-        </>
-      ) : (
-        <>
-          <div className="sticky top-0 z-40">
-            <ConnectionStatusBar
-              banner={connection.banner}
-              isChecking={connection.isChecking}
-              onRetry={() => void connection.checkNow()}
-              onDismiss={connection.dismissReconnected}
-            />
-            <TopBar
-              officer={currentOfficer}
-              activeTab={effectiveTab}
-              onSelectTab={setActiveTab}
-              onLogout={handleLogout}
-            />
-          </div>
-          <main className="mx-auto max-w-7xl px-3 py-5 sm:px-6 sm:py-6 lg:py-8">
-            <div key={effectiveTab} className="animate-panel-reveal">
-              {effectiveTab === 'piket' && (
-                <SpreadsheetWorkspace
-                  officer={currentOfficer}
-                  appState={appState}
-                  connectionOffline={connection.isDisconnected}
-                  onStateUpdate={handleStateUpdate}
-                  onNotify={notify}
-                />
-              )}
-              {effectiveTab === 'rekap' && (
-                <StudentRecapView
-                  officer={currentOfficer}
-                  appState={appState}
-                  onStateUpdate={handleStateUpdate}
-                  onNotify={notify}
-                />
-              )}
-              {effectiveTab === 'arsip' && (
-                <ArchiveView appState={appState} onNotify={notify} />
-              )}
-              {effectiveTab === 'jadwal' && (
-                <ScheduleSettingsView
-                  officer={currentOfficer}
-                  appState={appState}
-                  onStateUpdate={handleStateUpdate}
-                  onPasswordUpdated={handlePasswordUpdated}
-                  onOpenAccounts={() => setActiveTab('akun')}
-                  onNotify={notify}
-                />
-              )}
-              {effectiveTab === 'akun' && isManagerRole(currentOfficer.role) && (
-                <AccountManagementView
-                  officer={currentOfficer}
-                  appState={appState}
-                  onStateUpdate={handleStateUpdate}
-                  onNotify={notify}
-                />
-              )}
+    <MotionConfig reducedMotion="user">
+      <div className="min-h-screen bg-transparent text-slate-900">
+        {pendingPasswordChange ? (
+          <>
+            <div className="sticky top-0 z-40">
+              <ConnectionStatusBar
+                banner={connection.banner}
+                isChecking={connection.isChecking}
+                onRetry={() => void connection.checkNow()}
+                onDismiss={connection.dismissReconnected}
+              />
             </div>
-          </main>
-        </>
-      )}
+            <MandatoryPasswordChangeView
+              meta={meta}
+              pending={pendingPasswordChange}
+              onSuccess={handleMandatoryPasswordUpdated}
+              onCancel={handleCancelMandatoryChange}
+            />
+          </>
+        ) : !currentOfficer || !appState ? (
+          <>
+            <div className="sticky top-0 z-40">
+              <ConnectionStatusBar
+                banner={connection.banner}
+                isChecking={connection.isChecking}
+                onRetry={() => void connection.checkNow()}
+                onDismiss={connection.dismissReconnected}
+              />
+            </div>
+            <LoginView
+              meta={meta}
+              onLoginSuccess={handleLoginSuccess}
+              onRequiresPasswordChange={handleRequiresPasswordChange}
+            />
+          </>
+        ) : (
+          <>
+            <div className="sticky top-0 z-40">
+              <ConnectionStatusBar
+                banner={connection.banner}
+                isChecking={connection.isChecking}
+                onRetry={() => void connection.checkNow()}
+                onDismiss={connection.dismissReconnected}
+              />
+              <TopBar
+                officer={currentOfficer}
+                activeTab={effectiveTab}
+                onSelectTab={setActiveTab}
+                onLogout={handleLogout}
+              />
+            </div>
+            <main className="mx-auto max-w-7xl px-3 py-5 sm:px-6 sm:py-6 lg:py-8">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={effectiveTab}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  {effectiveTab === 'piket' && (
+                    <SpreadsheetWorkspace
+                      officer={currentOfficer}
+                      appState={appState}
+                      connectionOffline={connection.isDisconnected}
+                      onStateUpdate={handleStateUpdate}
+                      onNotify={notify}
+                    />
+                  )}
+                  {effectiveTab === 'rekap' && (
+                    <StudentRecapView
+                      officer={currentOfficer}
+                      appState={appState}
+                      onStateUpdate={handleStateUpdate}
+                      onNotify={notify}
+                    />
+                  )}
+                  {effectiveTab === 'arsip' && (
+                    <ArchiveView appState={appState} onNotify={notify} />
+                  )}
+                  {effectiveTab === 'jadwal' && (
+                    <ScheduleSettingsView
+                      officer={currentOfficer}
+                      appState={appState}
+                      onStateUpdate={handleStateUpdate}
+                      onPasswordUpdated={handlePasswordUpdated}
+                      onOpenAccounts={() => setActiveTab('akun')}
+                      onNotify={notify}
+                    />
+                  )}
+                  {effectiveTab === 'akun' && isManagerRole(currentOfficer.role) && (
+                    <AccountManagementView
+                      officer={currentOfficer}
+                      appState={appState}
+                      onStateUpdate={handleStateUpdate}
+                      onNotify={notify}
+                    />
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </main>
+          </>
+        )}
 
-      {/* Clean non-blocking toast notification */}
-      {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          onClick={() => setToast(null)}
-          className={`animate-toast-in fixed bottom-4 left-3 right-3 z-[60] flex cursor-pointer items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium shadow-lg sm:bottom-5 sm:left-5 sm:right-auto sm:max-w-sm ${
-            toast.type === 'success'
-              ? 'border-emerald-200 bg-white text-emerald-900'
-              : toast.type === 'error'
-                ? 'border-red-200 bg-white text-red-900'
-                : 'border-slate-200 bg-white text-slate-900'
-          }`}
-        >
-          {toast.type === 'success' ? (
-            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
-          ) : toast.type === 'error' ? (
-            <XCircle className="h-4 w-4 shrink-0 text-red-600" aria-hidden="true" />
-          ) : (
-            <Info className="h-4 w-4 shrink-0 text-blue-600" aria-hidden="true" />
+        {/* Clean non-blocking animated toast notification */}
+        <AnimatePresence>
+          {toast && (
+            <motion.div
+              key={toast.id}
+              role="status"
+              aria-live="polite"
+              initial={{ opacity: 0, y: 16, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+              onClick={() => setToast(null)}
+              className={`fixed bottom-4 left-3 right-3 z-[60] flex cursor-pointer items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium shadow-lg sm:bottom-5 sm:left-5 sm:right-auto sm:max-w-sm ${
+                toast.type === 'success'
+                  ? 'border-emerald-200 bg-white text-emerald-900'
+                  : toast.type === 'error'
+                    ? 'border-red-200 bg-white text-red-900'
+                    : 'border-slate-200 bg-white text-slate-900'
+              }`}
+            >
+              {toast.type === 'success' ? (
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
+              ) : toast.type === 'error' ? (
+                <XCircle className="h-4 w-4 shrink-0 text-red-600" aria-hidden="true" />
+              ) : (
+                <Info className="h-4 w-4 shrink-0 text-blue-600" aria-hidden="true" />
+              )}
+              <span className="min-w-0 break-words">{toast.text}</span>
+            </motion.div>
           )}
-          <span className="min-w-0 break-words">{toast.text}</span>
-        </div>
-      )}
-    </div>
+        </AnimatePresence>
+      </div>
+    </MotionConfig>
   );
 }

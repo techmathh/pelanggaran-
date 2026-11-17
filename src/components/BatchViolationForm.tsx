@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState, type FormEvent } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   Check,
   CheckCircle2,
@@ -382,15 +383,18 @@ export function BatchViolationForm({
               const shortLabel =
                 preset.label.length > 34 ? `${preset.label.slice(0, 32)}…` : preset.label;
               return (
-                <button
+                <motion.button
                   key={preset.id}
                   type="button"
+                  whileHover={{ y: -1, scale: 1.015 }}
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: 'spring', stiffness: 450, damping: 28 }}
                   disabled={!canRecordNow || submitting}
                   onClick={() => toggleQuickPreset(preset)}
-                  className={`card-3d-interactive inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium whitespace-nowrap disabled:opacity-50 ${
+                  className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium whitespace-nowrap transition-colors disabled:opacity-50 ${
                     isPicked
-                      ? 'border-blue-600 bg-blue-600 text-white'
-                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                      ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-blue-300 hover:bg-blue-50/50'
                   }`}
                 >
                   {isPicked && <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
@@ -406,7 +410,7 @@ export function BatchViolationForm({
                       · {todayCount}×
                     </span>
                   )}
-                </button>
+                </motion.button>
               );
             })}
           </div>
@@ -432,8 +436,16 @@ export function BatchViolationForm({
             </span>
           </button>
 
+          <AnimatePresence initial={false}>
           {showFullRulePicker && (
-            <div className="mt-2.5 grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 sm:grid-cols-12">
+            <motion.div
+              key="batch-full-rule-picker"
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18 }}
+              className="mt-2.5 grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 sm:grid-cols-12"
+            >
               <div className="sm:col-span-5">
                 <label
                   htmlFor="batch-category-select"
@@ -545,17 +557,31 @@ export function BatchViolationForm({
                   </div>
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
         </div>
 
         {/* Selected Violations Summary List */}
+        <AnimatePresence mode="wait">
         {selectedRules.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-xs text-slate-500">
+          <motion.p
+            key="batch-no-rules"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-xs text-slate-500"
+          >
             Belum ada pelanggaran dipilih. Klik minimal 1 tombol pelanggaran cepat di atas.
-          </p>
+          </motion.p>
         ) : (
-          <div className="rounded-xl border border-blue-200 bg-blue-50/45 p-3">
+          <motion.div
+            key="batch-rules-list"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            className="rounded-xl border border-blue-200 bg-blue-50/45 p-3"
+          >
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
               <span className="font-semibold text-blue-950">
                 Pelanggaran dipilih ({selectedRules.length} aturan ·{' '}
@@ -563,9 +589,14 @@ export function BatchViolationForm({
               </span>
             </div>
             <ul className="mt-2 divide-y divide-blue-100">
+              <AnimatePresence initial={false}>
               {selectedRules.map((rule) => (
-                <li
+                <motion.li
                   key={rule.key}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 8 }}
+                  transition={{ duration: 0.16 }}
                   className="flex items-center justify-between gap-2 py-1.5 text-xs text-slate-800"
                 >
                   <div className="min-w-0">
@@ -585,11 +616,13 @@ export function BatchViolationForm({
                   >
                     <X className="h-3.5 w-3.5" aria-hidden="true" />
                   </button>
-                </li>
+                </motion.li>
               ))}
+              </AnimatePresence>
             </ul>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
       </div>
 
       {/* Langkah 2: Pilih Banyak Siswa Sekaligus */}
@@ -608,32 +641,36 @@ export function BatchViolationForm({
             aria-label="Cara memilih siswa massal"
             className="inline-flex items-center gap-1 rounded-xl bg-slate-100 p-1"
           >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={studentPickerTab === 'search'}
-              onClick={() => setStudentPickerTab('search')}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
-                studentPickerTab === 'search'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Cari &amp; Ketik Nama
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={studentPickerTab === 'class'}
-              onClick={() => setStudentPickerTab('class')}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
-                studentPickerTab === 'class'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Centang per Kelas
-            </button>
+            {(
+              [
+                { id: 'search', label: 'Cari & Ketik Nama' },
+                { id: 'class', label: 'Centang per Kelas' },
+              ] as const
+            ).map((tab) => {
+              const active = studentPickerTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setStudentPickerTab(tab.id)}
+                  className={`relative rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
+                    active ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="batch-picker-pill"
+                      transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                      className="absolute inset-0 rounded-lg bg-white shadow-sm"
+                      aria-hidden="true"
+                    />
+                  )}
+                  <span className="relative z-10">{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -762,8 +799,16 @@ export function BatchViolationForm({
               </button>
             </div>
 
+            <AnimatePresence initial={false}>
             {showManualStudentBox && (
-              <div className="grid grid-cols-1 gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 p-3 sm:grid-cols-12">
+              <motion.div
+                key="batch-manual-student"
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.16 }}
+                className="grid grid-cols-1 gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 p-3 sm:grid-cols-12"
+              >
                 <div className="sm:col-span-5">
                   <input
                     type="text"
@@ -810,8 +855,9 @@ export function BatchViolationForm({
                   />
                   <span>Simpan juga ke direktori siswa sekolah</span>
                 </label>
-              </div>
+              </motion.div>
             )}
+            </AnimatePresence>
           </div>
         ) : (
           <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3.5">
@@ -943,9 +989,14 @@ export function BatchViolationForm({
             </p>
           ) : (
             <div className="mt-2 max-h-40 overflow-y-auto grid grid-cols-1 gap-1.5 rounded-lg border border-slate-200 bg-white p-1.5 sm:grid-cols-2">
+              <AnimatePresence initial={false}>
               {selectedStudents.map((stu, idx) => (
-                <div
+                <motion.div
                   key={stu.key}
+                  initial={{ opacity: 0, scale: 0.94 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.92 }}
+                  transition={{ type: 'spring', stiffness: 450, damping: 28 }}
                   className="flex items-center justify-between gap-2 rounded-md border border-slate-100 bg-slate-50/60 px-2.5 py-1 text-xs"
                 >
                   <span className="min-w-0 truncate text-slate-800">
@@ -963,8 +1014,9 @@ export function BatchViolationForm({
                   >
                     <X className="h-3.5 w-3.5" aria-hidden="true" />
                   </button>
-                </div>
+                </motion.div>
               ))}
+              </AnimatePresence>
             </div>
           )}
         </div>
@@ -999,8 +1051,13 @@ export function BatchViolationForm({
           </span>
         </label>
 
+        <AnimatePresence>
         {totalPlannedRows > 0 && (
-          <div
+          <motion.div
+            key="batch-planned-summary"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
             className={`rounded-xl border px-3.5 py-2.5 text-xs ${
               totalPlannedRows > MAX_BATCH_VIOLATION_ROWS
                 ? 'border-red-200 bg-red-50 text-red-900'
@@ -1013,8 +1070,9 @@ export function BatchViolationForm({
             <span className="font-mono-num">{selectedRules.length} pelanggaran</span>).
             {totalPlannedRows > MAX_BATCH_VIOLATION_ROWS &&
               ` Melebihi batas maksimal ${MAX_BATCH_VIOLATION_ROWS} catatan per simpan.`}
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
         {connectionOffline && canRecordNow && (
           <div
@@ -1028,8 +1086,10 @@ export function BatchViolationForm({
           </div>
         )}
 
-        <button
+        <motion.button
           type="submit"
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.985 }}
           disabled={
             !canRecordNow ||
             submitting ||
@@ -1058,7 +1118,7 @@ export function BatchViolationForm({
                     ? `Simpan Semua (${totalPlannedRows} Catatan)`
                     : 'Pilih Pelanggaran & Siswa untuk Menyimpan'}
           </span>
-        </button>
+        </motion.button>
       </div>
     </form>
   );

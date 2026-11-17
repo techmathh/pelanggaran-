@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react';
+import * as XLSX from 'xlsx';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   AlertTriangle,
   BookOpen,
+  CheckCircle2,
   ChevronDown,
   ChevronUp,
   Cloud,
@@ -20,6 +23,7 @@ import {
   Upload,
   UserPlus,
   Wrench,
+  X,
 } from 'lucide-react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { apiFetch } from '../lib/apiClient';
@@ -45,6 +49,10 @@ import {
   paginateItems,
   parseBulkAccountEntries,
 } from '../shared/piketLogic';
+import {
+  parseAccountImportRows,
+  type ParsedAccountImportResult,
+} from '../shared/accountImportLogic';
 import { PaginationBar } from './PaginationBar';
 import type {
   GeneratedAccountCredential,
@@ -55,6 +63,7 @@ import type {
   SystemBackupPayload,
 } from '../shared/types';
 import {
+  downloadAccountImportTemplateXlsx,
   downloadAccountsCredentialsCsv,
   downloadAccountsCredentialsXlsx,
   downloadRegisteredAccountsDirectoryXlsx,
@@ -89,7 +98,8 @@ export function AccountManagementView({
 
   const cycleWeeks = appState.weeklySchedule?.cycleWeeks ?? 2;
 
-  // Bulk creation state
+  // Bulk & Excel account creation state
+  const [createMode, setCreateMode] = useState<'manual' | 'excel'>('manual');
   const [namesText, setNamesText] = useState('');
   const [targetRole, setTargetRole] = useState<'admin' | 'petugas'>('petugas');
   const [division, setDivision] = useState('Sekbid Kedisiplinan');
@@ -110,6 +120,14 @@ export function AccountManagementView({
   const [shiftEnd, setShiftEnd] = useState('08:30');
   const [submitting, setSubmitting] = useState(false);
 
+  // Excel account import state
+  const [excelRawRows, setExcelRawRows] = useState<unknown[][] | null>(null);
+  const [excelFileName, setExcelFileName] = useState('');
+  const [isDraggingExcel, setIsDraggingExcel] = useState(false);
+  const [forceChangeExplicit, setForceChangeExplicit] = useState(false);
+  const [showSkippedExcelRows, setShowSkippedExcelRows] = useState(false);
+  const excelInputRef = useRef<HTMLInputElement | null>(null);
+
   // Latest generated credentials batch (contains plaintext temporaryPassword shown once for export)
   const [generatedBatch, setGeneratedBatch] = useState<GeneratedAccountCredential[]>([]);
 
@@ -124,7 +142,7 @@ export function AccountManagementView({
   const [editAccRole, setEditAccRole] = useState<'admin' | 'petugas'>('petugas');
 
   // Collapsible secondary sections to keep directory accessible without excessive scrolling
-  const [showBulkForm, setShowBulkForm] = useState(appState.officers.length <= 4);
+  const [showBulkForm, setShowBulkForm] = useState(true);
   const [showDevTools, setShowDevTools] = useState(false);
 
   // Account directory search, role filter & pagination
@@ -164,6 +182,41 @@ export function AccountManagementView({
   }, []);
 
   const parsedEntries = useMemo(() => parseBulkAccountEntries(namesText), [namesText]);
+
+  const parsedExcelResult: ParsedAccountImportResult | null = useMemo(() => {
+    if (!excelRawRows) return null;
+    return parseAccountImportRows(excelRawRows, {
+      defaultRole: targetRole,
+      defaultDivision: division,
+      defaultKelas,
+      defaultDays: scheduledDays,
+      defaultWeeks:
+        targetRole === 'admin' || rotationMode === 'all'
+          ? ALL_ROTATION_WEEKS
+          : scheduledWeeks,
+      defaultShiftStart: shiftStart,
+      defaultShiftEnd: shiftEnd,
+      cycleWeeks,
+      allowAdminRole: isDeveloper,
+    });
+  }, [
+    excelRawRows,
+    targetRole,
+    division,
+    defaultKelas,
+    scheduledDays,
+    rotationMode,
+    scheduledWeeks,
+    shiftStart,
+    shiftEnd,
+    cycleWeeks,
+    isDeveloper,
+  ]);
+
+  const existingUsernameSet = useMemo(
+    () => new Set(appState.officers.map((o) => o.username.toLowerCase())),
+    [appState.officers]
+  );
 
   const filteredOfficers = useMemo(() => {
     const q = accountSearch.trim().toLowerCase();
@@ -249,6 +302,131 @@ export function AccountManagementView({
       );
     } catch {
       onNotify('Gagal terhubung ke server saat membuat akun.', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function processExcelAccountFile(file: File) {
+    try {
+      const buffer = await file.arrayBuffer();
+      const wb = XLSX.read(buffer, { type: 'array' });
+      const firstSheetName = wb.SheetNames[0];
+      if (!firstSheetName) {
+        onNotify('File Excel tidak memiliki sheet yang bisa dibaca.', 'error');
+        return;
+      }
+      const ws = wb.Sheets[firstSheetName];
+      const rows = XLSX.utils.sheet_to_json<unknown[]>(ws, {
+        header: 1,
+        raw: false,
+        defval: '',
+      });
+      setExcelRawRows(rows);
+      setExcelFileName(file.name);
+      setShowSkippedExcelRows(false);
+
+      const preview = parseAccountImportRows(rows, {
+        defaultRole: targetRole,
+        defaultDivision: division,
+        defaultKelas,
+        defaultDays: scheduledDays,
+        defaultWeeks:
+          targetRole === 'admin' || rotationMode === 'all'
+            ? ALL_ROTATION_WEEKS
+            : scheduledWeeks,
+        defaultShiftStart: shiftStart,
+        defaultShiftEnd: shiftEnd,
+        cycleWeeks,
+        allowAdminRole: isDeveloper,
+      });
+
+      if (preview.entries.length === 0) {
+        onNotify(
+          'Tidak ditemukan baris akun valid di file Excel. Pastikan ada kolom Nama Lengkap.',
+          'error'
+        );
+      } else {
+        onNotify(
+          `${preview.entries.length} akun siap diimpor dari "${file.name}"${
+            preview.skipped.length > 0 ? ` (${preview.skipped.length} baris dilewati)` : ''
+          }.`,
+          'success'
+        );
+      }
+    } catch {
+      onNotify('Gagal membaca file Excel/CSV. Pastikan formatnya .xlsx, .xls, atau .csv.', 'error');
+    }
+  }
+
+  function handleExcelFileChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    void processExcelAccountFile(file);
+  }
+
+  function handleExcelDrop(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDraggingExcel(false);
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    void processExcelAccountFile(file);
+  }
+
+  function handleClearExcelPreview() {
+    setExcelRawRows(null);
+    setExcelFileName('');
+    setShowSkippedExcelRows(false);
+  }
+
+  async function handleImportExcelAccounts() {
+    if (!parsedExcelResult || parsedExcelResult.entries.length === 0 || submitting) return;
+
+    const entriesToImport = parsedExcelResult.entries.slice(0, 200);
+    setSubmitting(true);
+    try {
+      const res = await apiFetch('/api/accounts/import', {
+        method: 'POST',
+        body: JSON.stringify({
+          entries: entriesToImport.map((item) => ({
+            name: item.name,
+            username: item.username,
+            password: item.password,
+            role: item.role,
+            division: item.division,
+            kelas: item.kelas,
+            scheduledDays: item.scheduledDays,
+            scheduledWeeks: item.scheduledWeeks,
+            shiftStart: item.shiftStart,
+            shiftEnd: item.shiftEnd,
+          })),
+          forcePasswordChangeForExplicit: forceChangeExplicit,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        onNotify(data.error || 'Gagal mengimpor akun dari Excel.', 'error');
+        return;
+      }
+
+      onStateUpdate(data.state);
+      const createdCreds = Array.isArray(data.credentials)
+        ? (data.credentials as GeneratedAccountCredential[])
+        : [];
+      if (createdCreds.length > 0) {
+        setGeneratedBatch(createdCreds);
+      }
+      handleClearExcelPreview();
+      const skippedServer = Array.isArray(data.skipped) ? data.skipped.length : 0;
+      onNotify(
+        `${createdCreds.length} akun dari Excel berhasil dibuat${
+          skippedServer > 0 ? ` (${skippedServer} dilewati karena bentrok username)` : ''
+        }! Daftar kredensial siap disalin/unduh di bawah.`,
+        'success'
+      );
+    } catch {
+      onNotify('Gagal terhubung ke server saat mengimpor Excel.', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -575,8 +753,10 @@ export function AccountManagementView({
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <button
+            <motion.button
               type="button"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
               aria-expanded={showBulkForm}
               onClick={() => setShowBulkForm((prev) => !prev)}
               className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-colors whitespace-nowrap ${
@@ -586,17 +766,19 @@ export function AccountManagementView({
               }`}
             >
               <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>{showBulkForm ? 'Tutup Form Buat Akun' : 'Buat Banyak Akun'}</span>
+              <span>{showBulkForm ? 'Tutup Form Buat Akun' : 'Tambah / Upload Akun Excel'}</span>
               {showBulkForm ? (
                 <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
               ) : (
                 <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
               )}
-            </button>
+            </motion.button>
 
             {isDeveloper && (
-              <button
+              <motion.button
                 type="button"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
                 aria-expanded={showDevTools}
                 onClick={() => setShowDevTools((prev) => !prev)}
                 className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-colors whitespace-nowrap ${
@@ -607,17 +789,23 @@ export function AccountManagementView({
               >
                 <Wrench className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>{showDevTools ? 'Tutup Alat Developer' : 'Alat & Cadangan Developer'}</span>
-              </button>
+              </motion.button>
             )}
           </div>
         </div>
       </section>
 
       {/* Developer Control Panel (Collapsible for Developer role) */}
+      <AnimatePresence initial={false}>
       {isDeveloper && showDevTools && (
-        <section
+        <motion.section
+          key="dev-tools-panel"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.22 }}
           aria-label="Panel Khusus Developer"
-          className="surface-3d animate-panel-reveal rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6"
+          className="surface-3d rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6"
         >
           <div className="flex flex-col gap-1 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -746,28 +934,405 @@ export function AccountManagementView({
               )}
             </Tilt3DCard>
           </div>
-        </section>
+        </motion.section>
       )}
+      </AnimatePresence>
 
-      {/* Bulk Account Creation Form (Collapsible) */}
+      {/* Account Creation Form: Ketik Cepat OR Upload Excel */}
+      <AnimatePresence initial={false}>
       {showBulkForm && (
-      <section className="surface-3d animate-panel-reveal rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6">
-        <div className="flex items-start gap-2.5 border-b border-slate-100 pb-4">
-          <UserPlus className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" aria-hidden="true" />
-          <div>
-            <h2 className="font-display text-lg font-bold text-slate-900">
-              Buat Banyak Akun Sekaligus (Username & Password Otomatis)
-            </h2>
-            <p className="mt-0.5 text-xs text-slate-500">
-              Ketik atau tempel daftar nama lengkap (satu nama tiap baris). Jika ingin langsung
-              mengisi kelasnya, tambahkan{' '}
-              <code className="rounded bg-slate-100 px-1 py-0.5">| Kelas</code>. Username &amp;
-              password awal dibuat otomatis, lalu pengguna wajib mengganti password saat masuk pertama kali.
-            </p>
+      <motion.section
+        key="account-creation-panel"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.22 }}
+        className="surface-3d rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6"
+      >
+        <div className="flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-2.5">
+            {createMode === 'excel' ? (
+              <FileSpreadsheet className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" aria-hidden="true" />
+            ) : (
+              <UserPlus className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" aria-hidden="true" />
+            )}
+            <div>
+              <h2 className="font-display text-lg font-bold text-slate-900">
+                {createMode === 'excel'
+                  ? 'Upload Data Akun dari Excel (.xlsx / .csv)'
+                  : 'Buat Banyak Akun Sekaligus (Ketik Cepat)'}
+              </h2>
+              <p className="mt-0.5 text-xs text-slate-500">
+                {createMode === 'excel'
+                  ? 'Unggah file Excel berisi kolom Nama Lengkap, Username, Password, dan Jadwal Piket. Kolom yang dikosongkan otomatis mengikuti pengaturan default.'
+                  : 'Ketik atau tempel daftar nama lengkap (satu nama tiap baris, opsional | Kelas). Username & password awal dibuat otomatis.'}
+              </p>
+            </div>
+          </div>
+
+          <div
+            role="tablist"
+            aria-label="Metode tambah akun"
+            className="inline-flex self-start items-center gap-1 rounded-xl bg-slate-100 p-1 shrink-0"
+          >
+            {(
+              [
+                { id: 'manual', label: 'Ketik Nama Cepat' },
+                { id: 'excel', label: 'Upload Data Excel' },
+              ] as const
+            ).map((tab) => {
+              const active = createMode === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setCreateMode(tab.id)}
+                  className={`relative rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
+                    active ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="account-create-mode"
+                      transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                      className="absolute inset-0 rounded-lg bg-white shadow-sm"
+                      aria-hidden="true"
+                    />
+                  )}
+                  <span className="relative z-10">{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <form onSubmit={handleBulkCreate} className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <AnimatePresence mode="wait" initial={false}>
+        {createMode === 'excel' ? (
+          <motion.div
+            key="excel-import-tab"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18 }}
+            className="mt-5 space-y-5"
+          >
+            <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50/70 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-slate-900">
+                  Format Kolom Excel yang Didukung Otomatis:
+                </p>
+                <p className="text-xs leading-relaxed text-slate-600">
+                  <strong>Wajib:</strong> <code className="rounded bg-white px-1 py-0.5">Nama Lengkap</code>.{' '}
+                  <strong>Opsional:</strong>{' '}
+                  <code className="rounded bg-white px-1 py-0.5">Username</code>,{' '}
+                  <code className="rounded bg-white px-1 py-0.5">Password</code>,{' '}
+                  <code className="rounded bg-white px-1 py-0.5">Jadwal Piket</code> (mis. Senin, Rabu),{' '}
+                  <code className="rounded bg-white px-1 py-0.5">Minggu Piket</code>,{' '}
+                  <code className="rounded bg-white px-1 py-0.5">Jam Shift</code>,{' '}
+                  <code className="rounded bg-white px-1 py-0.5">Role</code>,{' '}
+                  <code className="rounded bg-white px-1 py-0.5">Kelas</code>,{' '}
+                  <code className="rounded bg-white px-1 py-0.5">Divisi</code>.
+                </p>
+              </div>
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => downloadAccountImportTemplateXlsx(cycleWeeks)}
+                className="btn-3d-soft inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50 whitespace-nowrap shrink-0"
+              >
+                <Download className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
+                <span>Unduh Template Excel (.xlsx)</span>
+              </motion.button>
+            </div>
+
+            <input
+              ref={excelInputRef}
+              id="account-excel-file-input"
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              onChange={handleExcelFileChange}
+              className="hidden"
+            />
+
+            <motion.div
+              animate={{
+                scale: isDraggingExcel ? 1.01 : 1,
+                borderColor: isDraggingExcel ? '#2563EB' : undefined,
+              }}
+              transition={{ type: 'spring', stiffness: 360, damping: 24 }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDraggingExcel(true);
+              }}
+              onDragLeave={() => setIsDraggingExcel(false)}
+              onDrop={handleExcelDrop}
+              onClick={() => excelInputRef.current?.click()}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  excelInputRef.current?.click();
+                }
+              }}
+              className={`cursor-pointer rounded-2xl border-2 border-dashed p-6 text-center transition-colors ${
+                isDraggingExcel
+                  ? 'border-blue-600 bg-blue-50/70'
+                  : 'border-slate-300 bg-slate-50/40 hover:border-blue-400 hover:bg-blue-50/30'
+              }`}
+            >
+              <Upload
+                className={`mx-auto h-7 w-7 ${
+                  isDraggingExcel ? 'text-blue-600' : 'text-slate-400'
+                }`}
+                aria-hidden="true"
+              />
+              <p className="mt-2 text-sm font-semibold text-slate-900">
+                {excelFileName
+                  ? `File terpasang: ${excelFileName}`
+                  : 'Klik di sini atau seret file Excel akun (.xlsx / .xls / .csv)'}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                {excelFileName
+                  ? 'Klik ulang untuk mengganti file lain, atau periksa pratinjau di bawah sebelum menyimpan.'
+                  : 'Maksimal 200 akun per unggahan. Baris dengan Username/Password kosong akan dibuatkan otomatis.'}
+              </p>
+            </motion.div>
+
+            {/* Fallback Default Settings & Options for Excel Import */}
+            <details className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+              <summary className="cursor-pointer text-xs font-semibold text-slate-700 select-none">
+                Pengaturan Default Jika Kolom di Excel Kosong ({getRoleLabel(targetRole)} · {defaultKelas} · {shiftStart}–{shiftEnd})
+              </summary>
+              <div className="mt-3 grid grid-cols-1 gap-3 border-t border-slate-100 pt-3 sm:grid-cols-4">
+                <div>
+                  <label htmlFor="excel-def-role" className="block text-[11px] font-medium text-slate-600">
+                    Role Default
+                  </label>
+                  <select
+                    id="excel-def-role"
+                    value={targetRole}
+                    onChange={(e) => setTargetRole(e.target.value as 'admin' | 'petugas')}
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900"
+                  >
+                    <option value="petugas">Petugas Piket</option>
+                    {isDeveloper && <option value="admin">Admin OSIS</option>}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="excel-def-kelas" className="block text-[11px] font-medium text-slate-600">
+                    Kelas Default
+                  </label>
+                  <input
+                    id="excel-def-kelas"
+                    type="text"
+                    value={defaultKelas}
+                    onChange={(e) => setDefaultKelas(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="excel-def-start" className="block text-[11px] font-medium text-slate-600">
+                    Jam Mulai Default
+                  </label>
+                  <input
+                    id="excel-def-start"
+                    type="time"
+                    value={shiftStart}
+                    onChange={(e) => setShiftStart(e.target.value)}
+                    className="font-mono-num mt-1 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="excel-def-end" className="block text-[11px] font-medium text-slate-600">
+                    Jam Selesai Default
+                  </label>
+                  <input
+                    id="excel-def-end"
+                    type="time"
+                    value={shiftEnd}
+                    onChange={(e) => setShiftEnd(e.target.value)}
+                    className="font-mono-num mt-1 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs"
+                  />
+                </div>
+              </div>
+            </details>
+
+            <AnimatePresence>
+              {parsedExcelResult && (
+                <motion.div
+                  key="excel-preview-box"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4"
+                >
+                  <div className="flex flex-col gap-3 border-b border-slate-100 pb-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-bold text-slate-900">
+                        Pratinjau Data Excel ({parsedExcelResult.entries.length} Akun Siap Diimpor)
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {parsedExcelResult.headerRowNumber
+                          ? `Header terdeteksi pada baris ${parsedExcelResult.headerRowNumber}. `
+                          : ''}
+                        {parsedExcelResult.skipped.length > 0 && (
+                          <span className="font-semibold text-amber-700">
+                            {parsedExcelResult.skipped.length} baris dilewati.
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 shrink-0">
+                      {parsedExcelResult.skipped.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setShowSkippedExcelRows((prev) => !prev)}
+                          className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100"
+                        >
+                          {showSkippedExcelRows
+                            ? 'Tutup Baris Dilewati'
+                            : `Lihat ${parsedExcelResult.skipped.length} Baris Dilewati`}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleClearExcelPreview}
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                      >
+                        <X className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span>Batal</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <AnimatePresence>
+                    {showSkippedExcelRows && parsedExcelResult.skipped.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <ul className="max-h-36 overflow-y-auto divide-y divide-amber-100 rounded-xl border border-amber-200 bg-amber-50/70 px-3 py-2 text-xs text-amber-900">
+                          {parsedExcelResult.skipped.map((sk) => (
+                            <li key={`${sk.rowNumber}-${sk.reason}`} className="py-1">
+                              <strong className="font-mono-num">Baris {sk.rowNumber}</strong>
+                              {sk.name ? ` (${sk.name})` : ''}: {sk.reason}
+                            </li>
+                          ))}
+                        </ul>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {parsedExcelResult.entries.length > 0 && (
+                    <>
+                      <div className="max-h-64 overflow-auto rounded-xl border border-slate-200">
+                        <table className="w-full min-w-[680px] border-collapse text-left text-xs">
+                          <thead className="sticky top-0 bg-slate-50 text-slate-600">
+                            <tr className="border-b border-slate-200 font-semibold">
+                              <th className="px-3 py-2 w-10">No</th>
+                              <th className="px-3 py-2">Nama Lengkap</th>
+                              <th className="px-3 py-2">Username</th>
+                              <th className="px-3 py-2">Password</th>
+                              <th className="px-3 py-2">Role &amp; Kelas</th>
+                              <th className="px-3 py-2">Jadwal Piket</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {parsedExcelResult.entries.slice(0, 200).map((row, idx) => {
+                              const alreadyExists =
+                                Boolean(row.username) &&
+                                existingUsernameSet.has(row.username!.toLowerCase());
+                              return (
+                                <tr
+                                  key={`${row.rowNumber}-${row.name}`}
+                                  className={alreadyExists ? 'bg-amber-50/60' : 'hover:bg-slate-50/70'}
+                                >
+                                  <td className="font-mono-num px-3 py-2 text-slate-500">{idx + 1}</td>
+                                  <td className="px-3 py-2 font-medium text-slate-900">{row.name}</td>
+                                  <td className="font-mono-num px-3 py-2">
+                                    {row.username ? (
+                                      <span className={alreadyExists ? 'font-bold text-amber-700' : 'font-semibold text-blue-700'}>
+                                        @{row.username}
+                                        {alreadyExists ? ' (sudah ada)' : ''}
+                                      </span>
+                                    ) : (
+                                      <span className="italic text-slate-400">Otomatis</span>
+                                    )}
+                                  </td>
+                                  <td className="font-mono-num px-3 py-2 text-slate-700">
+                                    {row.password ? '•••••• (dari Excel)' : (
+                                      <span className="italic text-slate-400">Otomatis</span>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2 text-slate-700">
+                                    {getRoleLabel(row.role)} · <span className="font-mono-num">{row.kelas}</span>
+                                  </td>
+                                  <td className="px-3 py-2 text-slate-600">
+                                    <span className="font-semibold text-blue-700">
+                                      {formatScheduledWeeksLabel(row.scheduledWeeks, cycleWeeks)}
+                                    </span>{' '}
+                                    · {row.scheduledDays.join(', ')} ({row.shiftStart}–{row.shiftEnd})
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-xs text-slate-700">
+                        <input
+                          type="checkbox"
+                          checked={forceChangeExplicit}
+                          onChange={(e) => setForceChangeExplicit(e.target.checked)}
+                          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600"
+                        />
+                        <span>
+                          Wajibkan akun yang sudah diberi password di Excel untuk mengganti password saat login pertama
+                          <span className="text-slate-500">
+                            {' '}(akun dengan password otomatis selalu wajib ganti saat login pertama).
+                          </span>
+                        </span>
+                      </label>
+
+                      <motion.button
+                        type="button"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.985 }}
+                        disabled={submitting}
+                        onClick={handleImportExcelAccounts}
+                        className="btn-3d-primary flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                      >
+                        <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                        <span>
+                          {submitting
+                            ? 'Mengimpor Akun ke Sistem...'
+                            : `Simpan ${Math.min(200, parsedExcelResult.entries.length)} Akun dari Excel`}
+                        </span>
+                      </motion.button>
+                    </>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        ) : (
+        <motion.form
+          key="manual-bulk-form"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.18 }}
+          onSubmit={handleBulkCreate}
+          className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-12"
+        >
           <div className="space-y-2 lg:col-span-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <label htmlFor="bulk-names" className="block text-sm font-medium text-slate-700">
@@ -957,8 +1522,10 @@ export function AccountManagementView({
               </div>
             )}
 
-            <button
+            <motion.button
               type="submit"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.985 }}
               disabled={submitting || parsedEntries.length === 0}
               className="btn-3d-primary flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
@@ -968,15 +1535,26 @@ export function AccountManagementView({
                   ? 'Sedang Membuat Akun...'
                   : `Buat ${parsedEntries.length || ''} Akun & Password Otomatis`}
               </span>
-            </button>
+            </motion.button>
           </div>
-        </form>
-      </section>
+        </motion.form>
+        )}
+        </AnimatePresence>
+      </motion.section>
       )}
+      </AnimatePresence>
 
       {/* Newly Generated Credentials Export Panel */}
+      <AnimatePresence>
       {generatedBatch.length > 0 && (
-        <section className="rounded-2xl border border-emerald-200 bg-white p-5 sm:p-6">
+        <motion.section
+          key="generated-creds-panel"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.22 }}
+          className="rounded-2xl border border-emerald-200 bg-white p-5 sm:p-6"
+        >
           <div className="flex flex-col gap-4 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="font-display text-lg font-bold text-slate-900">
@@ -1054,8 +1632,9 @@ export function AccountManagementView({
               </tbody>
             </table>
           </div>
-        </section>
+        </motion.section>
       )}
+      </AnimatePresence>
 
       {/* Registered Accounts Directory */}
       <section className="surface-3d animate-stagger-4 rounded-2xl border border-slate-200/90 bg-white">
@@ -1080,23 +1659,32 @@ export function AccountManagementView({
                   { id: 'admin', label: 'Admin' },
                   { id: 'developer', label: 'Dev' },
                 ] as const
-              ).map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => {
-                    setRoleFilter(item.id);
-                    setAccountPage(1);
-                  }}
-                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
-                    roleFilter === item.id
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
+              ).map((item) => {
+                const active = roleFilter === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setRoleFilter(item.id);
+                      setAccountPage(1);
+                    }}
+                    className={`relative rounded-md px-2.5 py-1 text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
+                      active ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="account-role-filter"
+                        transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                        className="absolute inset-0 rounded-md bg-white shadow-sm"
+                        aria-hidden="true"
+                      />
+                    )}
+                    <span className="relative z-10">{item.label}</span>
+                  </button>
+                );
+              })}
             </div>
 
             <div className="relative w-full sm:w-52">

@@ -210,6 +210,19 @@ export interface StudentImportEntry {
   nis: string;
 }
 
+export interface AccountImportEntry {
+  name: string;
+  username?: string;
+  password?: string;
+  role?: 'admin' | 'petugas';
+  division?: string;
+  kelas?: string;
+  scheduledDays?: HariPiket[];
+  scheduledWeeks?: number[];
+  shiftStart?: string;
+  shiftEnd?: string;
+}
+
 export interface PublicAppState {
   officers: PublicOfficer[];
   presets: ViolationPreset[];

@@ -624,6 +624,101 @@ export function downloadCurrentStudentRosterXlsx(
   triggerDownload(blob, `Roster-Siswa-SMAN1-Kemangkon-${dateLabel}.xlsx`);
 }
 
+export function downloadAccountImportTemplateXlsx(cycleWeeks = 4): void {
+  const wb = XLSX.utils.book_new();
+  const sampleRows: (string | number)[][] = [
+    [
+      'No',
+      'Nama Lengkap',
+      'Username',
+      'Password',
+      'Role',
+      'Kelas',
+      'Divisi',
+      'Jadwal Piket',
+      'Minggu Piket',
+      'Jam Mulai',
+      'Jam Selesai',
+    ],
+    [
+      1,
+      'Ahmad Fauzi',
+      'ahmad.fauzi',
+      'osis1234',
+      'Petugas',
+      '11A',
+      'Sekbid Kedisiplinan',
+      'Senin, Rabu, Jumat',
+      cycleWeeks > 1 ? '1, 3' : 'Semua',
+      '06:30',
+      '08:30',
+    ],
+    [
+      2,
+      'Siti Nurhaliza',
+      'siti.nurhaliza',
+      'piket2026',
+      'Petugas',
+      '11B',
+      'Sekbid Kedisiplinan',
+      'Selasa, Kamis',
+      cycleWeeks > 1 ? '2, 4' : 'Semua',
+      '06:30',
+      '08:30',
+    ],
+    [
+      3,
+      'Rizky Pratama',
+      '',
+      '',
+      'Petugas',
+      '10C',
+      'Sekbid Kedisiplinan',
+      'Senin - Sabtu',
+      'Semua',
+      '06:30',
+      '08:30',
+    ],
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(sampleRows);
+  ws['!cols'] = [
+    { wch: 5 },
+    { wch: 24 },
+    { wch: 18 },
+    { wch: 15 },
+    { wch: 12 },
+    { wch: 10 },
+    { wch: 22 },
+    { wch: 24 },
+    { wch: 14 },
+    { wch: 12 },
+    { wch: 12 },
+  ];
+
+  const guideRows: string[][] = [
+    ['PANDUAN UPLOAD DATA AKUN EXCEL SIPIKET OSIS'],
+    ['1. Gunakan sheet "Data Akun" (hapus atau timpa 3 baris contoh dengan data petugas asli).'],
+    ['2. Kolom wajib hanya "Nama Lengkap". Kolom lainnya opsional dan akan memakai nilai default bila dikosongkan.'],
+    ['3. Username & Password: boleh diisi langsung di Excel (password minimal 6 karakter), atau dikosongkan agar sistem membuatkan otomatis.'],
+    ['4. Jadwal Piket (Hari): tulis dipisah koma seperti "Senin, Rabu" atau rentang seperti "Senin - Sabtu" / "Semua Hari".'],
+    ['5. Minggu Piket: tulis angka minggu seperti "1", "1, 3", atau "Semua" sesuai siklus giliran mingguan sekolah.'],
+    ['6. Jam Mulai & Jam Selesai: gunakan format 24 jam HH:MM (contoh 06:30 dan 08:30).'],
+    ['7. Role: isi "Petugas" atau "Admin" (hanya Developer yang dapat mengimpor role Admin).'],
+  ];
+  const wsGuide = XLSX.utils.aoa_to_sheet(guideRows);
+  wsGuide['!cols'] = [{ wch: 96 }];
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Data Akun');
+  XLSX.utils.book_append_sheet(wb, wsGuide, 'Petunjuk');
+
+  const arrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([arrayBuffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  triggerDownload(blob, 'Template-Upload-Akun-SiPiket.xlsx');
+}
+
 function triggerDownload(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
