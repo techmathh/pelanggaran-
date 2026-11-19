@@ -72,7 +72,6 @@ export function StudentRecapView({
   const [manageMode, setManageMode] = useState<'single' | 'import'>('single');
   const [newStuName, setNewStuName] = useState('');
   const [newStuKelas, setNewStuKelas] = useState('');
-  const [newStuNis, setNewStuNis] = useState('');
   const [savingStudent, setSavingStudent] = useState(false);
   const [confirmDeleteStudentId, setConfirmDeleteStudentId] = useState<string | null>(null);
 
@@ -140,7 +139,7 @@ export function StudentRecapView({
         body: JSON.stringify({
           name: newStuName,
           kelas: newStuKelas,
-          nis: newStuNis,
+          nis: '-',
         }),
       });
       const data = await res.json();
@@ -151,7 +150,6 @@ export function StudentRecapView({
       onStateUpdate?.(data.state);
       setNewStuName('');
       setNewStuKelas('');
-      setNewStuNis('');
       onNotify?.('Siswa baru berhasil ditambahkan ke direktori sekolah.', 'success');
     } catch {
       onNotify?.('Gagal terhubung ke server.', 'error');
@@ -259,7 +257,7 @@ export function StudentRecapView({
       onNotify?.(
         importMode === 'replace_all'
           ? `Roster tahun ajaran baru diterapkan: ${data.totalStudents} siswa aktif di direktori.`
-          : `Import selesai: ${data.importedCount ?? 0} siswa baru ditambahkan, ${data.updatedCount ?? 0} NIS diperbarui (total ${data.totalStudents} siswa).`,
+          : `Import selesai: ${data.importedCount ?? 0} siswa baru ditambahkan, ${data.updatedCount ?? 0} data diperbarui (total ${data.totalStudents} siswa).`,
         'success'
       );
     } catch {

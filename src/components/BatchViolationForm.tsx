@@ -452,6 +452,16 @@ export function BatchViolationForm({
   }
 
   function renderViolationSelectOptions() {
+    const topIds = new Set(
+      orderedViolationOptions.topFrequentAndRecent.map((opt) => opt.preset.id)
+    );
+    const remainingCategories = orderedViolationOptions.byCategory
+      .map((group) => ({
+        category: group.category,
+        items: group.items.filter((opt) => !topIds.has(opt.preset.id)),
+      }))
+      .filter((group) => group.items.length > 0);
+
     return (
       <>
         <option value="">-- Pilih pelanggaran --</option>
@@ -465,7 +475,7 @@ export function BatchViolationForm({
             ))}
           </optgroup>
         )}
-        {orderedViolationOptions.byCategory.map((group) => (
+        {remainingCategories.map((group) => (
           <optgroup key={group.category} label={group.category}>
             {group.items.map((opt) => (
               <option key={opt.preset.id} value={opt.preset.id}>
@@ -609,9 +619,14 @@ export function BatchViolationForm({
                               )
                             }
                             onChange={(e) => {
+                              const nextName = e.target.value;
                               updateRow(row.rowKey, {
-                                studentName: e.target.value,
+                                studentName: nextName,
                                 studentId: undefined,
+                                kelas:
+                                  nextName.trim() && !row.kelas && rowClassFilter
+                                    ? rowClassFilter
+                                    : row.kelas,
                                 saveToStudentDirectory: false,
                               });
                               setActiveStudentRowKey(row.rowKey);
@@ -997,7 +1012,7 @@ export function BatchViolationForm({
                           setShowMassSearchDropdown(false);
                         }
                       }}
-                      placeholder="Ketik nama siswa lalu klik untuk menambah..."
+                      placeholder="Ketik nama atau kelas (mis. 10a) lalu klik untuk menambah..."
                       className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-8 pr-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none"
                     />
                     {showMassSearchDropdown && massSearchText.trim() && (

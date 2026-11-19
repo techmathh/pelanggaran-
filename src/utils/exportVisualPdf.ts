@@ -109,7 +109,7 @@ export function downloadVisualPdfReport(
 
   // --- Visual Section: Two Side-by-Side Vector Charts ---
   const chartBoxW = (contentWidth - 6) / 2;
-  const maxChartRows = Math.max(classGroups.length, 6);
+  const maxChartRows = Math.max(Math.min(classGroups.length, 8), 6);
   const chartBoxH = Math.max(46, 14 + maxChartRows * 6.5);
 
   // Left Chart: Pelanggaran & Poin per Kelas
@@ -257,12 +257,12 @@ export function downloadVisualPdfReport(
           6: { cellWidth: 34 },
           7: { cellWidth: 16 },
         },
-        head: [['No', 'Jam', 'Kode', 'Siswa & NIS', 'Jenis Pelanggaran', 'Poin', 'Tindak Lanjut', 'Petugas']],
+        head: [['No', 'Jam', 'Kode', 'Nama Siswa', 'Jenis Pelanggaran', 'Poin', 'Tindak Lanjut', 'Petugas']],
         body: grp.rows.map((r, idx) => [
           idx + 1,
           r.timeLabel,
           r.violationCode || '-',
-          `${r.studentName}\nNIS ${r.studentNis}`,
+          r.studentName,
           `${r.violationLabel}${r.notes ? `\n(${r.notes})` : ''}`,
           `+${r.points}`,
           r.actionTaken,

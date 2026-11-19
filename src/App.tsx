@@ -451,54 +451,51 @@ export default function App() {
               />
             </div>
             <main className="mx-auto max-w-7xl px-3 py-5 sm:px-6 sm:py-6 lg:py-8">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={effectiveTab}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                >
-                  {effectiveTab === 'piket' && (
-                    <SpreadsheetWorkspace
-                      officer={currentOfficer}
-                      appState={appState}
-                      connectionOffline={connection.isDisconnected}
-                      onStateUpdate={handleStateUpdate}
-                      onNotify={notify}
-                    />
-                  )}
-                  {effectiveTab === 'rekap' && (
-                    <StudentRecapView
-                      officer={currentOfficer}
-                      appState={appState}
-                      onStateUpdate={handleStateUpdate}
-                      onNotify={notify}
-                    />
-                  )}
-                  {effectiveTab === 'arsip' && (
-                    <ArchiveView appState={appState} onNotify={notify} />
-                  )}
-                  {effectiveTab === 'jadwal' && (
-                    <ScheduleSettingsView
-                      officer={currentOfficer}
-                      appState={appState}
-                      onStateUpdate={handleStateUpdate}
-                      onPasswordUpdated={handlePasswordUpdated}
-                      onOpenAccounts={() => setActiveTab('akun')}
-                      onNotify={notify}
-                    />
-                  )}
-                  {effectiveTab === 'akun' && isManagerRole(currentOfficer.role) && (
-                    <AccountManagementView
-                      officer={currentOfficer}
-                      appState={appState}
-                      onStateUpdate={handleStateUpdate}
-                      onNotify={notify}
-                    />
-                  )}
-                </motion.div>
-              </AnimatePresence>
+              <motion.div
+                key={effectiveTab}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+              >
+                {effectiveTab === 'piket' && (
+                  <SpreadsheetWorkspace
+                    officer={currentOfficer}
+                    appState={appState}
+                    connectionOffline={connection.isDisconnected}
+                    onStateUpdate={handleStateUpdate}
+                    onNotify={notify}
+                  />
+                )}
+                {effectiveTab === 'rekap' && (
+                  <StudentRecapView
+                    officer={currentOfficer}
+                    appState={appState}
+                    onStateUpdate={handleStateUpdate}
+                    onNotify={notify}
+                  />
+                )}
+                {effectiveTab === 'arsip' && (
+                  <ArchiveView appState={appState} onNotify={notify} />
+                )}
+                {effectiveTab === 'jadwal' && (
+                  <ScheduleSettingsView
+                    officer={currentOfficer}
+                    appState={appState}
+                    onStateUpdate={handleStateUpdate}
+                    onPasswordUpdated={handlePasswordUpdated}
+                    onOpenAccounts={() => setActiveTab('akun')}
+                    onNotify={notify}
+                  />
+                )}
+                {effectiveTab === 'akun' && isManagerRole(currentOfficer.role) && (
+                  <AccountManagementView
+                    officer={currentOfficer}
+                    appState={appState}
+                    onStateUpdate={handleStateUpdate}
+                    onNotify={notify}
+                  />
+                )}
+              </motion.div>
             </main>
           </>
         )}

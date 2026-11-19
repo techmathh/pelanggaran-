@@ -133,7 +133,6 @@ export function downloadSpreadsheetXlsx(
       'No',
       'Kelas',
       'Jam',
-      'NIS',
       'Nama Siswa',
       'Kode AKPS',
       'Jenis Pelanggaran',
@@ -152,7 +151,6 @@ export function downloadSpreadsheetXlsx(
         globalRowNo++,
         row.kelas,
         row.timeLabel,
-        row.studentNis,
         row.studentName,
         row.violationCode || '-',
         row.violationLabel,
@@ -170,7 +168,6 @@ export function downloadSpreadsheetXlsx(
       '-',
       '-',
       '-',
-      '-',
       'Nihil (Tidak ada pelanggaran tercatat)',
       '-',
       '-',
@@ -181,7 +178,7 @@ export function downloadSpreadsheetXlsx(
       '-',
     ]);
   } else {
-    allAoA.push(['', 'TOTAL', '', '', '', '', '', '', totalPointsAll, '', '', '']);
+    allAoA.push(['', 'TOTAL', '', '', '', '', '', totalPointsAll, '', '', '']);
   }
 
   const wsAll = XLSX.utils.aoa_to_sheet(allAoA);
@@ -189,8 +186,7 @@ export function downloadSpreadsheetXlsx(
     { wch: 5 },
     { wch: 12 },
     { wch: 8 },
-    { wch: 12 },
-    { wch: 24 },
+    { wch: 26 },
     { wch: 11 },
     { wch: 42 },
     { wch: 26 },
@@ -200,8 +196,8 @@ export function downloadSpreadsheetXlsx(
     { wch: 18 },
   ];
   wsAll['!merges'] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 11 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 11 } },
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 10 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 10 } },
   ];
   XLSX.utils.book_append_sheet(
     wb,
@@ -219,7 +215,6 @@ export function downloadSpreadsheetXlsx(
       [
         'No',
         'Jam',
-        'NIS',
         'Nama Siswa',
         'Kode AKPS',
         'Jenis Pelanggaran',
@@ -235,7 +230,6 @@ export function downloadSpreadsheetXlsx(
       classAoA.push([
         idx + 1,
         row.timeLabel,
-        row.studentNis,
         row.studentName,
         row.violationCode || '-',
         row.violationLabel,
@@ -248,7 +242,6 @@ export function downloadSpreadsheetXlsx(
     });
 
     classAoA.push([
-      '',
       '',
       '',
       `Total Kelas ${grp.kelas} (${grp.totalIncidents} catatan)`,
@@ -265,8 +258,7 @@ export function downloadSpreadsheetXlsx(
     wsClass['!cols'] = [
       { wch: 5 },
       { wch: 8 },
-      { wch: 12 },
-      { wch: 24 },
+      { wch: 26 },
       { wch: 11 },
       { wch: 42 },
       { wch: 26 },
@@ -276,9 +268,9 @@ export function downloadSpreadsheetXlsx(
       { wch: 18 },
     ];
     wsClass['!merges'] = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: 10 } },
-      { s: { r: 1, c: 0 }, e: { r: 1, c: 10 } },
-      { s: { r: 2, c: 0 }, e: { r: 2, c: 10 } },
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } },
+      { s: { r: 2, c: 0 }, e: { r: 2, c: 9 } },
     ];
 
     XLSX.utils.book_append_sheet(
@@ -357,13 +349,12 @@ export function downloadStudentRecapXlsx(
       [`REKAP AKPS SISWA — KELAS ${kelas}`],
       [`Tanggal Cetak: ${dateLabel}`],
       [],
-      ['No', 'NIS', 'Nama Siswa', 'Jumlah Pelanggaran', 'Total Poin', 'Pelanggaran Terakhir', 'Status Sanksi AKPS'],
+      ['No', 'Nama Siswa', 'Jumlah Pelanggaran', 'Total Poin', 'Pelanggaran Terakhir', 'Status Sanksi AKPS'],
     ];
 
     list.forEach((stu, idx) => {
       classAoA.push([
         idx + 1,
-        stu.studentNis,
         stu.studentName,
         stu.incidentCount,
         stu.totalPoints,
@@ -375,17 +366,16 @@ export function downloadStudentRecapXlsx(
     const wsClass = XLSX.utils.aoa_to_sheet(classAoA);
     wsClass['!cols'] = [
       { wch: 5 },
-      { wch: 12 },
-      { wch: 26 },
+      { wch: 28 },
       { wch: 18 },
       { wch: 12 },
       { wch: 40 },
       { wch: 44 },
     ];
     wsClass['!merges'] = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } },
-      { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } },
-      { s: { r: 2, c: 0 }, e: { r: 2, c: 6 } },
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } },
+      { s: { r: 2, c: 0 }, e: { r: 2, c: 5 } },
     ];
     XLSX.utils.book_append_sheet(
       wb,
@@ -577,16 +567,16 @@ export function downloadRegisteredAccountsDirectoryXlsx(
 export function downloadStudentRosterTemplateXlsx(): void {
   const wb = XLSX.utils.book_new();
   const sheetRows: (string | number)[][] = [
-    ['No', 'NIS', 'Nama Lengkap', 'Kelas'],
-    [1, '3101', 'Contoh: Budi Santoso', '10A'],
+    ['No', 'Nama Lengkap', 'Kelas'],
+    [1, 'Contoh: Budi Santoso', '10A'],
   ];
   const ws = XLSX.utils.aoa_to_sheet(sheetRows);
-  ws['!cols'] = [{ wch: 6 }, { wch: 14 }, { wch: 32 }, { wch: 12 }];
+  ws['!cols'] = [{ wch: 6 }, { wch: 32 }, { wch: 12 }];
 
   const guideRows: string[][] = [
     ['PANDUAN IMPORT ROSTER SISWA SIPIKET OSIS'],
     ['1. Gunakan sheet "Roster Siswa" (hapus baris contoh sebelum mengisi data asli).'],
-    ['2. Kolom wajib: Nama Lengkap dan Kelas (contoh: 10A, 11B, 12C). Kolom NIS boleh dikosongkan atau diisi "-".'],
+    ['2. Kolom wajib: Nama Lengkap dan Kelas (contoh: 10A, 11B, 12C).'],
     ['3. Untuk kenaikan kelas tahun ajaran baru, Anda dapat mengunduh Roster Saat Ini, menaikkan kelas di Excel, menghapus kelas 12 yang lulus, lalu menambah siswa kelas 10 baru.'],
     ['4. Pilih mode "Tambah / Gabung" untuk menambah siswa baru, atau "Ganti Total Roster" untuk memperbarui seluruh daftar siswa tahun ajaran baru.'],
   ];
@@ -608,13 +598,13 @@ export function downloadCurrentStudentRosterXlsx(
   dateLabel: string
 ): void {
   const wb = XLSX.utils.book_new();
-  const rows: (string | number)[][] = [['No', 'NIS', 'Nama Lengkap', 'Kelas']];
+  const rows: (string | number)[][] = [['No', 'Nama Lengkap', 'Kelas']];
   students.forEach((s, idx) => {
-    rows.push([idx + 1, s.nis || '-', s.name, s.kelas]);
+    rows.push([idx + 1, s.name, s.kelas]);
   });
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [{ wch: 6 }, { wch: 14 }, { wch: 34 }, { wch: 12 }];
+  ws['!cols'] = [{ wch: 6 }, { wch: 34 }, { wch: 12 }];
   XLSX.utils.book_append_sheet(wb, ws, 'Roster Siswa');
 
   const arrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });

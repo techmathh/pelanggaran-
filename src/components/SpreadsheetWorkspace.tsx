@@ -1174,7 +1174,7 @@ export function SpreadsheetWorkspace({
                             setStudentNis('');
                           }
                         }
-                        if (val) {
+                        if (val && !studentName.trim()) {
                           window.requestAnimationFrame(() => {
                             studentInputRef.current?.focus();
                             setShowStudentDropdown(true);
@@ -1301,6 +1301,12 @@ export function SpreadsheetWorkspace({
                             Kelas <strong>{kelas}</strong> terisi otomatis
                           </span>
                         </span>
+                      </p>
+                    )}
+
+                    {isNewManualStudent && !kelas.trim() && !showStudentDropdown && (
+                      <p className="mt-1.5 text-xs text-amber-700">
+                        Pilih kelas pada dropdown di sebelah kiri (atau <strong>Kelas Lain</strong>) untuk siswa baru ini.
                       </p>
                     )}
 
