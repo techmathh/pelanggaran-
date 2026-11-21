@@ -51,6 +51,7 @@ import {
   getPublicAppState,
   getPublicMeta,
   getSessionSyncSnapshot,
+  getStateVersion,
   importAccountsFromSpreadsheet,
   importStudentsRosterRecord,
   recordViolationInDb,
@@ -74,6 +75,7 @@ import {
   verifySessionToken,
   type SessionTokenPayload,
 } from './src/server/database';
+import { registerBotBridge } from './brigde';
 
 const PORT = Number(process.env.PORT) || 3000;
 
@@ -186,6 +188,8 @@ async function startServer() {
       res.status(503).json({ ok: false, db: 'unavailable', mode: executionMode });
     }
   });
+
+  registerBotBridge(app, { getPublicAppState, getStateVersion, getDatabase });
 
   // Public metadata for login screen (zero dummy or user data exposed)
   app.get('/api/public-meta', (_req, res) => {
