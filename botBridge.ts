@@ -6,7 +6,7 @@
  *
  * Pemasangan (2 baris di server.ts, setelah route /api/health):
  *
- *   import { registerBotBridge } from './brigde';
+ *   import { registerBotBridge } from './botBridge';
  *   ...
  *   registerBotBridge(app, { getPublicAppState, getStateVersion, getDatabase });
  *
