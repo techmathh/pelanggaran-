@@ -75,7 +75,7 @@ import {
   verifySessionToken,
   type SessionTokenPayload,
 } from './src/server/database';
-import { registerBotBridge } from './brigde';
+import { registerBotBridge } from './botBridge';
 
 const PORT = Number(process.env.PORT) || 3000;
 
