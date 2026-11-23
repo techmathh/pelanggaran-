@@ -5,6 +5,7 @@ import type {
   DailySessionProductivitySummary,
   DailySpreadsheet,
   HariPiket,
+  HolidayPeriod,
   KategoriPelanggaran,
   Officer,
   OfficerProductivityItem,
@@ -22,6 +23,7 @@ export const DEFAULT_DAILY_SESSION_CONFIG: DailySessionConfig = {
   activeDays: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'],
   startTime: '06:30',
   endTime: '08:30',
+  holidays: [],
 };
 
 export const DEFAULT_WEEKLY_ROTATION_CONFIG: WeeklyRotationConfig = {
@@ -616,10 +618,59 @@ export function addViolationToSpreadsheet(
   };
 }
 
+const DATE_KEY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+export const MAX_HOLIDAY_PERIODS = 120;
+
+export function isValidDateKey(value: unknown): value is string {
+  if (typeof value !== 'string' || !DATE_KEY_REGEX.test(value)) return false;
+  const d = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value;
+}
+
+/**
+ * Membersihkan daftar libur dari input mentah: membuang entri tidak valid,
+ * menukar tanggal terbalik, memberi id bila kosong, dan mengurutkan berdasarkan tanggal mulai.
+ */
+export function normalizeHolidays(raw: unknown): HolidayPeriod[] {
+  if (!Array.isArray(raw)) return [];
+  const result: HolidayPeriod[] = [];
+  const seenIds = new Set<string>();
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const h = item as Partial<HolidayPeriod>;
+    if (!isValidDateKey(h.startDate)) continue;
+    const endDate = isValidDateKey(h.endDate) ? h.endDate : h.startDate;
+    const [startDate, finalEnd] =
+      endDate < h.startDate ? [endDate, h.startDate] : [h.startDate, endDate];
+    let id = typeof h.id === 'string' && h.id.trim() ? h.id.trim().slice(0, 60) : '';
+    if (!id || seenIds.has(id)) {
+      id = `libur-${startDate}-${result.length + 1}`;
+    }
+    seenIds.add(id);
+    result.push({
+      id,
+      startDate,
+      endDate: finalEnd,
+      label: typeof h.label === 'string' ? h.label.trim().slice(0, 80) : '',
+    });
+    if (result.length >= MAX_HOLIDAY_PERIODS) break;
+  }
+  return result.sort((a, b) => a.startDate.localeCompare(b.startDate));
+}
+
+export function findHolidayForDate(
+  holidays: HolidayPeriod[] | undefined,
+  dateKey: string
+): HolidayPeriod | undefined {
+  if (!Array.isArray(holidays)) return undefined;
+  return holidays.find((h) => h.startDate <= dateKey && dateKey <= h.endDate);
+}
+
 export function validateDailySessionInput(input: {
   activeDays?: HariPiket[];
   startTime?: string;
   endTime?: string;
+  holidays?: unknown;
 }): string | null {
   if (!Array.isArray(input.activeDays) || input.activeDays.length === 0) {
     return 'Pilih minimal satu hari aktif spreadsheet piket.';
@@ -636,6 +687,25 @@ export function validateDailySessionInput(input: {
   if (parseMinutes(input.startTime) >= parseMinutes(input.endTime)) {
     return 'Jam selesai spreadsheet harus lebih akhir daripada jam mulai.';
   }
+  if (input.holidays !== undefined) {
+    if (!Array.isArray(input.holidays)) {
+      return 'Daftar hari libur tidak valid.';
+    }
+    if (input.holidays.length > MAX_HOLIDAY_PERIODS) {
+      return `Maksimal ${MAX_HOLIDAY_PERIODS} periode libur.`;
+    }
+    for (const item of input.holidays as Partial<HolidayPeriod>[]) {
+      if (!item || !isValidDateKey(item.startDate)) {
+        return 'Tanggal mulai libur tidak valid (format YYYY-MM-DD).';
+      }
+      if (item.endDate !== undefined && !isValidDateKey(item.endDate)) {
+        return 'Tanggal selesai libur tidak valid (format YYYY-MM-DD).';
+      }
+      if (typeof item.label === 'string' && item.label.length > 80) {
+        return 'Keterangan libur maksimal 80 karakter.';
+      }
+    }
+  }
   return null;
 }
 
@@ -651,6 +721,9 @@ export interface AutoSessionWindowStatus {
   dateKey: string;
   minutesUntilStart: number;
   minutesUntilClose: number;
+  /** true bila tanggal ini termasuk periode libur yang diatur di pengaturan. */
+  isHoliday?: boolean;
+  holidayLabel?: string;
 }
 
 export function getAutoSessionWindowStatus(
@@ -677,6 +750,23 @@ export function getAutoSessionWindowStatus(
       dateKey,
       minutesUntilStart: 0,
       minutesUntilClose: 0,
+    };
+  }
+
+  const holiday = findHolidayForDate(dailySession?.holidays, dateKey);
+  if (holiday) {
+    return {
+      isActiveDay: false,
+      phase: 'NON_ACTIVE_DAY',
+      startTime,
+      endTime,
+      currentTime: timeHHMM,
+      hari,
+      dateKey,
+      minutesUntilStart: 0,
+      minutesUntilClose: 0,
+      isHoliday: true,
+      holidayLabel: holiday.label,
     };
   }
 
@@ -748,14 +838,22 @@ export function evaluateAutoSpreadsheetLifecycle(
   nowIso: string
 ): {
   changedSheets: DailySpreadsheet[];
+  /** ID spreadsheet kosong (tanpa catatan) yang sudah tertutup sehingga tidak disimpan. */
+  deletedSheetIds: string[];
   windowStatus: AutoSessionWindowStatus;
 } {
   const windowStatus = getAutoSessionWindowStatus(dailySession, now, simulation);
   const changedSheets: DailySpreadsheet[] = [];
+  const deletedSheetIds: string[] = [];
 
-  // 1. Auto-finalize any stale past-day ACTIVE spreadsheets that weren't closed before midnight
+  // 1. Auto-close stale past-day ACTIVE spreadsheets that weren't closed before midnight.
+  //    Spreadsheet tanpa catatan tidak disimpan sama sekali.
   for (const sheet of spreadsheets) {
     if (sheet.date < windowStatus.dateKey && sheet.status === 'ACTIVE' && !sheet.reopenedManually) {
+      if (sheet.rows.length === 0) {
+        deletedSheetIds.push(sheet.id);
+        continue;
+      }
       changedSheets.push({
         ...sheet,
         status: 'FINALIZED',
@@ -767,7 +865,7 @@ export function evaluateAutoSpreadsheetLifecycle(
 
   const todaySheet = spreadsheets.find((s) => s.date === windowStatus.dateKey);
 
-  // 2. Automatically open at startTime and automatically finalize at endTime
+  // 2. Automatically open at startTime and automatically close at endTime
   if (windowStatus.phase === 'OPEN') {
     if (!todaySheet) {
       changedSheets.push({
@@ -797,34 +895,29 @@ export function evaluateAutoSpreadsheetLifecycle(
         reopenedManually: false,
       });
     }
-  } else if (windowStatus.phase === 'CLOSED') {
-    if (!todaySheet) {
-      changedSheets.push({
-        id: `sheet-${windowStatus.dateKey}`,
-        date: windowStatus.dateKey,
-        hari: windowStatus.hari,
-        title: `Spreadsheet Piket OSIS — ${formatIndonesianDateLabel(windowStatus.dateKey, windowStatus.hari)}`,
-        status: 'FINALIZED',
-        createdAt: nowIso,
-        createdById: 'system-auto',
-        createdByName: 'Sistem Otomatis',
-        activeOfficers: [],
-        finishedOfficers: [],
-        finalizedAt: nowIso,
-        reopenedManually: false,
-        rows: [],
-      });
-    } else if (todaySheet.status === 'ACTIVE' && !todaySheet.reopenedManually) {
-      changedSheets.push({
-        ...todaySheet,
-        status: 'FINALIZED',
-        finishedOfficers: [...todaySheet.activeOfficers],
-        finalizedAt: todaySheet.finalizedAt || nowIso,
-      });
+  } else if (windowStatus.phase === 'CLOSED' || windowStatus.phase === 'NON_ACTIVE_DAY') {
+    // Hari libur / hari non-aktif / jam sudah lewat: spreadsheet hari ini yang masih kosong
+    // tidak disimpan, dan tidak ada spreadsheet kosong yang dibuat hanya untuk langsung ditutup.
+    if (
+      todaySheet &&
+      todaySheet.status === 'ACTIVE' &&
+      !todaySheet.reopenedManually &&
+      !deletedSheetIds.includes(todaySheet.id)
+    ) {
+      if (todaySheet.rows.length === 0) {
+        deletedSheetIds.push(todaySheet.id);
+      } else if (windowStatus.phase === 'CLOSED') {
+        changedSheets.push({
+          ...todaySheet,
+          status: 'FINALIZED',
+          finishedOfficers: [...todaySheet.activeOfficers],
+          finalizedAt: todaySheet.finalizedAt || nowIso,
+        });
+      }
     }
   }
 
-  return { changedSheets, windowStatus };
+  return { changedSheets, deletedSheetIds, windowStatus };
 }
 
 export function getConsensusProgress(spreadsheet: DailySpreadsheet): {

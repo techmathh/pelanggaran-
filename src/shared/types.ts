@@ -188,10 +188,20 @@ export interface WeeklyRotationConfig {
   anchorMonday: string; // YYYY-MM-DD (Senin minggu ke-1 siklus)
 }
 
+export interface HolidayPeriod {
+  id: string;
+  startDate: string; // YYYY-MM-DD (inklusif)
+  endDate: string;   // YYYY-MM-DD (inklusif, sama dengan startDate untuk libur 1 hari)
+  label: string;     // contoh: "Libur Semester", "HUT RI"
+}
+
 export interface DailySessionConfig {
+  /** Hari aktif per minggu. Hari yang tidak dipilih = libur rutin mingguan. */
   activeDays: HariPiket[];
   startTime: string; // HH:mm (24h)
   endTime: string;   // HH:mm (24h)
+  /** Libur pada tanggal tertentu / rentang tanggal / seminggu penuh. */
+  holidays?: HolidayPeriod[];
 }
 
 export interface PublicMetaState {

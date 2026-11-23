@@ -13,6 +13,8 @@ import {
   canModifyViolationRow,
   createOrJoinDailySpreadsheet,
   evaluateAutoSpreadsheetLifecycle,
+  findHolidayForDate,
+  normalizeHolidays,
   exportSpreadsheetToCsv,
   formatScheduledWeeksLabel,
   generateUniqueUsername,
@@ -37,7 +39,7 @@ import {
   validatePresetInput,
   validateViolationInput,
 } from './piketLogic';
-import type { DailySpreadsheet, Officer, StudentRecord } from './types';
+import type { DailySpreadsheet, Officer, StudentRecord, ViolationEntry } from './types';
 import { SMAN1_KEMANGKON_STUDENTS } from '../server/studentRoster';
 import {
   deriveConnectionStatus,
@@ -771,9 +773,47 @@ test('validateDailySessionInput, getAutoSessionWindowStatus, and evaluateAutoSpr
   assert.equal(autoOpened.createdById, 'system-auto');
   assert.equal(getConsensusProgress(autoOpened).exportUnlocked, false);
 
-  // At CLOSED time (endTime reached): ACTIVE sheet transitions automatically to FINALIZED & unlocks export
-  const closedEval = evaluateAutoSpreadsheetLifecycle(
+  // At CLOSED time with NO records: empty sheet is not saved at all (and none is created)
+  const emptyClosedEval = evaluateAutoSpreadsheetLifecycle(
     [autoOpened],
+    DEFAULT_DAILY_SESSION_CONFIG,
+    mondayBase,
+    { enabled: true, unrestricted: false, simulatedDay: 'Senin', simulatedTime: '08:30' },
+    '2026-11-16T08:30:00+07:00'
+  );
+  assert.equal(emptyClosedEval.changedSheets.length, 0);
+  assert.deepEqual(emptyClosedEval.deletedSheetIds, [autoOpened.id]);
+
+  const noSheetClosedEval = evaluateAutoSpreadsheetLifecycle(
+    [],
+    DEFAULT_DAILY_SESSION_CONFIG,
+    mondayBase,
+    { enabled: true, unrestricted: false, simulatedDay: 'Senin', simulatedTime: '09:00' },
+    '2026-11-16T09:00:00+07:00'
+  );
+  assert.equal(noSheetClosedEval.changedSheets.length, 0);
+  assert.equal(noSheetClosedEval.deletedSheetIds.length, 0);
+
+  // At CLOSED time with records: ACTIVE sheet transitions automatically to FINALIZED & unlocks export
+  const sampleRow: ViolationEntry = {
+    id: 'viol-sample-1',
+    timestamp: '2026-11-16T07:20:00+07:00',
+    timeLabel: '07:20',
+    studentName: 'Siswa Contoh',
+    studentNis: '-',
+    kelas: 'X-1',
+    violationCode: 'A1',
+    violationLabel: 'Terlambat',
+    category: 'A. Kedisiplinan & Kehadiran',
+    points: 5,
+    actionTaken: 'Teguran Lisan & Catat',
+    notes: '',
+    recordedById: 'o1',
+    recordedByName: 'Petugas',
+  };
+  const autoOpenedWithRow: DailySpreadsheet = { ...autoOpened, rows: [sampleRow] };
+  const closedEval = evaluateAutoSpreadsheetLifecycle(
+    [autoOpenedWithRow],
     DEFAULT_DAILY_SESSION_CONFIG,
     mondayBase,
     { enabled: true, unrestricted: false, simulatedDay: 'Senin', simulatedTime: '08:30' },
@@ -817,6 +857,7 @@ test('validateDailySessionInput, getAutoSessionWindowStatus, and evaluateAutoSpr
     date: '2026-11-14',
     hari: 'Sabtu',
     reopenedManually: false,
+    rows: [sampleRow],
   };
   const pastFinalizeEval = evaluateAutoSpreadsheetLifecycle(
     [stalePastSheet],
@@ -827,6 +868,62 @@ test('validateDailySessionInput, getAutoSessionWindowStatus, and evaluateAutoSpr
   );
   assert.equal(pastFinalizeEval.changedSheets.length, 1);
   assert.equal(pastFinalizeEval.changedSheets[0].status, 'FINALIZED');
+
+  // Past-day stale ACTIVE sheet WITHOUT records is dropped instead of finalized
+  const pastEmptyEval = evaluateAutoSpreadsheetLifecycle(
+    [{ ...stalePastSheet, rows: [] }],
+    DEFAULT_DAILY_SESSION_CONFIG,
+    mondayBase,
+    { enabled: true, unrestricted: false, simulatedDay: 'Senin', simulatedTime: '06:00' },
+    '2026-11-16T06:00:00+07:00'
+  );
+  assert.equal(pastEmptyEval.changedSheets.length, 0);
+  assert.deepEqual(pastEmptyEval.deletedSheetIds, ['sheet-2026-11-14']);
+});
+
+test('holiday periods (single day, range, whole week) block the automatic spreadsheet', () => {
+  const mondayBase = new Date('2026-11-16T00:30:00Z');
+  const sim = { enabled: true, unrestricted: false, simulatedDay: 'Senin' as const, simulatedTime: '07:15' };
+
+  assert.equal(validateDailySessionInput({ activeDays: ['Senin'], startTime: '06:30', endTime: '08:30', holidays: 'x' }) !== null, true);
+  assert.equal(
+    validateDailySessionInput({
+      activeDays: ['Senin'],
+      startTime: '06:30',
+      endTime: '08:30',
+      holidays: [{ startDate: '2026-13-40' }],
+    }) !== null,
+    true
+  );
+
+  const holidays = normalizeHolidays([
+    { id: 'a', startDate: '2026-11-18', endDate: '2026-11-16', label: ' Libur Semester ' },
+    { startDate: 'bukan-tanggal', endDate: '2026-11-20', label: 'x' },
+    { startDate: '2026-12-25', label: 'Natal' },
+  ]);
+  assert.equal(holidays.length, 2);
+  assert.equal(holidays[0].startDate, '2026-11-16'); // tanggal terbalik otomatis ditukar
+  assert.equal(holidays[0].endDate, '2026-11-18');
+  assert.equal(holidays[0].label, 'Libur Semester');
+  assert.equal(holidays[1].endDate, '2026-12-25'); // libur 1 hari
+
+  assert.ok(findHolidayForDate(holidays, '2026-11-17'));
+  assert.equal(findHolidayForDate(holidays, '2026-11-19'), undefined);
+
+  const config = { ...DEFAULT_DAILY_SESSION_CONFIG, holidays };
+  const windowStatus = getAutoSessionWindowStatus(config, mondayBase, sim);
+  assert.equal(windowStatus.phase, 'NON_ACTIVE_DAY');
+  assert.equal(windowStatus.isHoliday, true);
+  assert.equal(windowStatus.holidayLabel, 'Libur Semester');
+
+  // Hari libur: tidak ada spreadsheet yang dibuat otomatis
+  const holidayEval = evaluateAutoSpreadsheetLifecycle([], config, mondayBase, sim, '2026-11-16T07:15:00+07:00');
+  assert.equal(holidayEval.changedSheets.length, 0);
+  assert.equal(holidayEval.deletedSheetIds.length, 0);
+
+  // Tanpa libur, hari yang sama OPEN seperti biasa
+  const normalWindow = getAutoSessionWindowStatus(DEFAULT_DAILY_SESSION_CONFIG, mondayBase, sim);
+  assert.equal(normalWindow.phase, 'OPEN');
 });
 
 test('motionMath computes clamped 3D tilt angles, glare coords, and cubic ease-out cleanly', () => {
