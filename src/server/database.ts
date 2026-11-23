@@ -14,8 +14,10 @@ import {
   evaluateAutoSpreadsheetLifecycle,
   formatDateKey,
   generateUniqueUsername,
+  getAutoSessionWindowStatus,
   getEffectiveClock,
   getMondayDateKey,
+  normalizeHolidays,
   removeOfficerFromActiveSpreadsheet,
   shiftAnchorMondayForTargetWeek,
   toggleOfficerFinished,
@@ -579,6 +581,7 @@ export function getDailySessionConfig(): DailySessionConfig {
       activeDays: validDays.length > 0 ? validDays : [...DEFAULT_DAILY_SESSION_CONFIG.activeDays],
       startTime: parsed.startTime || DEFAULT_DAILY_SESSION_CONFIG.startTime,
       endTime: parsed.endTime || DEFAULT_DAILY_SESSION_CONFIG.endTime,
+      holidays: normalizeHolidays(parsed.holidays),
     };
   } catch {
     return { ...DEFAULT_DAILY_SESSION_CONFIG };
@@ -595,6 +598,11 @@ export function setDailySessionConfigRecord(
     activeDays: config.activeDays.filter((d) => HARI_LIST.includes(d)),
     startTime: config.startTime,
     endTime: config.endTime,
+    // Bila klien tidak mengirim daftar libur, daftar libur yang sudah tersimpan dipertahankan.
+    holidays:
+      config.holidays !== undefined
+        ? normalizeHolidays(config.holidays)
+        : getDailySessionConfig().holidays ?? [],
   };
   db.exec('BEGIN');
   try {
@@ -1106,7 +1114,7 @@ export function syncAutoDailySpreadsheets(now = new Date()): number {
   const dailySession = getDailySessionConfig();
   const simulation = getSimulationConfig();
   const spreadsheets = getAllSpreadsheets();
-  const { changedSheets } = evaluateAutoSpreadsheetLifecycle(
+  const { changedSheets, deletedSheetIds } = evaluateAutoSpreadsheetLifecycle(
     spreadsheets,
     dailySession,
     now,
@@ -1114,7 +1122,7 @@ export function syncAutoDailySpreadsheets(now = new Date()): number {
     now.toISOString()
   );
 
-  if (changedSheets.length === 0) {
+  if (changedSheets.length === 0 && deletedSheetIds.length === 0) {
     return 0;
   }
 
@@ -1123,13 +1131,44 @@ export function syncAutoDailySpreadsheets(now = new Date()): number {
     for (const sheet of changedSheets) {
       persistSpreadsheet(db, sheet);
     }
+    // Spreadsheet tanpa catatan yang sudah tertutup tidak disimpan.
+    for (const sheetId of deletedSheetIds) {
+      deleteEmptySpreadsheet(db, sheetId);
+    }
     db.exec('COMMIT');
   } catch (err) {
     db.exec('ROLLBACK');
     throw err;
   }
   bumpStateVersion();
-  return changedSheets.length;
+  return changedSheets.length + deletedSheetIds.length;
+}
+
+/** Hapus spreadsheet beserta relasinya, hanya bila benar-benar tidak punya catatan pelanggaran. */
+function deleteEmptySpreadsheet(db: DatabaseSync, sheetId: string): void {
+  const row = db
+    .prepare('SELECT COUNT(*) AS total FROM violations WHERE spreadsheet_id = ?')
+    .get(sheetId) as { total: number } | undefined;
+  if ((row?.total ?? 0) > 0) return;
+  db.prepare('DELETE FROM spreadsheet_officers WHERE spreadsheet_id = ?').run(sheetId);
+  db.prepare('DELETE FROM spreadsheets WHERE id = ?').run(sheetId);
+}
+
+function buildSheetUnavailableMessage(
+  dailySession: ReturnType<typeof getDailySessionConfig>,
+  now: Date
+): string {
+  const window = getAutoSessionWindowStatus(dailySession, now, getSimulationConfig());
+  if (window.isHoliday) {
+    return `Hari ini libur${window.holidayLabel ? ` (${window.holidayLabel})` : ''}. Spreadsheet tidak dibuka.`;
+  }
+  if (window.phase === 'NON_ACTIVE_DAY') {
+    return `Hari ${window.hari} bukan hari aktif spreadsheet piket.`;
+  }
+  if (window.phase === 'CLOSED') {
+    return `Jam spreadsheet hari ini sudah berakhir (${dailySession.endTime} WIB).`;
+  }
+  return `Spreadsheet hari ini belum dibuka. Sesi akan dibuat otomatis pada pukul ${dailySession.startTime} WIB.`;
 }
 
 export function getPublicMeta(): PublicMetaState {
@@ -1880,6 +1919,7 @@ export function restoreSystemBackupPayload(
             validDays.length > 0 ? validDays : [...DEFAULT_DAILY_SESSION_CONFIG.activeDays],
           startTime: payload.dailySession.startTime || DEFAULT_DAILY_SESSION_CONFIG.startTime,
           endTime: payload.dailySession.endTime || DEFAULT_DAILY_SESSION_CONFIG.endTime,
+          holidays: normalizeHolidays(payload.dailySession.holidays),
         })
       );
     }
@@ -2036,9 +2076,7 @@ export function recordViolationInDb(
   const existingToday = spreadsheets.find((s) => s.date === clock.dateKey);
 
   if (!existingToday) {
-    throw new Error(
-      `Spreadsheet hari ini belum dibuka. Sesi akan dibuat otomatis pada pukul ${dailySession.startTime} WIB.`
-    );
+    throw new Error(buildSheetUnavailableMessage(dailySession, now));
   }
 
   const joined = createOrJoinDailySpreadsheet(
@@ -2150,9 +2188,7 @@ export function recordViolationsBulkInDb(
   const existingToday = spreadsheets.find((s) => s.date === clock.dateKey);
 
   if (!existingToday) {
-    throw new Error(
-      `Spreadsheet hari ini belum dibuka. Sesi akan dibuat otomatis pada pukul ${dailySession.startTime} WIB.`
-    );
+    throw new Error(buildSheetUnavailableMessage(dailySession, now));
   }
 
   const joined = createOrJoinDailySpreadsheet(
@@ -2317,7 +2353,19 @@ export function finishSpreadsheetInDb(
   }
 
   const updated = toggleOfficerFinished(sheet, officerId, finished, nowIso);
-  persistSpreadsheet(db, updated);
+  if (updated.status === 'FINALIZED' && updated.rows.length === 0) {
+    // Ditutup tanpa satu pun catatan: spreadsheet tidak disimpan.
+    db.exec('BEGIN');
+    try {
+      deleteEmptySpreadsheet(db, updated.id);
+      db.exec('COMMIT');
+    } catch (err) {
+      db.exec('ROLLBACK');
+      throw err;
+    }
+  } else {
+    persistSpreadsheet(db, updated);
+  }
   bumpStateVersion();
 
   return {
@@ -2362,7 +2410,12 @@ export function closeSpreadsheetManuallyInDb(
     finalizedAt: nowIso,
     reopenedManually: false,
   };
-  persistSpreadsheet(db, closed);
+  if (closed.rows.length === 0) {
+    // Ditutup tanpa satu pun catatan: spreadsheet tidak disimpan.
+    deleteEmptySpreadsheet(db, closed.id);
+  } else {
+    persistSpreadsheet(db, closed);
+  }
   bumpStateVersion();
   return getPublicAppState();
 }
