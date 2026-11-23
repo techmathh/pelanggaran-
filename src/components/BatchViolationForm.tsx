@@ -54,11 +54,9 @@ export function BatchViolationForm({
   onSuccessSubmit,
   onNotify,
 }: BatchViolationFormProps) {
-  // Primary Mode: Simple Per-Column Rows (Siswa | Pelanggaran)
+  // Primary Mode: Simple Per-Column Rows (Siswa | Pelanggaran). Mulai dari 1 kolom.
   const [rows, setRows] = useState<BatchColumnRow[]>(() => [
     createEmptyBatchColumnRow('init-1'),
-    createEmptyBatchColumnRow('init-2'),
-    createEmptyBatchColumnRow('init-3'),
   ]);
   const [activeStudentRowKey, setActiveStudentRowKey] = useState<string | null>(null);
   const [highlightedStudentIdx, setHighlightedStudentIdx] = useState(0);
@@ -250,7 +248,7 @@ export function BatchViolationForm({
   function handleAddEmptyRow() {
     setRows((prev) => {
       if (prev.length >= MAX_BATCH_VIOLATION_ROWS) {
-        onNotify(`Maksimal ${MAX_BATCH_VIOLATION_ROWS} baris dalam satu tabel.`, 'info');
+        onNotify(`Maksimal ${MAX_BATCH_VIOLATION_ROWS} kolom dalam satu tabel.`, 'info');
         return prev;
       }
       return [
@@ -261,10 +259,13 @@ export function BatchViolationForm({
   }
 
   function handleRemoveRow(rowKey: string) {
+    // Minimal harus ada 1 kolom: kolom terakhir tidak dapat dihapus.
+    if (rows.length <= 1) {
+      onNotify('Minimal harus ada 1 kolom.', 'info');
+      return;
+    }
     setRows((prev) => {
-      if (prev.length <= 1) {
-        return [createEmptyBatchColumnRow(`${Date.now()}-reset`)];
-      }
+      if (prev.length <= 1) return prev;
       return prev.filter((r) => r.rowKey !== rowKey);
     });
     setExpandedDetailRows((prev) => {
@@ -276,11 +277,7 @@ export function BatchViolationForm({
   }
 
   function handleResetAllRows() {
-    setRows([
-      createEmptyBatchColumnRow(`${Date.now()}-1`),
-      createEmptyBatchColumnRow(`${Date.now()}-2`),
-      createEmptyBatchColumnRow(`${Date.now()}-3`),
-    ]);
+    setRows([createEmptyBatchColumnRow(`${Date.now()}-1`)]);
     setExpandedDetailRows({});
   }
 
@@ -411,7 +408,7 @@ export function BatchViolationForm({
       onRecordPresetUsed(selectedMassRuleItem.presetId);
     }
 
-    onNotify(`${newRows.length} siswa dimasukkan ke daftar baris.`, 'success');
+    onNotify(`${newRows.length} siswa dimasukkan ke daftar kolom.`, 'success');
     setMassStudents([]);
     setShowSameRuleDrawer(false);
   }
@@ -556,7 +553,7 @@ export function BatchViolationForm({
                     {/* Row Index */}
                     <div className="flex items-center justify-between md:justify-center">
                       <span className="font-mono-num text-xs font-semibold text-slate-400">
-                        <span className="md:hidden">Baris </span>
+                        <span className="md:hidden">Kolom </span>
                         {idx + 1}
                       </span>
                       <div className="flex items-center gap-1 md:hidden">
@@ -580,10 +577,11 @@ export function BatchViolationForm({
                         </button>
                         <button
                           type="button"
-                          disabled={submitting}
-                          aria-label={`Hapus baris ${idx + 1}`}
+                          disabled={submitting || rows.length <= 1}
+                          title={rows.length <= 1 ? 'Minimal harus ada 1 kolom' : 'Hapus kolom'}
+                          aria-label={`Hapus kolom ${idx + 1}`}
                           onClick={() => handleRemoveRow(row.rowKey)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-700"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-400"
                         >
                           <X className="h-4 w-4" aria-hidden="true" />
                         </button>
@@ -778,10 +776,11 @@ export function BatchViolationForm({
                       </button>
                       <button
                         type="button"
-                        disabled={submitting}
-                        aria-label={`Hapus baris ${idx + 1}`}
+                        disabled={submitting || rows.length <= 1}
+                        title={rows.length <= 1 ? 'Minimal harus ada 1 kolom' : 'Hapus kolom'}
+                        aria-label={`Hapus kolom ${idx + 1}`}
                         onClick={() => handleRemoveRow(row.rowKey)}
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-700"
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-400"
                       >
                         <X className="h-3.5 w-3.5" aria-hidden="true" />
                       </button>
@@ -855,7 +854,7 @@ export function BatchViolationForm({
           </AnimatePresence>
         </div>
 
-        {/* Footer Tabel: Tambah Baris & Bersihkan */}
+        {/* Footer Tabel: Tambah Kolom & Bersihkan */}
         <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 px-3 py-2">
           <button
             type="button"
@@ -864,7 +863,7 @@ export function BatchViolationForm({
             className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-800 disabled:opacity-50"
           >
             <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>Tambah Baris</span>
+            <span>Tambah Kolom</span>
           </button>
 
           {hasAnyTypedData && (

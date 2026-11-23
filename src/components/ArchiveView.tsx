@@ -17,7 +17,11 @@ interface ArchiveViewProps {
 
 export function ArchiveView({ appState, onNotify }: ArchiveViewProps) {
   const sortedSheets = useMemo(
-    () => [...appState.spreadsheets].sort((a, b) => b.date.localeCompare(a.date)),
+    () =>
+      // Spreadsheet yang sudah tertutup tanpa satu pun catatan tidak ditampilkan.
+      appState.spreadsheets
+        .filter((s) => s.status !== 'FINALIZED' || s.rows.length > 0)
+        .sort((a, b) => b.date.localeCompare(a.date)),
     [appState.spreadsheets]
   );
 
