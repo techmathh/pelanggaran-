@@ -25,6 +25,7 @@ import {
 import type {
   AccountImportEntry,
   HariPiket,
+  HolidayPeriod,
   Officer,
   RolePetugas,
   StudentImportEntry,
@@ -1230,14 +1231,20 @@ async function startServer() {
       return;
     }
 
-    const { activeDays, startTime, endTime, syncOfficers } = req.body as {
+    const { activeDays, startTime, endTime, syncOfficers, holidays } = req.body as {
       activeDays?: HariPiket[];
       startTime?: string;
       endTime?: string;
       syncOfficers?: boolean;
+      holidays?: HolidayPeriod[];
     };
 
-    const validationError = validateDailySessionInput({ activeDays, startTime, endTime });
+    const validationError = validateDailySessionInput({
+      activeDays,
+      startTime,
+      endTime,
+      holidays,
+    });
     if (validationError) {
       res.status(400).json({ error: validationError });
       return;
@@ -1248,6 +1255,7 @@ async function startServer() {
         activeDays: activeDays!,
         startTime: startTime!,
         endTime: endTime!,
+        holidays,
       },
       syncOfficers !== false,
       new Date()
